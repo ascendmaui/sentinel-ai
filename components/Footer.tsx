@@ -13,6 +13,7 @@ export function Footer() {
           <Link href="/#phases">Phases</Link>
           <Link href="/#who">Who it&apos;s for</Link>
           <Link href="/#how">How it works</Link>
+          <Link href="/case-studies">Case studies</Link>
           <Link href="/#contact">Contact</Link>
           <a href="mailto:ascendmaui@gmail.com">ascendmaui@gmail.com</a>
         </nav>
