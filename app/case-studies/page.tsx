@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Icon } from "../../components/Icons";
-import { findings, severityCounts } from "../../lib/caseStudies";
+import { findings, remediation, severityCounts } from "../../lib/caseStudies";
 
 const title = "Case studies";
 const description =
@@ -174,6 +174,41 @@ export default function CaseStudiesPage() {
         </div>
       </section>
 
+      <section className="section" aria-labelledby="cs-remediation">
+        <div className="section-head">
+          <p className="eyebrow">Remediation</p>
+          <h2 id="cs-remediation">Remediation: all {remediation.length} findings fixed</h2>
+          <p className="lead">
+            Status as of 29 September 2026. All {remediation.length} findings above are fixed in the
+            application&apos;s current source, and none is pending. We re-read the current code for each
+            one and ran the application&apos;s automated test suite (1,757 tests, passing under both a UTC
+            and a US-Eastern runtime). This was a source and test check only: no requests were sent to
+            the running application, and no offensive pass was performed. Where a production check is
+            mentioned, it comes from the application&apos;s own remediation log and was not re-run.
+          </p>
+        </div>
+        <div className="cs-findings">
+          {remediation.map((r) => (
+            <article className="card cs-finding" key={r.id} id={`fix-${r.id.toLowerCase()}`}>
+              <div className="cs-finding-top">
+                <span className="cs-id">{r.id}</span>
+                <span className={`cs-sev cs-sev-${r.severity.toLowerCase()}`}>
+                  {r.severity} <span className="cs-sev-note">· proposed</span>
+                </span>
+              </div>
+              <h3>{r.title}</h3>
+              <h4>What was found</h4>
+              <p>{r.found}</p>
+              <h4>What changed</h4>
+              <p>{r.changed}</p>
+              <p className="cs-status">
+                <Icon name="check" /> <strong>Checked 29 Sep 2026:</strong> {r.checked}
+              </p>
+            </article>
+          ))}
+        </div>
+      </section>
+
       <section className="section" aria-labelledby="cs-limits">
         <div className="panel">
           <p className="eyebrow">Limits of this write-up</p>
@@ -181,7 +216,7 @@ export default function CaseStudiesPage() {
           <ul className="cs-limits">
             <li>It does not describe an active penetration test, vulnerability scan, or exploitation.</li>
             <li>
-              Findings come from a read-only code review and the application&apos;s own remediation log;
+              Findings come from a read-only code review and the application&apos;s own remediation log; the follow-up check was also limited to source and tests;
               they are not an exhaustive list of the application&apos;s weaknesses.
             </li>
             <li>
