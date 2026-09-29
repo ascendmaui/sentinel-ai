@@ -10,4 +10,4 @@ export const THEME_META: Record<ThemeName, string> = {
   "high-contrast": tokens.themes["high-contrast"].color.bg,
 };
 
-export const THEME_BOOT_SCRIPT = `(function(){var d=document.documentElement;try{var t=localStorage.getItem("${THEME_KEY}");if(t!=="dark"&&t!=="light"&&t!=="high-contrast"){var m=window.matchMedia;t=m&&m("(prefers-contrast: more)").matches?"high-contrast":m&&m("(prefers-color-scheme: light)").matches?"light":"dark"}d.setAttribute("data-theme",t)}catch(e){d.setAttribute("data-theme","dark")}})();`;
+export const THEME_BOOT_SCRIPT = `(function(){var d=document.documentElement;try{var t=localStorage.getItem("${THEME_KEY}");if(t!=="dark"&&t!=="light"&&t!=="high-contrast"){var m=window.matchMedia;t=m&&m("(prefers-contrast: more)").matches?"high-contrast":"dark"}d.setAttribute("data-theme",t)}catch(e){d.setAttribute("data-theme","dark")}})();`;

@@ -1,13 +1,26 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
   <defs>
-    <linearGradient id="g" x1="0.15" y1="0" x2="0.85" y2="1">
+    <linearGradient id="g" x1="0.2" y1="0" x2="0.8" y2="1">
       <stop offset="0" stop-color="#FFE3A3"/>
       <stop offset="0.5" stop-color="#F2B544"/>
       <stop offset="1" stop-color="#B7791F"/>
     </linearGradient>
+    <radialGradient id="c"><stop offset="0" stop-color="#FFFFFF"/><stop offset="0.5" stop-color="#FFF4D6"/><stop offset="1" stop-color="#F2B544" stop-opacity="0"/></radialGradient>
+    <g id="w" fill="url(#g)">
+      <path d="M15 11.4C11 10.6 6.2 7.6 2 2.6 8.2 3.8 12.4 6 15 9.2Z"/>
+      <path d="M15 14C10.6 13.6 5.4 11.6 0.8 8.6 7 8.6 11.8 10.2 15 12.4Z"/>
+      <path d="M15 16.6C11.4 17 7 16.4 3 14.2 8 13.4 12 14 15 15.2Z" opacity="0.92"/>
+      <path d="M15 19.4C12.6 21 9.4 22.2 6.4 22.4 9.4 19.6 12.2 18.2 15 17.8Z" opacity="0.8"/>
+    </g>
   </defs>
-  <rect width="32" height="32" rx="8" fill="#07070C"/>
-  <path d="M16 2.5 27.5 7.2V15.5c0 7.2-4.8 12.4-11.5 14.8C9.3 27.9 4.5 22.7 4.5 15.5V7.2Z" fill="url(#g)"/>
-  <ellipse cx="16" cy="15.2" rx="5.2" ry="3.4" fill="#07070C"/>
-  <circle cx="16" cy="15.2" r="1.7" fill="#7CFFCB"/>
+  <rect width="32" height="32" rx="7" fill="#07070C"/>
+  <g transform="translate(16 16.5) scale(0.86) translate(-16 -16)">
+    <use href="#w"/>
+    <use href="#w" transform="translate(32 0) scale(-1 1)"/>
+    <path d="M16 8.6c1.5 3 2.2 6.6 2.2 10.2 0 3.6-.8 6.6-2.2 9.6-1.4-3-2.2-6-2.2-9.6 0-3.6.7-7.2 2.2-10.2Z" fill="url(#g)"/>
+    <ellipse cx="16" cy="4.6" rx="3.6" ry="1.15" stroke="#FFE3A3" stroke-width="0.8"/>
+    <circle cx="16" cy="7.2" r="1.5" fill="#FFE3A3"/>
+    <circle cx="16" cy="15.4" r="3.4" fill="url(#c)"/>
+    <circle cx="16" cy="15.4" r="1.05" fill="#FFFFFF"/>
+  </g>
 </svg>

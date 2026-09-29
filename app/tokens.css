@@ -70,7 +70,7 @@
   --ao-mark-hi: #FFE3A3;
   --ao-mark-mid: #F2B544;
   --ao-mark-lo: #B7791F;
-  --ao-mark-jewel: #7CFFCB;
+  --ao-mark-jewel: #FFF4D6;
   --ao-mark-keyhole: #07070C;
   --ao-text-grad: linear-gradient(135deg, var(--ao-primary-strong) 0%, var(--ao-primary) 48%, var(--ao-primary-deep) 100%);
   --ao-primary-grad: linear-gradient(135deg, var(--ao-primary-fill-hi) 0%, var(--ao-primary-fill) 48%, var(--ao-primary-fill-lo) 100%);
@@ -123,7 +123,7 @@
   --ao-mark-hi: #F2B544;
   --ao-mark-mid: #C98A26;
   --ao-mark-lo: #8A5A0B;
-  --ao-mark-jewel: #09704F;
+  --ao-mark-jewel: #5A3A00;
   --ao-mark-keyhole: #FAF7F0;
   --ao-text-grad: linear-gradient(135deg, var(--ao-primary-strong) 0%, var(--ao-primary) 48%, var(--ao-primary-deep) 100%);
   --ao-primary-grad: linear-gradient(135deg, var(--ao-primary-fill-hi) 0%, var(--ao-primary-fill) 48%, var(--ao-primary-fill-lo) 100%);
@@ -176,13 +176,14 @@
   --ao-mark-hi: #FFE3A3;
   --ao-mark-mid: #FFD27A;
   --ao-mark-lo: #FFD27A;
-  --ao-mark-jewel: #7CFFCB;
+  --ao-mark-jewel: #FFF4D6;
   --ao-mark-keyhole: #000000;
   --ao-text-grad: linear-gradient(135deg, var(--ao-primary-strong) 0%, var(--ao-primary) 48%, var(--ao-primary-deep) 100%);
   --ao-primary-grad: linear-gradient(135deg, var(--ao-primary-fill-hi) 0%, var(--ao-primary-fill) 48%, var(--ao-primary-fill-lo) 100%);
 }
 
-@media (prefers-color-scheme: light) {
+/* Seraphim AI is dark-first: the no-JS light fallback is disabled; light theme remains available via the switcher. */
+@media (prefers-color-scheme: light) and (min-width: 99999px) {
   :root:not([data-theme]) {
     color-scheme: light;
     --ao-bg: #FAF7F0;
@@ -230,7 +231,7 @@
     --ao-mark-hi: #F2B544;
     --ao-mark-mid: #C98A26;
     --ao-mark-lo: #8A5A0B;
-    --ao-mark-jewel: #09704F;
+    --ao-mark-jewel: #5A3A00;
     --ao-mark-keyhole: #FAF7F0;
     --ao-text-grad: linear-gradient(135deg, var(--ao-primary-strong) 0%, var(--ao-primary) 48%, var(--ao-primary-deep) 100%);
     --ao-primary-grad: linear-gradient(135deg, var(--ao-primary-fill-hi) 0%, var(--ao-primary-fill) 48%, var(--ao-primary-fill-lo) 100%);
@@ -285,7 +286,7 @@
     --ao-mark-hi: #FFE3A3;
     --ao-mark-mid: #FFD27A;
     --ao-mark-lo: #FFD27A;
-    --ao-mark-jewel: #7CFFCB;
+    --ao-mark-jewel: #FFF4D6;
     --ao-mark-keyhole: #000000;
     --ao-text-grad: linear-gradient(135deg, var(--ao-primary-strong) 0%, var(--ao-primary) 48%, var(--ao-primary-deep) 100%);
     --ao-primary-grad: linear-gradient(135deg, var(--ao-primary-fill-hi) 0%, var(--ao-primary-fill) 48%, var(--ao-primary-fill-lo) 100%);

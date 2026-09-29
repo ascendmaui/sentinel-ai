@@ -1,5 +1,9 @@
 import { HeroStage } from "../components/HeroStage";
+import Link from "next/link";
 import { Icon, type IconName } from "../components/Icons";
+import { TrustBadges } from "../components/TrustBadges";
+import { TierStrip } from "../components/TierStrip";
+import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME } from "../lib/brand";
 
 const phases: { icon: IconName; n: string; title: string; body: string }[] = [
   {
@@ -67,23 +71,24 @@ export default function HomePage() {
             <span className="pulse" aria-hidden="true" /> Scoped security assessments
           </p>
           <h1>
-            Find what breaks.
+            Know your exposure.
             <br />
-            <span className="gold-text">Fix it on purpose.</span>
+            <span className="gold-text">Close it on purpose.</span>
           </h1>
           <p className="lead">
-            Sentinel AI helps teams run scoped security work in three clear phases: passive recon, a
-            Scoped Assessment, and remediation with retest, so you learn where the real risk is and how to
-            close it.
+            {BRAND_NAME} helps teams that ship AI agents run scoped security work in three clear phases:
+            passive recon, a Scoped Assessment with written client authorization, and remediation with
+            retest, so you learn where the real risk is and how to close it.
           </p>
           <div className="row">
-            <a className="btn btn-gold" href="mailto:ascendmaui@gmail.com?subject=Sentinel%20AI%20inquiry">
+            <a className="btn btn-gold" href={`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}%20inquiry`}>
               <Icon name="mail" /> Contact us
             </a>
             <a className="btn btn-glass" href="#phases">
               See the phases
             </a>
           </div>
+          <TrustBadges compact />
           <p className="fine">Always scoped · Built by Ascend Maui</p>
         </div>
         <HeroStage />
@@ -131,6 +136,61 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section className="section" id="tiers">
+        <div className="section-head">
+          <p className="eyebrow">Ways to work together</p>
+          <h2>Four tiers, from a light first look to a full engagement.</h2>
+          <p className="lead">
+            Same method at every size. No prices listed: each engagement is scoped in writing.{" "}
+            <Link href="/pricing#compare" style={{ color: "var(--ao-primary)" }}>
+              Compare the tiers
+            </Link>
+            .
+          </p>
+        </div>
+        <TierStrip />
+      </section>
+
+      <section className="section" id="incidents">
+        <div className="panel steps-teaser">
+          <div>
+            <p className="eyebrow">Why this matters now</p>
+            <h2>AI agents have already crossed lines nobody intended.</h2>
+            <p className="lead">
+              In July 2026, OpenAI models running a cyber evaluation escaped their sandbox and compromised parts of
+              Hugging Face, per OpenAI and Hugging Face&apos;s own reports. We read the primary sources so you do not
+              have to.
+            </p>
+            <Link className="btn btn-gold" href="/incident-case-studies">
+              Read the Incident Case Studies →
+            </Link>
+          </div>
+          <ol className="mini-steps">
+            <li>
+              <span className="step-num">01</span>
+              <div>
+                <strong>Sourced, not sensational</strong>
+                <p>Every incident separates what is documented from what is our analysis.</p>
+              </div>
+            </li>
+            <li>
+              <span className="step-num">02</span>
+              <div>
+                <strong>Hypothetical scenarios</strong>
+                <p>Conceptual walk-throughs of weak spots in older systems and over-permissioned agents.</p>
+              </div>
+            </li>
+            <li>
+              <span className="step-num">03</span>
+              <div>
+                <strong>What a Scoped Assessment would flag</strong>
+                <p>Honest about what we do: passive recon, assessment, remediation and retest.</p>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </section>
+
       <section className="section" id="how">
         <div className="panel steps-teaser">
           <div>
@@ -157,17 +217,17 @@ export default function HomePage() {
       <section className="section" id="contact">
         <div className="cta-band">
           <div>
-            <h2>Ready to put a sentry on the gate?</h2>
+            <h2>Ready to see what an attacker would see first?</h2>
             <p className="lead">
               Tell us what you need assessed. We&apos;ll reply with scope questions and next steps, with no cold
               scanner spam.
             </p>
           </div>
           <div className="row">
-            <a className="btn btn-gold" href="mailto:ascendmaui@gmail.com?subject=Sentinel%20AI%20inquiry">
-              <Icon name="mail" /> ascendmaui@gmail.com
+            <a className="btn btn-gold" href={`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}%20inquiry`}>
+              <Icon name="mail" /> {BRAND_EMAIL}
             </a>
-            <a className="btn btn-glass" href="mailto:ascendmaui@gmail.com?subject=Sentinel%20AI%20scope%20request">
+            <a className="btn btn-glass" href={`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}%20scope%20request`}>
               Request a scoped assessment
             </a>
           </div>
