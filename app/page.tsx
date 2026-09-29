@@ -5,20 +5,20 @@ const phases: { icon: IconName; n: string; title: string; body: string }[] = [
   {
     icon: "scan",
     n: "01",
-    title: "Reconnaissance",
-    body: "Map the attack surface you authorize — hosts, apps, identities, and exposures — so the next pass aims at real targets, not noise.",
+    title: "Recon",
+    body: "Passive review of public information: the hosts, apps, and exposures that can be seen from outside, so the next phase is aimed at what matters, not noise.",
   },
   {
     icon: "target",
     n: "02",
-    title: "Authorized offensive pass",
-    body: "With written scope and rules of engagement, pressure the system the way an adversary would: prove what is exploitable, document how, stop at your boundaries.",
+    title: "Scoped Assessment",
+    body: "Scenario design with private local models, carried out within an agreed scope. Findings are documented and the work stops at the boundaries you set.",
   },
   {
     icon: "fix",
     n: "03",
-    title: "Remediation",
-    body: "Turn findings into ranked fixes, clear owners, and verification steps so engineering can close gaps without guesswork.",
+    title: "Remediation and Retest",
+    body: "Turn findings into ranked fixes, clear owners, and verification steps, then retest so engineering can confirm the gaps are closed.",
   },
 ];
 
@@ -26,12 +26,12 @@ const audiences: { icon: IconName; title: string; body: string }[] = [
   {
     icon: "shield",
     title: "Security and AppSec teams",
-    body: "Need evidence of risk under authorization, not another unchecked scanner dump.",
+    body: "Need clear evidence of risk within an agreed scope, not another unchecked scanner dump.",
   },
   {
     icon: "users",
     title: "Founders and product leads",
-    body: "Shipping fast and want a sober read on what an attacker could actually do before launch or fundraising diligence.",
+    body: "Shipping fast and want a sober read on real risk before launch or fundraising diligence.",
   },
   {
     icon: "list",
@@ -44,12 +44,12 @@ const steps = [
   {
     n: "01",
     t: "Define scope",
-    d: "Agree on systems, accounts, windows, and hard stop conditions. Nothing starts without written authorization.",
+    d: "Agree on systems, accounts, windows, and hard stop conditions. Nothing starts without a written scope.",
   },
   {
     n: "02",
     t: "Run the three phases",
-    d: "Recon, authorized offensive pass, then remediation — reported as you go so surprises stay visible.",
+    d: "Recon, Scoped Assessment, then Remediation and Retest, reported as you go so surprises stay visible.",
   },
   {
     n: "03",
@@ -64,7 +64,7 @@ export default function HomePage() {
       <section className="hero">
         <div className="hero-copy">
           <p className="eyebrow">
-            <span className="pulse" aria-hidden="true" /> Authorized security assessments
+            <span className="pulse" aria-hidden="true" /> Scoped security assessments
           </p>
           <h1>
             Find what breaks.
@@ -72,8 +72,8 @@ export default function HomePage() {
             <span className="gold-text">Fix it on purpose.</span>
           </h1>
           <p className="lead">
-            Sentinel AI helps teams run scoped security work in three clear phases — reconnaissance, an
-            authorized offensive pass, and remediation — so you learn what an adversary could do and how to
+            Sentinel AI helps teams run scoped security work in three clear phases: passive recon, a
+            Scoped Assessment, and remediation with retest, so you learn where the real risk is and how to
             close it.
           </p>
           <div className="row">
@@ -84,7 +84,7 @@ export default function HomePage() {
               See the phases
             </a>
           </div>
-          <p className="fine">Always scoped · Always authorized · Built by Ascend Maui</p>
+          <p className="fine">Always scoped · Built by Ascend Maui</p>
         </div>
         <HeroStage />
       </section>
@@ -94,7 +94,7 @@ export default function HomePage() {
           <p className="eyebrow">What it does</p>
           <h2>Three phases. One clear outcome.</h2>
           <p className="lead">
-            A disciplined path from surface map to proven risk to fix list — under your rules of engagement.
+            A disciplined path from public surface map to scoped findings to a verified fix list.
           </p>
         </div>
         <div className="card-grid">
@@ -116,7 +116,7 @@ export default function HomePage() {
       <section className="section" id="who">
         <div className="section-head">
           <p className="eyebrow">Who it&apos;s for</p>
-          <h2>Teams that need truth under authorization.</h2>
+          <h2>Teams that need clear answers within a defined scope.</h2>
         </div>
         <div className="card-grid">
           {audiences.map((a) => (
@@ -159,7 +159,7 @@ export default function HomePage() {
           <div>
             <h2>Ready to put a sentry on the gate?</h2>
             <p className="lead">
-              Tell us what you need assessed. We&apos;ll reply with scope questions and next steps — no cold
+              Tell us what you need assessed. We&apos;ll reply with scope questions and next steps, with no cold
               scanner spam.
             </p>
           </div>
@@ -168,7 +168,7 @@ export default function HomePage() {
               <Icon name="mail" /> ascendmaui@gmail.com
             </a>
             <a className="btn btn-glass" href="mailto:ascendmaui@gmail.com?subject=Sentinel%20AI%20scope%20request">
-              Request a scoped pass
+              Request a scoped assessment
             </a>
           </div>
         </div>

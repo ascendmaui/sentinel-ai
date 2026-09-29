@@ -4,7 +4,7 @@ import { findings, remediation, severityCounts } from "../../lib/caseStudies";
 
 const title = "Case studies";
 const description =
-  "Self-engagement: airport ride platform. How Sentinel AI assessed an application owned by the same principal — findings, proposed severities, and documented before/after fixes.";
+  "Self-engagement: airport ride platform. How Sentinel AI assessed an application owned by the same principal: findings, proposed severities, and documented before/after fixes.";
 
 export const metadata: Metadata = {
   title,
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "article",
     siteName: "Sentinel AI",
-    title: "Case study — Self-engagement: airport ride platform",
+    title: "Case study 01: Self-engagement, airport ride platform",
     description,
     url: "/case-studies",
   },
@@ -22,19 +22,19 @@ export const metadata: Metadata = {
 const phases = [
   {
     n: "01",
-    title: "Reconnaissance",
+    title: "Recon",
     state: "Performed (observational)",
     body: "An observational inventory of the application: what it does, its tech stack, whether it handles user data and payments, and a sketch of its surface (accounts, public API routes, payments, an admin area). No probing was involved.",
   },
   {
     n: "02",
-    title: "Authorized offensive pass",
+    title: "Scoped Assessment",
     state: "Not performed",
     body: "No active scanning or exploitation was carried out. In its place, the assessor did a read-only review of the application's source code, which is where the code-review findings below come from.",
   },
   {
     n: "03",
-    title: "Remediation",
+    title: "Remediation and Retest",
     state: "Performed, with verification",
     body: "Fixes were written and merged. Where the remediation log records a production change or a verification check, it is stated with the finding.",
   },
@@ -51,8 +51,8 @@ const summary: { k: string; v: string }[] = [
     v: "Reconnaissance, code review, and remediation with verification. See the phase table below for what was and was not done.",
   },
   {
-    k: "Scope and authorization",
-    v: "Owner-authorized self-assessment of the owner's own application. Scope is limited to the application's own code and configuration.",
+    k: "Scope",
+    v: "Self-assessment of the owner's own application. Scope is limited to the application's own code and configuration.",
   },
   {
     k: "Report status",
@@ -70,7 +70,7 @@ export default function CaseStudiesPage() {
         </h1>
         <p className="lead">
           The first Sentinel AI case study: an assessment of an application its owner also built and
-          runs. We show what was found, how we rate it, what changed, and — just as important — what was
+          runs. We show what was found, how we rate it, what changed, and, just as important, what was
           not done.
         </p>
         <p className="fine">
@@ -183,7 +183,7 @@ export default function CaseStudiesPage() {
             application&apos;s current source, and none is pending. We re-read the current code for each
             one and ran the application&apos;s automated test suite (1,757 tests, passing under both a UTC
             and a US-Eastern runtime). This was a source and test check only: no requests were sent to
-            the running application, and no offensive pass was performed. Where a production check is
+            the running application, and no active assessment was performed. Where a production check is
             mentioned, it comes from the application&apos;s own remediation log and was not re-run.
           </p>
         </div>
@@ -240,7 +240,7 @@ export default function CaseStudiesPage() {
               <Icon name="mail" /> ascendmaui@gmail.com
             </a>
             <a className="btn btn-glass" href="mailto:ascendmaui@gmail.com?subject=Sentinel%20AI%20scope%20request">
-              Request a scoped pass
+              Request a scoped assessment
             </a>
           </div>
         </div>

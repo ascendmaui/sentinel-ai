@@ -24,12 +24,12 @@ const mono = JetBrains_Mono({
 });
 
 const description =
-  "Sentinel AI runs authorized security assessments in three phases: reconnaissance, an authorized offensive pass, and remediation guidance — so teams find and fix what matters.";
+  "Sentinel AI runs scoped security assessments in three phases: recon of public information, a Scoped Assessment within an agreed scope, and remediation with retest, so teams find and fix what matters.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://sentinel-ai-tawny.vercel.app"),
   title: {
-    default: "Sentinel AI — authorized security assessments",
+    default: "Sentinel AI: scoped security assessments",
     template: "%s · Sentinel AI",
   },
   description,
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "Sentinel AI",
-    title: "Sentinel AI — authorized security assessments",
+    title: "Sentinel AI: scoped security assessments",
     description,
     url: "/",
   },
