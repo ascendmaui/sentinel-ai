@@ -132,3 +132,84 @@ export const severityCounts = findings.reduce<Record<string, number>>((acc, f) =
   acc[f.severity] = (acc[f.severity] ?? 0) + 1;
   return acc;
 }, {});
+
+export type Remediation = {
+  id: string;
+  title: string;
+  severity: Severity;
+  found: string;
+  changed: string;
+  checked: string;
+};
+
+/**
+ * Remediation summary. Each "checked" line states what was confirmed on 2026-09-29 by reading the
+ * application's current main branch source (read-only) and running its own automated test suite.
+ * Nothing here was confirmed by probing the running application.
+ */
+export const remediation: Remediation[] = [
+  {
+    id: "F-01",
+    title: "Scheduled-maintenance endpoint trusted a platform header",
+    severity: "Medium",
+    found: "With no shared secret configured in production, the endpoint accepted a spoofable platform header as proof of the scheduler.",
+    changed: "Constant-time bearer comparison; the header is honored only on the hosting platform and only when no usable secret exists; overlapping sweeps are claimed atomically; generic error responses. A random secret was set in production and the scheduler wired to present it.",
+    checked: "Code and unit tests confirmed on current main. The production 401 checks are from the application's remediation log, not re-run.",
+  },
+  {
+    id: "F-02",
+    title: "Pickup date and time interpreted in the server's timezone",
+    severity: "High",
+    found: "Timezone-naive pickup times were parsed in the server zone, shifting surge windows by hours.",
+    changed: "Date and time are read as the product's local wall clock and converted to a single instant; daylight-saving edge cases have an explicit policy. Fare formulas unchanged.",
+    checked: "Code confirmed on current main; tests pass under both a UTC and a US-Eastern runtime.",
+  },
+  {
+    id: "F-03",
+    title: "Scheduled trips always recorded a single passenger",
+    severity: "Medium",
+    found: "The scheduling path stored one passenger regardless of party size.",
+    changed: "The requested party size is validated (default 1) and stored on the trip. A hard seat cap was not added and remains a product decision.",
+    checked: "Code and tests confirmed on current main.",
+  },
+  {
+    id: "F-04",
+    title: "Failed audit-log writes were silently ignored",
+    severity: "Low",
+    found: "Trip event inserts were fire-and-forget, so a failed write left no log line or error.",
+    changed: "Server-side event writes go through one helper that logs and returns the error; scheduling and settlement return a distinct error code. Two client-side write sites (driver accept, driver desk) also log and surface failures.",
+    checked: "Code and tests confirmed on current main.",
+  },
+  {
+    id: "F-05",
+    title: "Student-discount eligibility disagreed between quote and display",
+    severity: "Low",
+    found: "A blank rider tier got the discount in one path and not in the other.",
+    changed: "Both paths apply the same rule: only an omitted or standard tier qualifies.",
+    checked: "Code and tests confirmed on current main.",
+  },
+  {
+    id: "F-06",
+    title: "Referral payout ledger could record the same trip twice",
+    severity: "Medium",
+    found: "Settlement inserted a ledger row on every run with no uniqueness rule.",
+    changed: "A unique index on trip and referral code, and an insert-if-absent write that reports \"already recorded\".",
+    checked: "Migration, settlement code, and tests confirmed on current main. The absence of pre-existing duplicates in production is from the remediation log, not re-run.",
+  },
+  {
+    id: "F-07",
+    title: "Charge idempotency key included the amount",
+    severity: "Medium",
+    found: "A fare that moved during card authentication produced a new key and a second payment intent.",
+    changed: "Keys are built from stable identifiers plus a generation marker that changes only after a successful charge; the existing payment intent is retrieved and reused.",
+    checked: "Key-building code and tests confirmed on current main. Behavior against the live payment processor was not exercised.",
+  },
+  {
+    id: "F-08",
+    title: "Two row-level security policies referenced each other",
+    severity: "Low",
+    found: "A circular policy dependency between the profile and trip tables broke sign-in queries.",
+    changed: "The cross-table check moved into a narrowly scoped privileged helper function.",
+    checked: "Migration present on current main. That it is applied to the live database is from the remediation log, not re-checked.",
+  },
+];
