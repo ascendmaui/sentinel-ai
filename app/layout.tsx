@@ -27,7 +27,7 @@ const description =
   "Sentinel AI runs authorized security assessments in three phases: reconnaissance, an authorized offensive pass, and remediation guidance — so teams find and fix what matters.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://sentinel-ai.vercel.app"),
+  metadataBase: new URL("https://sentinel-ai-tawny.vercel.app"),
   title: {
     default: "Sentinel AI — authorized security assessments",
     template: "%s · Sentinel AI",
