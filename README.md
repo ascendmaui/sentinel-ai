@@ -1,6 +1,6 @@
 # Sentinel AI
 
-Marketing site for **Sentinel AI** — authorized security assessments in three phases (recon → authorized offensive pass → remediation).
+Marketing site for **Sentinel AI**: scoped security assessments in three phases (Recon → Scoped Assessment → Remediation and Retest).
 
 ## Stack
 
