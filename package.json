@@ -1,5 +1,5 @@
 {
-  "name": "sentinel-ai-site",
+  "name": "seraphim-ai-site",
   "private": true,
   "scripts": {
     "dev": "next dev",

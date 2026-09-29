@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { TierCta } from "../../components/TierCta";
 import { Icon } from "../../components/Icons";
+import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME } from "../../lib/brand";
 import { findings, remediation, severityCounts } from "../../lib/caseStudies";
 
 const title = "Case studies";
 const description =
-  "Self-engagement: airport ride platform. How Sentinel AI assessed an application owned by the same principal: findings, proposed severities, and documented before/after fixes.";
+  `Self-engagement: airport ride platform. How ${BRAND_NAME} assessed an application owned by the same principal: findings, proposed severities, and documented before/after fixes.`;
 
 export const metadata: Metadata = {
   title,
@@ -12,7 +14,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/case-studies" },
   openGraph: {
     type: "article",
-    siteName: "Sentinel AI",
+    siteName: BRAND_NAME,
     title: "Case study 01: Self-engagement, airport ride platform",
     description,
     url: "/case-studies",
@@ -41,7 +43,7 @@ const phases = [
 ];
 
 const summary: { k: string; v: string }[] = [
-  { k: "Assessor", v: "Sentinel AI, an Ascend Maui initiative" },
+  { k: "Assessor", v: `${BRAND_NAME}, an Ascend Maui initiative` },
   {
     k: "Target",
     v: "A regional airport ride-booking platform (rider and driver apps, web API, card payments), owned and operated by the same principal. This is a self-engagement.",
@@ -69,7 +71,7 @@ export default function CaseStudiesPage() {
           Self-engagement: <span className="gold-text">airport ride platform</span>
         </h1>
         <p className="lead">
-          The first Sentinel AI case study: an assessment of an application its owner also built and
+          The first {BRAND_NAME} case study: an assessment of an application its owner also built and
           runs. We show what was found, how we rate it, what changed, and, just as important, what was
           not done.
         </p>
@@ -99,7 +101,7 @@ export default function CaseStudiesPage() {
           <p className="eyebrow">Method, honestly</p>
           <h2 id="cs-phases">The three phases: what actually happened</h2>
           <p className="lead">
-            Sentinel AI&apos;s method has three phases. For this engagement they were not all performed
+            {BRAND_NAME}&apos;s method has three phases. For this engagement they were not all performed
             in full, and we say so.
           </p>
         </div>
@@ -227,6 +229,10 @@ export default function CaseStudiesPage() {
         </div>
       </section>
 
+      <section className="section" aria-labelledby="cs-next">
+        <TierCta tier="thrones" lead="A Scoped Assessment of one defined system, followed by remediation guidance and a retest, is the same shape as the case study above." />
+      </section>
+
       <section className="section" id="contact">
         <div className="cta-band">
           <div>
@@ -236,10 +242,10 @@ export default function CaseStudiesPage() {
             </p>
           </div>
           <div className="row">
-            <a className="btn btn-gold" href="mailto:ascendmaui@gmail.com?subject=Sentinel%20AI%20inquiry">
-              <Icon name="mail" /> ascendmaui@gmail.com
+            <a className="btn btn-gold" href={`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}%20inquiry`}>
+              <Icon name="mail" /> {BRAND_EMAIL}
             </a>
-            <a className="btn btn-glass" href="mailto:ascendmaui@gmail.com?subject=Sentinel%20AI%20scope%20request">
+            <a className="btn btn-glass" href={`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}%20scope%20request`}>
               Request a scoped assessment
             </a>
           </div>
