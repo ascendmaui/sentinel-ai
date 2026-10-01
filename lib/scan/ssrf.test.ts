@@ -70,6 +70,16 @@ describe("parsePublicUrl", () => {
       "file:///etc/passwd",
       "http://10.0.0.5/admin",
       "http://2130706433",
+      "http://service.invalid",
+      "http://staging.test",
+      "http://hidden.onion",
+      "http://router.home.arpa",
+      "http://cluster.lan",
+      "http://portal.corp",
+      "http://storage.local",
+      "http://api.internal",
+      "http://test",
+      "http://invalid",
     ]) {
       const parsed = parsePublicUrl(input);
       assert.equal(parsed.ok, false, input);

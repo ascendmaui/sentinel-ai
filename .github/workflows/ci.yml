@@ -38,6 +38,9 @@ jobs:
       - name: Install dependencies (clean install)
         run: npm ci
 
+      - name: Run TypeScript type check
+        run: npm run typecheck
+
       - name: Run smoke tests
         run: npm run test:smoke
 

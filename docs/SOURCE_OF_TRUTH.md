@@ -64,7 +64,7 @@ A passive scan product beside the human tiers. The human tiers stay. The scan do
 - Node built-ins for DNS, HTTP, and TLS. No paid recon APIs.
 - Deploy target remains Vercel. Pull requests get preview deployments; production deploys from `main` only. `.vercelignore` excludes markdown, so these docs are not the deployed site.
 - Package name in `package.json` is still `seraphim-ai-site`.
-- Hardened CI workflow in `.github/workflows/ci.yml` running smoke tests (`npm run test:smoke`), unit tests (`npm test`), and production build checks (`npm run build`).
+- Hardened CI workflow in `.github/workflows/ci.yml` running static type checks (`npm run typecheck`), smoke tests (`npm run test:smoke`), unit tests (`npm test`), and production build checks (`npm run build`).
 
 ## File map
 
@@ -149,6 +149,8 @@ Residual risk John should know: the checkbox does not prove ownership. A visitor
 
 ```bash
 npm install
+npm run typecheck
+npm run test:smoke
 npm test
 npm run dev
 ```

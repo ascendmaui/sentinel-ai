@@ -16,8 +16,9 @@ import {
 const tokens = JSON.parse(readFileSync(new URL("../tokens.json", import.meta.url), "utf8"));
 import { scanTiers, SCAN_TIER_ORDER, tierAtLeast, type ScanTierId } from "../scanTiers";
 import { tiers, type TierId } from "../tiers";
-import { isBlockedIp, parsePublicUrl } from "./ssrf";
-import { parseScanRequest } from "./request";
+import { isBlockedIp, isBlockedHostname, parsePublicUrl } from "./ssrf";
+import { cleanCompanyName, parseScanRequest } from "./request";
+import { findSecretHits, headerScore, summarizeSetCookie } from "./parse";
 import { newReportToken, verifyReportToken, saveReport, getReport } from "./store";
 import { allowScan, clientKey } from "./limit";
 import type { Report } from "./types";
@@ -143,6 +144,88 @@ describe("Smoke: SSRF boundary defense", () => {
     assert.equal(parsePublicUrl("ftp://example.com").ok, false);
     assert.equal(parsePublicUrl("javascript:alert(1)").ok, false);
   });
+
+  it("rejects special-use domain names and cloud metadata hosts", () => {
+    const specialHosts = [
+      "localhost",
+      "test.localhost",
+      "staging.local",
+      "cluster.internal",
+      "server.localdomain",
+      "site.invalid",
+      "demo.test",
+      "hidden.onion",
+      "router.home.arpa",
+      "mesh.lan",
+      "corp.home",
+      "metadata.google.internal",
+      "metadata.goog",
+    ];
+    for (const host of specialHosts) {
+      assert.equal(isBlockedHostname(host), true, `Expected ${host} to be blocked`);
+      assert.equal(parsePublicUrl(`https://${host}`).ok, false, `Expected URL for ${host} to be rejected`);
+    }
+  });
+});
+
+describe("Smoke: Evidence redaction, sanitization, and security scoring", () => {
+  it("redacts secret-shaped API keys in evidence strings", () => {
+    const htmlWithKey = `<html><body>Welcome to app <script>const key = 'AKIAIOSFODNN7EXAMPLE';</script></body></html>`;
+    const hits = findSecretHits(htmlWithKey);
+    assert.equal(hits.length, 1);
+    assert.equal(hits[0].kind, "aws-access-key");
+    assert.match(hits[0].redacted, /\[redacted\]/);
+    assert.doesNotMatch(hits[0].redacted, /AKIAIOSFODNN7EXAMPLE/);
+  });
+
+  it("summarizes cookies without revealing session values", () => {
+    const rawCookies = [
+      "session_id=super_secret_token_12345; Path=/; Secure; HttpOnly; SameSite=Strict",
+      "tracking=public_user_99; Path=/",
+    ];
+    const facts = summarizeSetCookie(rawCookies);
+    assert.equal(facts.length, 2);
+    assert.equal(facts[0].name, "session_id");
+    assert.equal(facts[0].secure, true);
+    assert.equal(facts[0].httpOnly, true);
+    assert.equal(facts[0].sameSite, "strict");
+    // Verify no secret value is preserved in fact structure
+    assert.equal(JSON.stringify(facts).includes("super_secret_token_12345"), false);
+  });
+
+  it("sanitizes user-provided company names", () => {
+    assert.equal(cleanCompanyName(null), null);
+    assert.equal(cleanCompanyName(""), null);
+    assert.equal(cleanCompanyName("   "), null);
+    assert.equal(cleanCompanyName("Acme Corp\u0000\u001F"), "Acme Corp");
+    const longName = "A".repeat(150);
+    const cleanedLong = cleanCompanyName(longName);
+    assert.ok(cleanedLong);
+    assert.equal(cleanedLong.length, 120);
+  });
+
+  it("computes header scores within 0 to 100 boundary", () => {
+    const emptyScore = headerScore({});
+    assert.equal(emptyScore, 0);
+
+    const fullHeaders = {
+      "content-security-policy": "default-src 'self'",
+      "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+      "x-content-type-options": "nosniff",
+      "x-frame-options": "DENY",
+      "referrer-policy": "strict-origin-when-cross-origin",
+      "permissions-policy": "camera=()",
+    };
+    const perfectScore = headerScore(fullHeaders);
+    assert.equal(perfectScore, 100);
+
+    const partialHeaders = {
+      "strict-transport-security": "max-age=31536000",
+      "x-content-type-options": "nosniff",
+    };
+    const partialScore = headerScore(partialHeaders);
+    assert.ok(partialScore > 0 && partialScore < 100);
+  });
 });
 
 describe("Smoke: In-memory store and cryptographic tokens", () => {
@@ -164,18 +247,39 @@ describe("Smoke: In-memory store and cryptographic tokens", () => {
     const mockReport: Report = {
       id: token,
       createdAt: new Date().toISOString(),
-      tier: "basic",
-      companyName: "Acme Corp",
-      targetUrl: "https://example.com/",
-      summary: {
-        score: 85,
-        risk: "Low",
-        headline: "Clean passive public perimeter",
+      engine: {
+        mode: "passive-v1",
+        note: "Seraphim Scan AI passive scan.",
       },
+      tier: "basic",
+      tierName: "Basic",
+      className: "Angels",
+      companyName: "Acme Corp",
+      target: {
+        input: "https://example.com/",
+        finalUrl: "https://example.com/",
+        host: "example.com",
+      },
+      authorization: {
+        affirmed: true,
+        affirmedAt: new Date().toISOString(),
+        statement: "I affirm I am authorized",
+      },
+      counts: {
+        critical: 0,
+        high: 0,
+        medium: 0,
+        low: 0,
+        info: 0,
+        pending: 0,
+        requiresEngagement: 0,
+        pass: 0,
+      },
+      headerScore: null,
       sections: [],
-      rawObservation: {} as unknown as Report["rawObservation"],
-      statement: "I affirm I am authorized",
-      affirmedAt: new Date().toISOString(),
+      remediationPlan: null,
+      retestChecklist: null,
+      limitations: [],
     };
 
     saveReport(mockReport);
@@ -261,6 +365,30 @@ describe("Smoke: Scan API Route Handlers", () => {
     assert.equal(data.error, "The request is too large.");
   });
 
+  it("POST /api/scan rejects invalid scan tier", async () => {
+    const req = new Request("http://localhost/api/scan", {
+      method: "POST",
+      body: JSON.stringify({ targetUrl: "https://example.com", tier: "uber-mega-tier", authorization: true }),
+      headers: { "content-type": "application/json" },
+    });
+    const res = await POST(req);
+    assert.equal(res.status, 400);
+    const data = await res.json();
+    assert.equal(data.error, "Choose a scan tier.");
+  });
+
+  it("POST /api/scan rejects non-string target URL", async () => {
+    const req = new Request("http://localhost/api/scan", {
+      method: "POST",
+      body: JSON.stringify({ targetUrl: 12345, tier: "basic", authorization: true }),
+      headers: { "content-type": "application/json" },
+    });
+    const res = await POST(req);
+    assert.equal(res.status, 400);
+    const data = await res.json();
+    assert.equal(data.error, "Enter a website URL.");
+  });
+
   it("GET /api/scan/[id] returns 404 for invalid or unknown token", async () => {
     // Malformed token
     const res1 = await GET(new Request("http://localhost/api/scan/invalid"), {
@@ -281,18 +409,39 @@ describe("Smoke: Scan API Route Handlers", () => {
     const mockReport: Report = {
       id: token,
       createdAt: new Date().toISOString(),
-      tier: "standard",
-      companyName: "Test Co",
-      targetUrl: "https://example.com/",
-      summary: {
-        score: 92,
-        risk: "Low",
-        headline: "Good posture",
+      engine: {
+        mode: "passive-v1",
+        note: "Seraphim Scan AI passive scan.",
       },
+      tier: "standard",
+      tierName: "Standard",
+      className: "Thrones",
+      companyName: "Test Co",
+      target: {
+        input: "https://example.com/",
+        finalUrl: "https://example.com/",
+        host: "example.com",
+      },
+      authorization: {
+        affirmed: true,
+        affirmedAt: new Date().toISOString(),
+        statement: "I affirm I am authorized",
+      },
+      counts: {
+        critical: 0,
+        high: 0,
+        medium: 0,
+        low: 0,
+        info: 0,
+        pending: 0,
+        requiresEngagement: 0,
+        pass: 0,
+      },
+      headerScore: 92,
       sections: [],
-      rawObservation: {} as unknown as Report["rawObservation"],
-      statement: "I affirm I am authorized",
-      affirmedAt: new Date().toISOString(),
+      remediationPlan: null,
+      retestChecklist: null,
+      limitations: [],
     };
     saveReport(mockReport);
 

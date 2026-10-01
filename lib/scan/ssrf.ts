@@ -22,6 +22,13 @@ const BLOCKED_HOSTS = new Set([
   "metadata",
   "metadata.google.internal",
   "metadata.goog",
+  "invalid",
+  "test",
+  "local",
+  "internal",
+  "lan",
+  "corp",
+  "home",
 ]);
 
 function ipv4ToInt(ip: string): number | null {
@@ -155,7 +162,19 @@ export function bareHostname(hostname: string): string {
 export function isBlockedHostname(hostname: string): boolean {
   const host = bareHostname(hostname);
   if (!host || BLOCKED_HOSTS.has(host)) return true;
-  if (host.endsWith(".localhost") || host.endsWith(".local") || host.endsWith(".internal") || host.endsWith(".localdomain")) {
+  if (
+    host.endsWith(".localhost") ||
+    host.endsWith(".local") ||
+    host.endsWith(".internal") ||
+    host.endsWith(".localdomain") ||
+    host.endsWith(".invalid") ||
+    host.endsWith(".test") ||
+    host.endsWith(".onion") ||
+    host.endsWith(".home.arpa") ||
+    host.endsWith(".lan") ||
+    host.endsWith(".corp") ||
+    host.endsWith(".home")
+  ) {
     return true;
   }
   if (host.endsWith(".metadata.google.internal") || host === "metadata.google.internal") return true;
