@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Seraphim AI site styles (design system shared with Agent Overlord). Every color comes from tokens.css, which is
+   Seraphim Scan AI site styles (design system shared with Agent Overlord). Every color comes from tokens.css, which is
    generated from brand/tokens.json (node brand/build-tokens.mjs).
    Themes: [data-theme="dark"] (default), "light", "high-contrast".
    The app illustrations (.mock-*) intentionally stay dark in every theme:

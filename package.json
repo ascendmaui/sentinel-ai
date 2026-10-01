@@ -5,7 +5,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --experimental-strip-types --import ./scripts/test-register.mjs --test lib/scan/*.test.ts"
+    "test": "node --experimental-strip-types --import ./scripts/test-register.mjs --test lib/scan/*.test.ts",
+    "test:smoke": "node --experimental-strip-types --import ./scripts/test-register.mjs --test lib/scan/smoke.test.ts"
   },
   "dependencies": {
     "next": "^15.1.0",

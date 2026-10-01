@@ -1,42 +1,60 @@
 # Seraphim Scan AI (site)
 
+[![CI](https://github.com/ascendmaui/sentinel-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/ascendmaui/sentinel-ai/actions/workflows/ci.yml)
+
 **Source of truth:** [docs/SOURCE_OF_TRUTH.md](docs/SOURCE_OF_TRUTH.md). Pipeline sketch: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-Marketing and scan site for **Seraphim Scan AI** (formerly Seraphim AI in the UI). The GitHub repo and the Vercel project are still `sentinel-ai`. Intended domain `seraphimscanai.com` is not confirmed here.
+Marketing and scan site for **Seraphim Scan AI** (formerly Seraphim AI in the UI). The GitHub repo and the Vercel project remain `sentinel-ai`. Intended domain `seraphimscanai.com` is pending confirmation.
 
-The product is a passive scan with a written report (Basic through Full), plus human Scoped Assessments (Seraphim, Cherubim, Thrones, Angels) when a person and a written scope are required.
+The product is a passive public scan with a written report (Basic through Full), plus human Scoped Assessments (Seraphim, Cherubim, Thrones, Angels) when an assessor and a written scope are required.
 
-The brand name is a single constant: `lib/brand.ts` (`BRAND_NAME`). Change it there and the whole site follows. The logo SVGs contain no text.
+The brand name is a single constant: `lib/brand.ts` (`BRAND_NAME`). Change it there and all pages, metadata, nav, footer, and wordmarks follow. Logo SVGs (`components/Logo.tsx`, `app/icon.svg`) contain no text.
 
 ## Stack
 
 - Next.js 15 App Router, React 19, TypeScript. No extra runtime dependencies.
-- Design tokens and globals adapted from Ascend Maui / Agent Overlord (`app/tokens.css`, `app/globals.css`)
+- Design tokens and globals adapted from Ascend Maui / Agent Overlord (`app/tokens.css`, `app/globals.css`, `lib/tokens.json`)
 - Dark / light / high-contrast themes (dark is the default)
 - Hero figure: `components/HeroFigure.tsx` (canvas, respects `prefers-reduced-motion`, static SVG fallback)
 - Optional faint background code layer: `components/CodeRain.tsx`, disable with `SHOW_CODE_RAIN = false` in `lib/brand.ts`
 
-## Content
+## Security Boundaries & Honesty Rules
 
-- `app/incident-case-studies/page.tsx` and `lib/incidents.ts`: sourced incident case studies and hypothetical scenarios
-- `app/blog/` and `lib/posts.ts`: blog index and posts
-- `app/pricing/page.tsx` and `lib/tiers.ts`: tier comparison and tier anchors
-- `app/case-studies/page.tsx`: self-engagement case study
+- **Strict SSRF Boundary:** Only public `http` and `https` schemes on ports `80` and `443` are permitted. All loopback, RFC 1918 private, link-local / cloud metadata (`169.254.169.254`), CGNAT (`100.64.0.0/10`), anycast 6to4 relay (`192.88.99.0/24`), multicast, documentation (`2001:db8::/32`), benchmarking, overlay, and non-global IPv6 ranges are blocked at parse time and connection lookup time (`lib/scan/ssrf.ts`).
+- **Passive Only:** Automated scans are strictly passive public checks (DNS, TLS on port 443, public headers, and basic homepage heuristics). No active probing, port scanning, prompt injection attacks, authenticated testing, or crawler swarms are ever executed. Checks that cannot be completed remain marked as `pending`.
+- **Human Scoped Assessments:** Deep technical review (tool permissions, secret sprawl, agent sandboxes, prompt injection defenses) is delivered exclusively by people through written client engagements.
+- **No Deceptive Claims:** No monitoring platform, no persistent background sensors, no unverified certifications (SOC 2, ISO), no fictitious client logos, and no invented statistics.
+- **Zero Secrets & Ephemeral Store:** In-memory store uses HMAC-SHA256 signed tokens (`id~mac`) with a 2-hour TTL and LRU pruning (`lib/scan/store.ts`). `.env.example` contains variable names only without values.
 
-## Honesty rules for copy
+## Content Map
 
-Automated scans are passive public checks only. A human Scoped Assessment is a separate written engagement. Checks that cannot be run are marked pending. Active testing is not auto-run and is not given fake results. No monitoring platform, sensors, certifications, client logos, or invented statistics.
+- `app/scan/page.tsx` and `app/report/[id]/page.tsx`: Passive scan intake and report viewer
+- `app/incident-case-studies/page.tsx` and `lib/incidents.ts`: Sourced incident case studies and hypothetical scenarios
+- `app/blog/` and `lib/posts.ts`: Technical blog index and posts
+- `app/pricing/page.tsx`, `lib/scanTiers.ts`, and `lib/tiers.ts`: Automated scan tiers and human assessment comparisons
+- `app/case-studies/page.tsx`: Self-engagement case study
 
-## Develop
+## Develop & Verify
 
 ```bash
-npm install
+# Clean install of dependencies
+npm ci
+
+# Run smoke tests (brand invariants, tiers, SSRF boundaries, store tokens, rate limiters, API routes)
+npm run test:smoke
+
+# Run complete test suite (unit + smoke tests)
 npm test
+
+# Run release build and type check
+npm run build
+
+# Start local development server
 npm run dev
 ```
 
-`npm test` covers the SSRF guard, secret redaction, and report serializer. `npm run build` is the release check.
+## CI/CD & Deploy Guardrails
 
-## Deploy
-
-Vercel project linked to this repo. Pull requests get preview deployments; production deploys only from `main`.
+- **GitHub Actions CI:** Configured in `.github/workflows/ci.yml`. Enforces clean install (`npm ci`), smoke tests (`npm run test:smoke`), full test suite (`npm test`), and production build verification (`npm run build`) on every push and pull request.
+- **Draft PR Policy:** Pull requests are created as drafts until reviewed. Do not merge directly to `main`.
+- **Deployments:** Vercel project is linked to `ascendmaui/sentinel-ai`. Pull requests generate preview deployments; production deploys only from `main` (`sentinel-ai-tawny.vercel.app`). Never promote production builds or apply infrastructure migrations without authorization.
