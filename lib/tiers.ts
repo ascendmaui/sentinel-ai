@@ -17,10 +17,10 @@ export type Tier = {
 };
 
 /**
- * The four service tiers. Every line describes work that is actually delivered by people
- * (plus private local models for scenario design). There is no monitoring platform, no
- * sensors or agents, no self-serve scanner, no SLA and no certification behind any tier.
- * No prices are published: positioning words only.
+ * Human Scoped Assessment tiers. Every line is work delivered by people (plus private
+ * local models for scenario design). These are not the automated scan products in
+ * lib/scanTiers.ts. There is no monitoring platform, no sensors installed in a client
+ * environment, no SLA, and no certification behind any tier. No prices are published.
  */
 export const tiers: Tier[] = [
   {
@@ -114,7 +114,7 @@ export const tiers: Tier[] = [
     notIncluded: [
       "Any Scoped Assessment or active testing",
       "Retest of fixes (available by moving to Thrones)",
-      "A self-serve scanner. Self-serve is not available today.",
+      "The automated passive scan. That is a separate product on the Scan page, and it does not include this conversation.",
     ],
     forWho:
       "Small teams and founders who want a sober, inexpensive first read on their public exposure before deciding what to do next.",
@@ -149,4 +149,4 @@ export const helper: { q: string; a: { label: string; tier: TierId }[] }[] = [
   },
 ];
 
-export const ENGAGEMENT_TERMS = `${BRAND_NAME} only works with written client authorization. Passive recon uses public information only. Any Scoped Assessment runs strictly inside an agreed written scope and window, and stops at the boundaries you set. Tier descriptions are summaries, not contracts: the scope, deliverables and terms of each engagement are set in writing before work starts.`;
+export const ENGAGEMENT_TERMS = `${BRAND_NAME} runs automated scans only after you affirm you are authorized, and those scans stay passive. A human Scoped Assessment still requires written client authorization. It runs inside an agreed scope and window, and stops at the boundaries you set. Tier descriptions are summaries, not contracts: the scope, deliverables and terms of each engagement are set in writing before work starts.`;

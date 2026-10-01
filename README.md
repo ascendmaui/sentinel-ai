@@ -1,6 +1,10 @@
-# Seraphim AI (site)
+# Seraphim Scan AI (site)
 
-Marketing site for **Seraphim AI**: scoped security assessments for teams shipping AI agents, in three phases (Recon, Scoped Assessment, Remediation and Retest), plus a four-tier service line (Seraphim, Cherubim, Thrones, Angels).
+**Source of truth:** [docs/SOURCE_OF_TRUTH.md](docs/SOURCE_OF_TRUTH.md). Pipeline sketch: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+Marketing and scan site for **Seraphim Scan AI** (formerly Seraphim AI in the UI). The GitHub repo and the Vercel project are still `sentinel-ai`. Intended domain `seraphimscanai.com` is not confirmed here.
+
+The product is a passive scan with a written report (Basic through Full), plus human Scoped Assessments (Seraphim, Cherubim, Thrones, Angels) when a person and a written scope are required.
 
 The brand name is a single constant: `lib/brand.ts` (`BRAND_NAME`). Change it there and the whole site follows. The logo SVGs contain no text.
 
@@ -21,14 +25,17 @@ The brand name is a single constant: `lib/brand.ts` (`BRAND_NAME`). Change it th
 
 ## Honesty rules for copy
 
-Everything on the site describes the service as it is today: passive public recon, Scoped Assessments with written client authorization, remediation guidance and retest, private local models for scenario design. No monitoring platform, sensors, certifications, client logos or invented statistics.
+Automated scans are passive public checks only. A human Scoped Assessment is a separate written engagement. Checks that cannot be run are marked pending. Active testing is not auto-run and is not given fake results. No monitoring platform, sensors, certifications, client logos, or invented statistics.
 
 ## Develop
 
 ```bash
 npm install
+npm test
 npm run dev
 ```
+
+`npm test` covers the SSRF guard, secret redaction, and report serializer. `npm run build` is the release check.
 
 ## Deploy
 

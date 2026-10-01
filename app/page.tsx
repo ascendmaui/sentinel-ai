@@ -2,27 +2,27 @@ import { HeroStage } from "../components/HeroStage";
 import Link from "next/link";
 import { Icon, type IconName } from "../components/Icons";
 import { TrustBadges } from "../components/TrustBadges";
-import { TierStrip } from "../components/TierStrip";
+import { ScanTierStrip } from "../components/ScanTierStrip";
 import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME } from "../lib/brand";
 
 const phases: { icon: IconName; n: string; title: string; body: string }[] = [
   {
     icon: "scan",
     n: "01",
-    title: "Recon",
-    body: "Passive review of public information: the hosts, apps, and exposures that can be seen from outside, so the next phase is aimed at what matters, not noise.",
+    title: "Passive scan",
+    body: "You choose a tier and affirm you are authorized. The scan reads public DNS, the certificate on port 443, response headers, and — on higher tiers — the public page. It does not log in or send prompts.",
   },
   {
-    icon: "target",
+    icon: "list",
     n: "02",
-    title: "Scoped Assessment",
-    body: "Scenario design with private local models, carried out within an agreed scope. Findings are documented and the work stops at the boundaries you set.",
+    title: "Report",
+    body: "Findings carry a severity, a short piece of evidence, and a remediation note. Anything the engine cannot check safely is marked pending. Active work is marked as a human engagement and is not invented.",
   },
   {
     icon: "fix",
     n: "03",
-    title: "Remediation and Retest",
-    body: "Turn findings into ranked fixes, clear owners, and verification steps, then retest so engineering can confirm the gaps are closed.",
+    title: "Scoped Assessment",
+    body: "When the public report is not enough, a person takes a written scope: scenario design with private local models, remediation guidance, and a retest. That work is separate from the automated scan.",
   },
 ];
 
@@ -47,18 +47,18 @@ const audiences: { icon: IconName; title: string; body: string }[] = [
 const steps = [
   {
     n: "01",
-    t: "Define scope",
-    d: "Agree on systems, accounts, windows, and hard stop conditions. Nothing starts without a written scope.",
+    t: "Affirm authorization",
+    d: "Name the site and confirm you own it or have written permission. The scan will not start without that checkbox.",
   },
   {
     n: "02",
-    t: "Run the three phases",
-    d: "Recon, Scoped Assessment, then Remediation and Retest, reported as you go so surprises stay visible.",
+    t: "Read the passive report",
+    d: "DNS, TLS, headers, and the public-page checks your tier includes. Pending means we did not guess.",
   },
   {
     n: "03",
-    t: "Verify and hand off",
-    d: "Confirm critical fixes, leave a durable record, and leave the door open for a follow-up pass when the stack changes.",
+    t: "Commission a person",
+    d: "A Scoped Assessment, remediation guidance, and retest stay written engagements. They are not auto-run.",
   },
 ];
 
@@ -68,25 +68,25 @@ export default function HomePage() {
       <section className="hero">
         <div className="hero-copy">
           <p className="eyebrow">
-            <span className="pulse" aria-hidden="true" /> Scoped security assessments
+            <span className="pulse" aria-hidden="true" /> Passive scan · written report
           </p>
           <h1>
-            Know your exposure.
+            See the public surface.
             <br />
-            <span className="gold-text">Close it on purpose.</span>
+            <span className="gold-text">Before rogue AI does.</span>
           </h1>
           <p className="lead">
-            {BRAND_NAME} helps teams that ship AI agents run scoped security work in three clear phases:
-            passive recon, a Scoped Assessment with written client authorization, and remediation with
-            retest, so you learn where the real risk is and how to close it.
+            {BRAND_NAME} scans a startup, company, or website you are authorized to check, then delivers a report.
+            Basic coverage is DNS, TLS, and headers. Higher tiers add public clues of AI-agent exposure and a remediation
+            template. Active testing stays a human Scoped Assessment.
           </p>
           <div className="row">
-            <a className="btn btn-gold" href={`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}%20inquiry`}>
-              <Icon name="mail" /> Contact us
-            </a>
-            <a className="btn btn-glass" href="#phases">
-              See the phases
-            </a>
+            <Link className="btn btn-gold" href="/scan">
+              <Icon name="scan" /> Start a scan
+            </Link>
+            <Link className="btn btn-glass" href="/pricing">
+              Compare scan tiers
+            </Link>
           </div>
           <TrustBadges compact />
           <p className="fine">Always scoped · Built by Ascend Maui</p>
@@ -97,9 +97,9 @@ export default function HomePage() {
       <section className="section" id="phases">
         <div className="section-head">
           <p className="eyebrow">What it does</p>
-          <h2>Three phases. One clear outcome.</h2>
+          <h2>Scan, report, then a person if you need one.</h2>
           <p className="lead">
-            A disciplined path from public surface map to scoped findings to a verified fix list.
+            The automated path stops at public information. The human path is still recon, a Scoped Assessment, and remediation with retest.
           </p>
         </div>
         <div className="card-grid">
@@ -138,17 +138,21 @@ export default function HomePage() {
 
       <section className="section" id="tiers">
         <div className="section-head">
-          <p className="eyebrow">Ways to work together</p>
-          <h2>Four tiers, from a light first look to a full engagement.</h2>
+          <p className="eyebrow">Scan tiers</p>
+          <h2>From a light public report to a full passive package.</h2>
           <p className="lead">
-            Same method at every size. No prices listed: each engagement is scoped in writing.{" "}
-            <Link href="/pricing#compare" style={{ color: "var(--ao-primary)" }}>
-              Compare the tiers
+            Same honesty at every size: passive checks only, and no prices until a scoping conversation.{" "}
+            <Link href="/pricing#scans" style={{ color: "var(--ao-primary)" }}>
+              Compare the scan tiers
+            </Link>
+            , or see the{" "}
+            <Link href="/pricing#engagements" style={{ color: "var(--ao-primary)" }}>
+              human Scoped Assessment tiers
             </Link>
             .
           </p>
         </div>
-        <TierStrip />
+        <ScanTierStrip />
       </section>
 
       <section className="section" id="incidents">
@@ -195,7 +199,7 @@ export default function HomePage() {
         <div className="panel steps-teaser">
           <div>
             <p className="eyebrow">How it works</p>
-            <h2>From written scope to verified fixes.</h2>
+            <h2>From an affirmed URL to a report you can hand over.</h2>
             <a className="btn btn-glass" href="#contact">
               Start a conversation →
             </a>
@@ -217,18 +221,17 @@ export default function HomePage() {
       <section className="section" id="contact">
         <div className="cta-band">
           <div>
-            <h2>Ready to see what an attacker would see first?</h2>
+            <h2>Start with the public report.</h2>
             <p className="lead">
-              Tell us what you need assessed. We&apos;ll reply with scope questions and next steps, with no cold
-              scanner spam.
+              Run a passive scan of a site you are authorized to check, or email us if you want a human Scoped Assessment.
             </p>
           </div>
           <div className="row">
-            <a className="btn btn-gold" href={`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}%20inquiry`}>
-              <Icon name="mail" /> {BRAND_EMAIL}
-            </a>
+            <Link className="btn btn-gold" href="/scan">
+              <Icon name="scan" /> Start a scan
+            </Link>
             <a className="btn btn-glass" href={`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}%20scope%20request`}>
-              Request a scoped assessment
+              <Icon name="mail" /> Request a Scoped Assessment
             </a>
           </div>
         </div>
