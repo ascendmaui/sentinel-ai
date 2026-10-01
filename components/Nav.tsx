@@ -1,12 +1,10 @@
 import Link from "next/link";
 import { Wordmark } from "./Logo";
 import { ThemeSwitcher } from "./ThemeSwitcher";
-import { BRAND_MAIL, BRAND_NAME, BRAND_EMAIL } from "../lib/brand";
+import { BRAND_NAME } from "../lib/brand";
 
 const links = [
-  { href: "/#phases", label: "Phases" },
-  { href: "/#who", label: "Who it's for" },
-  { href: "/#how", label: "How it works" },
+  { href: "/scan", label: "Scan" },
   { href: "/pricing", label: "Services" },
   { href: "/incident-case-studies", label: "Incidents" },
   { href: "/blog", label: "Blog" },
@@ -30,9 +28,9 @@ export function Nav() {
         </div>
         <div className="nav-actions">
           <ThemeSwitcher className="nav-theme" />
-          <a className="btn btn-gold btn-sm" href={`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}`}>
-            Talk to us
-          </a>
+          <Link className="btn btn-gold btn-sm" href="/scan">
+            Start a scan
+          </Link>
           <details className="nav-menu">
             <summary aria-label="Open menu">
               <span />

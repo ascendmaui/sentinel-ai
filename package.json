@@ -4,7 +4,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "node --experimental-strip-types --import ./scripts/test-register.mjs --test lib/scan/*.test.ts"
   },
   "dependencies": {
     "next": "^15.1.0",
