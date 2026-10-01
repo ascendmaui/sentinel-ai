@@ -41,6 +41,8 @@ The site on `main` is a **Next.js 15 marketing site** for human-led security wor
 | #2 | `case-study-remediation` | 2026-09-29 | Remediation section, findings F-01..F-08 as of 2026-09-29 |
 | #3 | `scoped-assessment-wording` | 2026-09-29 | Reword to Scoped Assessment phases; drop offensive wording |
 | #4 | `incident-case-studies-seraphim-ai` | 2026-09-29 | Incidents, blog, four tiers, Seraphim AI rebrand |
+| #5 | `cursor/seraphim-scan-product-6e7d` | Draft (Open) | Passive scan product and source of truth |
+| #7 | `feat/max-agy6-seraphim-0820` | Draft (Open) | Smoke tests, brand consistency, and CI/README hardening |
 
 There is no auth, database, payment, or scanner code on `main`.
 
@@ -62,6 +64,7 @@ A passive scan product beside the human tiers. The human tiers stay. The scan do
 - Node built-ins for DNS, HTTP, and TLS. No paid recon APIs.
 - Deploy target remains Vercel. Pull requests get preview deployments; production deploys from `main` only. `.vercelignore` excludes markdown, so these docs are not the deployed site.
 - Package name in `package.json` is still `seraphim-ai-site`.
+- Hardened CI workflow in `.github/workflows/ci.yml` running smoke tests (`npm run test:smoke`), unit tests (`npm test`), and production build checks (`npm run build`).
 
 ## File map
 
