@@ -58,6 +58,9 @@ export function isBlockedIpv4(ip: string): boolean {
     ["192.0.0.0", 24],
     ["192.0.2.0", 24],
     ["192.168.0.0", 16],
+    // Deprecated relay-anycast. It is special-use, not a destination a
+    // public passive scanner should ever contact.
+    ["192.88.99.0", 24],
     ["198.18.0.0", 15],
     ["198.51.100.0", 24],
     ["203.0.113.0", 24],
@@ -121,6 +124,11 @@ export function isBlockedIpv6(ip: string): boolean {
   if (g0 === 0x2001 && g1 === 0) return true;
   // 2001:db8::/32 — documentation
   if (g0 === 0x2001 && g1 === 0x0db8) return true;
+  // 2001:2::/48 — benchmarking; 2001:10::/28 and 2001:20::/28 are
+  // overlay identifier ranges. None are ordinary public destinations.
+  if (g0 === 0x2001 && g1 === 0x0002 && g2 === 0) return true;
+  if (g0 === 0x2001 && (g1 & 0xfff0) === 0x0010) return true;
+  if (g0 === 0x2001 && (g1 & 0xfff0) === 0x0020) return true;
   // Public Internet IPv6 is 2000::/3. Everything else is special-use.
   return (g0 >> 13) !== 1;
 }
