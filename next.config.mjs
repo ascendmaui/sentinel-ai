@@ -6,6 +6,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  poweredByHeader: false,
   outputFileTracingRoot: __dirname,
   async headers() {
     return [
@@ -39,6 +40,14 @@ const nextConfig = {
           {
             key: "Cross-Origin-Opener-Policy",
             value: "same-origin",
+          },
+          {
+            key: "Cross-Origin-Resource-Policy",
+            value: "same-origin",
+          },
+          {
+            key: "Origin-Agent-Cluster",
+            value: "?1",
           },
           {
             key: "X-Permitted-Cross-Domain-Policies",

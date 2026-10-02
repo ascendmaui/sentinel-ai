@@ -10,7 +10,7 @@ export type ScanRequest = {
 
 export function cleanCompanyName(value: unknown): string | null {
   if (typeof value !== "string") return null;
-  const cleaned = value.replace(/[\u0000-\u001F\u007F]/g, "").trim().slice(0, 120);
+  const cleaned = value.replace(/[\u0000-\u001F\u007F<>/]/g, "").trim().slice(0, 120);
   return cleaned.length ? cleaned : null;
 }
 

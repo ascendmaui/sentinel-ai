@@ -84,6 +84,9 @@ export function isBlockedIpv4(ip: string): boolean {
     // Deprecated relay-anycast. It is special-use, not a destination a
     // public passive scanner should ever contact.
     ["192.88.99.0", 24],
+    // AMT (RFC 7450) and AS112 (RFC 7535) special-purpose ranges
+    ["192.52.193.0", 24],
+    ["192.175.48.0", 24],
     ["198.18.0.0", 15],
     ["198.51.100.0", 24],
     ["203.0.113.0", 24],
@@ -178,6 +181,7 @@ export function bareHostname(hostname: string): string {
 export function isBlockedHostname(hostname: string): boolean {
   const host = bareHostname(hostname);
   if (!host || BLOCKED_HOSTS.has(host)) return true;
+  if (isIP(host)) return isBlockedIp(host);
   if (
     host.endsWith(".localhost") ||
     host.endsWith(".local") ||
@@ -204,7 +208,17 @@ export function isBlockedHostname(hostname: string): boolean {
     return true;
   }
   if (host.endsWith(".metadata.google.internal") || host === "metadata.google.internal") return true;
-  if (/^\d+$/.test(host) || /^0x[0-9a-f]+$/i.test(host)) return true;
+  if (/^0x[0-9a-f.]+$/i.test(host)) return true;
+  if (/^[\d.]+$/.test(host)) {
+    const parts = host.split(".");
+    if (parts.length === 1) return true;
+    if (parts.length > 1 && parts.length < 4) return true;
+    if (parts.length === 4) {
+      if (parts.some((p) => p.length > 1 && p.startsWith("0"))) return true;
+      if (parts.some((p) => Number(p) > 255)) return true;
+    }
+    if (parts.length > 4) return true;
+  }
   return false;
 }
 

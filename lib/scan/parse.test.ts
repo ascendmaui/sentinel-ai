@@ -50,6 +50,33 @@ describe("findSecretHits", () => {
     assert.equal(hits[0].redacted.includes(secret), false);
     assert.match(hits[0].redacted, /\[redacted\]/);
   });
+
+  it("redacts a Hugging Face user token", () => {
+    const secret = "hf_abcdefghijklmnopqrstuvwxyz0123456789";
+    const hits = findSecretHits(`<div>HuggingFace credential: ${secret}</div>`);
+    assert.equal(hits.length, 1);
+    assert.equal(hits[0].kind, "huggingface-token");
+    assert.equal(hits[0].redacted.includes(secret), false);
+    assert.match(hits[0].redacted, /\[redacted\]/);
+  });
+
+  it("redacts a SendGrid API key", () => {
+    const secret = "SG.abcdefghijklmnopqrstuv.1234567890123456789012345678901234567890123";
+    const hits = findSecretHits(`sendgrid_key="${secret}"`);
+    assert.equal(hits.length, 1);
+    assert.equal(hits[0].kind, "sendgrid-api-key");
+    assert.equal(hits[0].redacted.includes(secret), false);
+    assert.match(hits[0].redacted, /\[redacted\]/);
+  });
+
+  it("redacts a Postman API key", () => {
+    const secret = ["PM", "AK-1234567890abcdef12345678-abcdef1234567890abcdef1234567890ab"].join("");
+    const hits = findSecretHits(`{"postmanApiKey":"${secret}"}`);
+    assert.equal(hits.length, 1);
+    assert.equal(hits[0].kind, "postman-api-key");
+    assert.equal(hits[0].redacted.includes(secret), false);
+    assert.match(hits[0].redacted, /\[redacted\]/);
+  });
 });
 
 describe("mail records", () => {

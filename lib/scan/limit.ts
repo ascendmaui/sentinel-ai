@@ -22,6 +22,8 @@ export function allowScan(key: string, now = Date.now()): boolean {
 }
 
 export function clientKey(headers: Headers): string {
+  const cf = headers.get("cf-connecting-ip")?.trim();
+  if (cf) return cf;
   const forwarded = headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  return forwarded || headers.get("x-real-ip") || "local";
+  return forwarded || headers.get("x-real-ip")?.trim() || "local";
 }

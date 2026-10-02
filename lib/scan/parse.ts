@@ -7,8 +7,11 @@ const SECRET_RULES: { kind: string; re: RegExp }[] = [
   { kind: "anthropic-api-key", re: /\bsk-ant-[a-zA-Z0-9_-]{20,}\b/ },
   { kind: "openai-api-key", re: /\bsk-(?!ant-)(?:proj-|admin-)?[a-zA-Z0-9_-]{20,}\b/ },
   { kind: "google-api-key", re: /\bAIzaSy[0-9A-Za-z_-]{30,35}\b/ },
+  { kind: "huggingface-token", re: /\bhf_[a-zA-Z0-9]{34,}\b/ },
   { kind: "github-token", re: /\bgh[pousr]_[A-Za-z0-9]{20,}\b/ },
   { kind: "slack-token", re: /\bxox[baprs]-[A-Za-z0-9-]{10,}\b/ },
+  { kind: "sendgrid-api-key", re: /\bSG\.[a-zA-Z0-9_-]{22}\.[a-zA-Z0-9_-]{43}\b/ },
+  { kind: "postman-api-key", re: /\bPMAK-[0-9a-f]{24}-[0-9a-f]{34}\b/ },
   { kind: "assigned-secret", re: /\b(?:api[_-]?key|secret|password|token)\b\s*[:=]\s*['"][^'"\s]{12,}['"]/i },
 ];
 

@@ -13,6 +13,8 @@ describe("isBlockedIp", () => {
     "0.0.0.0",
     "100.64.0.1",
     "192.88.99.1",
+    "192.52.193.1",
+    "192.175.48.1",
     "255.255.255.255",
     "224.0.0.1",
     "::1",
@@ -96,6 +98,14 @@ describe("parsePublicUrl", () => {
       "http://sub.localtest.me",
       "http://foo.lvh.me",
       "http://bar.vcap.me",
+      "http://0177.0.0.1",
+      "http://127.000.000.001",
+      "http://127.1",
+      "http://127.0.1",
+      "http://0x7f000001",
+      "http://0x7f.0.0.1",
+      "http://192.52.193.1",
+      "http://192.175.48.1",
     ]) {
       const parsed = parsePublicUrl(input);
       assert.equal(parsed.ok, false, input);

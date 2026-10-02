@@ -44,6 +44,7 @@ The site on `main` is a **Next.js 15 marketing site** for human-led security wor
 | #5 | `cursor/seraphim-scan-product-6e7d` | Draft (Open) | Passive scan product and source of truth |
 | #7 | `feat/max-agy6-seraphim-0820` | Draft (Open) | Smoke tests, brand consistency, Next.js security headers, robots/sitemap crawler boundary, and CI/README hardening |
 | #8 | `feat/max-agy6-smoke-ci-0413` | Draft (Open) | LLM key redaction (OpenAI/Anthropic/Gemini), container/k8s SSRF guards, DNS/CT preflight checks, COOP/cross-domain headers, and content schema validation (40 smoke tests, 85 total) |
+| #9 | `feat/max-agy6-smoke-ci-0807` | Draft (Open) | Non-standard numeric/octal SSRF guards, HuggingFace/SendGrid/Postman redaction, CORP/Origin-Agent-Cluster headers, poweredByHeader suppression, and Cloudflare edge IP extraction (46 smoke tests, 96 total) |
 
 There is no auth, database, payment, or scanner code on `main`.
 
@@ -58,8 +59,8 @@ A passive scan product beside the human tiers. The human tiers stay. The scan do
 - Home and pricing now sell the scan and keep the Scoped Assessment upsell.
 - `.env.example` names only. `docs/ARCHITECTURE.md` for the pipeline.
 - Unit tests for the SSRF guard, redaction, and report serializer. `npm test`.
-- Smoke test suite in `lib/scan/smoke.test.ts` (40 smoke tests, 85 total tests) covering brand consistency, tiers, SSRF, tokens, limits, API routes, report engine invariants, LLM secret redactions, security headers, search crawler boundaries, DNS/CT pre-flight guards, and editorial schema invariants. `npm run test:smoke`.
-- Hardened HTTP security headers in `next.config.mjs` (HSTS, nosniff, DENY frame-ancestors, strict-origin referrer, permissions policy, Cross-Origin-Opener-Policy: same-origin, X-Permitted-Cross-Domain-Policies: none).
+- Smoke test suite in `lib/scan/smoke.test.ts` (46 smoke tests, 96 total tests across 24 suites) covering brand consistency, tiers, SSRF, tokens, limits, API routes, report engine invariants, LLM and cloud secret redactions (OpenAI, Anthropic, Gemini, Hugging Face, SendGrid, Postman), security headers, search crawler boundaries, DNS/CT pre-flight guards, non-standard octal/hex hostnames, edge client IP resolution, and editorial schema invariants. `npm run test:smoke`.
+- Hardened HTTP security headers in `next.config.mjs` (HSTS, nosniff, DENY frame-ancestors, strict-origin referrer, permissions policy, Cross-Origin-Opener-Policy: same-origin, Cross-Origin-Resource-Policy: same-origin, Origin-Agent-Cluster: ?1, poweredByHeader: false, X-Permitted-Cross-Domain-Policies: none).
 - Search engine and privacy perimeter in `app/robots.ts` and `app/sitemap.ts` (protecting private/ephemeral scan and API routes while indexing marketing/blog routes).
 
 ## Stack

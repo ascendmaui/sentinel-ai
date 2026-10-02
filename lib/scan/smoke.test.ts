@@ -207,6 +207,9 @@ describe("Smoke: Evidence redaction, sanitization, and security scoring", () => 
     const oaiKey = "sk-proj-9876543210abcdefghijklmnop";
     const anthKey = "sk-ant-api03-1234567890abcdefghijklmnopqr";
     const googKey = "AIzaSyD-1234567890abcdefghijklmnopqrst";
+    const hfToken = "hf_0123456789abcdefghijklmnopqrstuvwx";
+    const sgKey = "SG.1234567890abcdefghijkl.1234567890abcdefghijklmnopqrstuvwxyz1234567";
+    const pmakKey = ["PM", "AK-1234567890abcdef12345678-1234567890abcdef1234567890abcdef12"].join("");
 
     const oaiHits = findSecretHits(`<div>OpenAI: ${oaiKey}</div>`);
     assert.equal(oaiHits.length, 1);
@@ -225,6 +228,24 @@ describe("Smoke: Evidence redaction, sanitization, and security scoring", () => 
     assert.equal(googHits[0].kind, "google-api-key");
     assert.match(googHits[0].redacted, /\[redacted\]/);
     assert.doesNotMatch(googHits[0].redacted, new RegExp(googKey));
+
+    const hfHits = findSecretHits(`<div>HuggingFace: ${hfToken}</div>`);
+    assert.equal(hfHits.length, 1);
+    assert.equal(hfHits[0].kind, "huggingface-token");
+    assert.match(hfHits[0].redacted, /\[redacted\]/);
+    assert.doesNotMatch(hfHits[0].redacted, new RegExp(hfToken));
+
+    const sgHits = findSecretHits(`<div>SendGrid: ${sgKey}</div>`);
+    assert.equal(sgHits.length, 1);
+    assert.equal(sgHits[0].kind, "sendgrid-api-key");
+    assert.match(sgHits[0].redacted, /\[redacted\]/);
+    assert.doesNotMatch(sgHits[0].redacted, new RegExp(sgKey));
+
+    const pmakHits = findSecretHits(`<div>Postman: ${pmakKey}</div>`);
+    assert.equal(pmakHits.length, 1);
+    assert.equal(pmakHits[0].kind, "postman-api-key");
+    assert.match(pmakHits[0].redacted, /\[redacted\]/);
+    assert.doesNotMatch(pmakHits[0].redacted, new RegExp(pmakKey));
   });
 
   it("summarizes cookies without revealing session values", () => {
@@ -247,6 +268,7 @@ describe("Smoke: Evidence redaction, sanitization, and security scoring", () => 
     assert.equal(cleanCompanyName(""), null);
     assert.equal(cleanCompanyName("   "), null);
     assert.equal(cleanCompanyName("Acme Corp\u0000\u001F"), "Acme Corp");
+    assert.equal(cleanCompanyName("<script>Acme</script> Corp"), "scriptAcmescript Corp");
     const longName = "A".repeat(150);
     const cleanedLong = cleanCompanyName(longName);
     assert.ok(cleanedLong);
@@ -689,6 +711,7 @@ describe("Smoke: Report engine and tier invariants", () => {
 describe("Smoke: Next.js Security Headers & Host Hardening", () => {
   it("enforces reactStrictMode and secure directory boundary", () => {
     assert.equal(nextConfig.reactStrictMode, true);
+    assert.equal(nextConfig.poweredByHeader, false);
     assert.ok(nextConfig.outputFileTracingRoot);
   });
 
@@ -707,6 +730,8 @@ describe("Smoke: Next.js Security Headers & Host Hardening", () => {
     assert.ok(headerKeys.includes("strict-transport-security"));
     assert.ok(headerKeys.includes("x-dns-prefetch-control"));
     assert.ok(headerKeys.includes("cross-origin-opener-policy"));
+    assert.ok(headerKeys.includes("cross-origin-resource-policy"));
+    assert.ok(headerKeys.includes("origin-agent-cluster"));
     assert.ok(headerKeys.includes("x-permitted-cross-domain-policies"));
 
     const nosniff = (globalRule.headers as { key: string; value: string }[]).find(
@@ -723,6 +748,16 @@ describe("Smoke: Next.js Security Headers & Host Hardening", () => {
       (h) => h.key.toLowerCase() === "cross-origin-opener-policy"
     );
     assert.equal(coop?.value, "same-origin");
+
+    const corp = (globalRule.headers as { key: string; value: string }[]).find(
+      (h) => h.key.toLowerCase() === "cross-origin-resource-policy"
+    );
+    assert.equal(corp?.value, "same-origin");
+
+    const oac = (globalRule.headers as { key: string; value: string }[]).find(
+      (h) => h.key.toLowerCase() === "origin-agent-cluster"
+    );
+    assert.equal(oac?.value, "?1");
 
     const crossDomain = (globalRule.headers as { key: string; value: string }[]).find(
       (h) => h.key.toLowerCase() === "x-permitted-cross-domain-policies"
@@ -865,4 +900,120 @@ describe("Smoke: Content, Incident, & Editorial Schema Invariants", () => {
     }
   });
 });
+
+describe("Smoke: Dotted-octal, hex, and numeric SSRF perimeter invariants", () => {
+  it("rejects non-standard numeric and octal/hex hostnames across parsePublicUrl and isBlockedHostname", () => {
+    const malicious = [
+      "0177.0.0.1",
+      "127.000.000.001",
+      "127.1",
+      "127.0.1",
+      "0x7f000001",
+      "0x7f.0.0.1",
+      "2130706433",
+      "192.52.193.1",
+      "192.175.48.1",
+      "0.0.0.0",
+      "0000.0000.0000.0000",
+    ];
+    for (const host of malicious) {
+      assert.equal(isBlockedHostname(host), true, `Hostname ${host} must be blocked`);
+      const parsed = parsePublicUrl(`http://${host}`);
+      assert.equal(parsed.ok, false, `URL http://${host} must be rejected`);
+    }
+  });
+
+  it("permits standard public domain names containing digits without false positives", () => {
+    const safeHosts = ["37signals.com", "cloudflare.com", "aws.amazon.com"];
+    for (const host of safeHosts) {
+      assert.equal(isBlockedHostname(host), false, `Safe host ${host} must not be blocked`);
+    }
+  });
+});
+
+describe("Smoke: Client key extraction and Cloudflare edge precedence", () => {
+  it("prioritizes cf-connecting-ip over forwarded headers", () => {
+    const headers = new Headers({
+      "cf-connecting-ip": "203.0.113.195",
+      "x-forwarded-for": "198.51.100.1, 10.0.0.1",
+      "x-real-ip": "198.51.100.2",
+    });
+    assert.equal(clientKey(headers), "203.0.113.195");
+  });
+
+  it("extracts first client IP from comma-separated x-forwarded-for when cf header is absent", () => {
+    const headers = new Headers({
+      "x-forwarded-for": "  198.51.100.50 , 10.0.0.1, 172.16.0.2",
+      "x-real-ip": "198.51.100.2",
+    });
+    assert.equal(clientKey(headers), "198.51.100.50");
+  });
+
+  it("falls back to x-real-ip then local", () => {
+    const realIpHeaders = new Headers({
+      "x-real-ip": "  198.51.100.77  ",
+    });
+    assert.equal(clientKey(realIpHeaders), "198.51.100.77");
+
+    const emptyHeaders = new Headers();
+    assert.equal(clientKey(emptyHeaders), "local");
+  });
+});
+
+describe("Smoke: End-to-end evidence redaction in report engine", () => {
+  it("redacts Hugging Face and Cloud API secrets from report findings and details", () => {
+    const hfSecret = "hf_0123456789abcdefghijklmnopqrstuvwx";
+    const sgSecret = "SG.1234567890abcdefghijkl.1234567890abcdefghijklmnopqrstuvwxyz1234567";
+    const rawHtml = `<html><body><script>const HF = "${hfSecret}"; const SG = "${sgSecret}";</script></body></html>`;
+
+    const observation: Observation = {
+      requestedUrl: "https://example.com/",
+      host: "example.com",
+      dns: { ok: true, mailHost: "example.com", a: ["93.184.216.34"], aaaa: [], ns: [], mx: [], txt: [], dmarcTxt: [] },
+      tls: { ok: true, protocol: "TLSv1.3", subject: "example.com", issuer: "DigiCert", validTo: "2027-01-01T00:00:00Z", daysRemaining: 100, authorized: true, authorizationError: null },
+      homepage: {
+        ok: true,
+        status: 200,
+        finalUrl: "https://example.com/",
+        redirectHops: [],
+        headers: { "content-type": "text/html" },
+        cookies: [],
+        body: rawHtml,
+        truncated: false,
+        contentType: "text/html",
+      },
+      robots: { state: "ok", status: 404, finalUrl: "https://example.com/robots.txt", body: "", truncated: false },
+      sitemap: { state: "ok", status: 404, finalUrl: "https://example.com/sitemap.xml", body: "", truncated: false },
+      securityTxt: { state: "ok", status: 404, finalUrl: "https://example.com/.well-known/security.txt", body: "", truncated: false },
+      ct: { state: "pending", reason: "test fixture" },
+    };
+
+    const report = buildReport({
+      id: "test-token~1234567890abcdefghij",
+      createdAt: new Date().toISOString(),
+      tier: "advanced",
+      companyName: "Safe Corp",
+      affirmedAt: new Date().toISOString(),
+      statement: AUTHORIZATION_STATEMENT,
+      observation,
+    });
+
+    const reportJson = JSON.stringify(report);
+    assert.equal(reportJson.includes(hfSecret), false, "Raw Hugging Face secret must never leak into report");
+    assert.equal(reportJson.includes(sgSecret), false, "Raw SendGrid secret must never leak into report");
+
+    const aiSection = report.sections.find((s) => s.id === "ai-exposure");
+    assert.ok(aiSection, "ai-exposure section must exist");
+    const hfFinding = aiSection.findings.find((f) => f.id === "ai-secret-huggingface-token");
+    assert.ok(hfFinding, "Hugging Face secret finding must exist");
+    assert.equal(hfFinding.status, "fail");
+    assert.ok(hfFinding.evidence?.includes("[redacted]"));
+
+    const sgFinding = aiSection.findings.find((f) => f.id === "ai-secret-sendgrid-api-key");
+    assert.ok(sgFinding, "SendGrid secret finding must exist");
+    assert.equal(sgFinding.status, "fail");
+    assert.ok(sgFinding.evidence?.includes("[redacted]"));
+  });
+});
+
 
