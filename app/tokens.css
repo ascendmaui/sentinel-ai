@@ -182,7 +182,7 @@
   --ao-primary-grad: linear-gradient(135deg, var(--ao-primary-fill-hi) 0%, var(--ao-primary-fill) 48%, var(--ao-primary-fill-lo) 100%);
 }
 
-/* Seraphim AI is dark-first: the no-JS light fallback is disabled; light theme remains available via the switcher. */
+/* Seraphim Scan AI is dark-first: the no-JS light fallback is disabled; light theme remains available via the switcher. */
 @media (prefers-color-scheme: light) and (min-width: 99999px) {
   :root:not([data-theme]) {
     color-scheme: light;
