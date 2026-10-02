@@ -42,7 +42,7 @@ The site on `main` is a **Next.js 15 marketing site** for human-led security wor
 | #3 | `scoped-assessment-wording` | 2026-09-29 | Reword to Scoped Assessment phases; drop offensive wording |
 | #4 | `incident-case-studies-seraphim-ai` | 2026-09-29 | Incidents, blog, four tiers, Seraphim AI rebrand |
 | #5 | `cursor/seraphim-scan-product-6e7d` | Draft (Open) | Passive scan product and source of truth |
-| #7 | `feat/max-agy6-seraphim-0820` | Draft (Open) | Smoke tests, brand consistency, and CI/README hardening |
+| #7 | `feat/max-agy6-seraphim-0820` | Draft (Open) | Smoke tests, brand consistency, Next.js security headers, robots/sitemap crawler boundary, and CI/README hardening |
 
 There is no auth, database, payment, or scanner code on `main`.
 
@@ -57,6 +57,9 @@ A passive scan product beside the human tiers. The human tiers stay. The scan do
 - Home and pricing now sell the scan and keep the Scoped Assessment upsell.
 - `.env.example` names only. `docs/ARCHITECTURE.md` for the pipeline.
 - Unit tests for the SSRF guard, redaction, and report serializer. `npm test`.
+- Smoke test suite in `lib/scan/smoke.test.ts` covering brand consistency, tiers, SSRF, tokens, limits, API routes, report engine invariants, security headers, and search crawler boundaries. `npm run test:smoke`.
+- Hardened HTTP security headers in `next.config.mjs` (HSTS, nosniff, DENY frame-ancestors, strict-origin referrer, permissions policy).
+- Search engine and privacy perimeter in `app/robots.ts` and `app/sitemap.ts` (protecting private/ephemeral scan and API routes while indexing marketing/blog routes).
 
 ## Stack
 
@@ -79,12 +82,15 @@ A passive scan product beside the human tiers. The human tiers stay. The scan do
 | `lib/scan/report.ts` | Findings, scores, remediation template |
 | `lib/scan/store.ts` | Signed id and in-memory report map |
 | `lib/scan/run.ts` | Orchestrates one passive scan |
+| `lib/scan/smoke.test.ts` | Comprehensive smoke tests (34 assertions) |
 | `lib/posts.ts`, `lib/incidents.ts`, `lib/caseStudies.ts`, `lib/sources.ts` | Editorial content |
 | `app/page.tsx`, `app/pricing/page.tsx` | Marketing |
 | `app/scan/page.tsx`, `app/report/[id]/page.tsx` | Scan and report UI |
 | `app/api/scan/` | Scan API |
+| `app/robots.ts`, `app/sitemap.ts` | Search engine & crawler perimeter |
 | `app/blog/`, `app/case-studies/`, `app/incident-case-studies/` | Existing content pages |
 | `components/` | Nav, footer, hero, tier emblems, scan form, report view |
+| `next.config.mjs` | Build configuration and strict security response headers |
 | `docs/SOURCE_OF_TRUTH.md`, `docs/ARCHITECTURE.md` | This snapshot and the pipeline sketch |
 
 ## Scan tiers

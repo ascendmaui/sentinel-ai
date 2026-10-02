@@ -14,16 +14,21 @@ import {
   TRUE_BADGES,
 } from "../brand";
 const tokens = JSON.parse(readFileSync(new URL("../tokens.json", import.meta.url), "utf8"));
-import { scanTiers, SCAN_TIER_ORDER, tierAtLeast, type ScanTierId } from "../scanTiers";
+import { scanTiers, SCAN_TIER_ORDER, tierAtLeast, AUTHORIZATION_STATEMENT, type ScanTierId } from "../scanTiers";
 import { tiers, type TierId } from "../tiers";
 import { isBlockedIp, isBlockedHostname, parsePublicUrl } from "./ssrf";
 import { cleanCompanyName, parseScanRequest } from "./request";
 import { findSecretHits, headerScore, summarizeSetCookie } from "./parse";
+import { buildReport } from "./report";
 import { newReportToken, verifyReportToken, saveReport, getReport } from "./store";
 import { allowScan, clientKey } from "./limit";
-import type { Report } from "./types";
+import type { Observation, Report } from "./types";
 import { POST } from "../../app/api/scan/route";
 import { GET } from "../../app/api/scan/[id]/route";
+import robots from "../../app/robots";
+import sitemap from "../../app/sitemap";
+import { posts } from "../posts";
+import nextConfig from "../../next.config.mjs";
 
 describe("Smoke: Brand consistency and invariants", () => {
   it("exports official brand identity constants", () => {
@@ -455,3 +460,260 @@ describe("Smoke: Scan API Route Handlers", () => {
     assert.equal(body.report.tier, "standard");
   });
 });
+
+function mockObservation(): Observation {
+  return {
+    requestedUrl: "https://example.com/",
+    host: "example.com",
+    homepage: {
+      ok: true,
+      status: 200,
+      finalUrl: "https://example.com/",
+      redirectHops: [],
+      headers: {
+        server: "ExampleServer",
+        "strict-transport-security": "max-age=31536000",
+        "x-content-type-options": "nosniff",
+      },
+      cookies: [{ name: "session_token", secure: true, httpOnly: true, sameSite: "strict" }],
+      body: `<html><head><title>Smoke Example</title></head><body><script src="https://cdn.thirdparty.com/app.js"></script><p>AKIAIOSFODNN7EXAMPLE</p><form><input type="text" placeholder="Chat with AI" /></form></body></html>`,
+      truncated: false,
+      contentType: "text/html",
+    },
+    tls: {
+      ok: true,
+      protocol: "TLSv1.3",
+      subject: "example.com",
+      issuer: "Example CA",
+      validTo: "2030-01-01T00:00:00.000Z",
+      daysRemaining: 400,
+      authorized: true,
+      authorizationError: null,
+    },
+    dns: {
+      ok: true,
+      mailHost: "example.com",
+      a: ["93.184.216.34"],
+      aaaa: [],
+      ns: ["ns.example.com"],
+      mx: [],
+      txt: ["v=spf1 +all"],
+      dmarcTxt: [],
+    },
+    securityTxt: { state: "ok", status: 404, finalUrl: "https://example.com/.well-known/security.txt", body: "", truncated: false },
+    robots: { state: "ok", status: 200, finalUrl: "https://example.com/robots.txt", body: "User-agent: *\nDisallow:\n", truncated: false },
+    sitemap: { state: "ok", status: 200, finalUrl: "https://example.com/sitemap.xml", body: "<urlset><url><loc>https://example.com/</loc></url></urlset>", truncated: false },
+    ct: { state: "pending", reason: "lookup skipped in smoke test" },
+  };
+}
+
+describe("Smoke: Report engine and tier invariants", () => {
+  it("builds Basic tier without header score, remediation plan, or page mining", () => {
+    const report = buildReport({
+      id: "smoke-basic-token",
+      createdAt: new Date().toISOString(),
+      tier: "basic",
+      companyName: "Acme",
+      affirmedAt: new Date().toISOString(),
+      statement: AUTHORIZATION_STATEMENT,
+      observation: mockObservation(),
+    });
+
+    assert.equal(report.tier, "basic");
+    assert.equal(report.tierName, "Basic");
+    assert.equal(report.className, "Angels");
+    assert.equal(report.headerScore, null, "Basic tier must not compute a header score");
+    assert.equal(report.remediationPlan, null, "Basic tier must not include a remediation plan");
+    assert.equal(report.retestChecklist, null, "Basic tier must not include a retest checklist");
+
+    // Surface section should not contain secret scan
+    const surface = report.sections.find((s) => s.id === "surface");
+    assert.ok(surface);
+    assert.equal(surface.findings.some((f) => f.id.startsWith("ai-secret")), false);
+
+    // AI and manual sections are locked in Basic tier
+    const aiExposure = report.sections.find((s) => s.id === "ai-exposure");
+    assert.ok(aiExposure);
+    assert.equal(aiExposure.included, false);
+    assert.equal(aiExposure.findings[0]?.status, "not-in-tier");
+
+    const manual = report.sections.find((s) => s.id === "manual");
+    assert.ok(manual);
+    assert.equal(manual.included, false);
+    assert.equal(manual.findings[0]?.status, "not-in-tier");
+  });
+
+  it("builds Standard tier with header score and cookie facts but no secret scan", () => {
+    const report = buildReport({
+      id: "smoke-standard-token",
+      createdAt: new Date().toISOString(),
+      tier: "standard",
+      companyName: "Acme",
+      affirmedAt: new Date().toISOString(),
+      statement: AUTHORIZATION_STATEMENT,
+      observation: mockObservation(),
+    });
+
+    assert.equal(report.tier, "standard");
+    assert.equal(report.tierName, "Standard");
+    assert.equal(report.className, "Thrones");
+    assert.ok(typeof report.headerScore === "number");
+    assert.equal(report.remediationPlan, null);
+    assert.equal(report.retestChecklist, null);
+
+    // Surface section is included in Standard tier
+    const surface = report.sections.find((s) => s.id === "surface");
+    assert.ok(surface);
+    assert.equal(surface.included, true);
+
+    // AI exposure is still locked in Standard
+    const aiExposure = report.sections.find((s) => s.id === "ai-exposure");
+    assert.ok(aiExposure);
+    assert.equal(aiExposure.included, false);
+  });
+
+  it("builds Advanced tier with third-party hosts, AI hints, and redacted secrets", () => {
+    const report = buildReport({
+      id: "smoke-advanced-token",
+      createdAt: new Date().toISOString(),
+      tier: "advanced",
+      companyName: "Acme",
+      affirmedAt: new Date().toISOString(),
+      statement: AUTHORIZATION_STATEMENT,
+      observation: mockObservation(),
+    });
+
+    assert.equal(report.tier, "advanced");
+    assert.equal(report.tierName, "Advanced");
+    assert.equal(report.className, "Cherubim");
+    assert.equal(report.remediationPlan, null);
+
+    // AI exposure section is included and contains redacted secret finding
+    const ai = report.sections.find((s) => s.id === "ai-exposure");
+    assert.ok(ai);
+    assert.equal(ai.included, true);
+
+    const secretFinding = ai.findings.find((f) => f.id === "ai-secret-aws-access-key");
+    assert.ok(secretFinding);
+    assert.equal(secretFinding.status, "fail");
+    assert.ok(secretFinding.evidence);
+    assert.match(secretFinding.evidence, /\[redacted\]/);
+    assert.doesNotMatch(secretFinding.evidence, /AKIAIOSFODNN7EXAMPLE/);
+
+    // AI hints present
+    const promptFinding = ai.findings.find((f) => f.id === "ai-surface");
+    assert.ok(promptFinding);
+  });
+
+  it("builds Full tier with deterministic remediation plan and retest checklist", () => {
+    const report = buildReport({
+      id: "smoke-full-token",
+      createdAt: new Date().toISOString(),
+      tier: "full",
+      companyName: "Acme",
+      affirmedAt: new Date().toISOString(),
+      statement: AUTHORIZATION_STATEMENT,
+      observation: mockObservation(),
+    });
+
+    assert.equal(report.tier, "full");
+    assert.equal(report.tierName, "Full");
+    assert.equal(report.className, "Seraphim");
+    assert.equal(report.engine.mode, "passive-v1");
+    assert.equal(report.limitations.length, 6);
+
+    // Full tier generates plan and checklist from failed checks (like SPF +all and secret hit)
+    assert.ok(Array.isArray(report.remediationPlan));
+    assert.ok(report.remediationPlan.length > 0);
+    for (const item of report.remediationPlan) {
+      assert.ok(item.findingId);
+      assert.ok(item.action);
+    }
+
+    assert.ok(Array.isArray(report.retestChecklist));
+    assert.ok(report.retestChecklist.length > 0);
+    for (const item of report.retestChecklist) {
+      assert.ok(typeof item === "string");
+      assert.ok(item.length > 0);
+    }
+
+    // Manual section is never faked as executed
+    assert.ok(report.counts.requiresEngagement > 0);
+  });
+});
+
+describe("Smoke: Next.js Security Headers & Host Hardening", () => {
+  it("enforces reactStrictMode and secure directory boundary", () => {
+    assert.equal(nextConfig.reactStrictMode, true);
+    assert.ok(nextConfig.outputFileTracingRoot);
+  });
+
+  it("exports comprehensive security headers for all routes", async () => {
+    assert.ok(typeof nextConfig.headers === "function");
+    const rules = await nextConfig.headers();
+    assert.ok(Array.isArray(rules));
+    const globalRule = rules.find((r: { source: string }) => r.source === "/:path*");
+    assert.ok(globalRule);
+
+    const headerKeys = (globalRule.headers as { key: string; value: string }[]).map((h) => h.key.toLowerCase());
+    assert.ok(headerKeys.includes("x-content-type-options"));
+    assert.ok(headerKeys.includes("x-frame-options"));
+    assert.ok(headerKeys.includes("referrer-policy"));
+    assert.ok(headerKeys.includes("permissions-policy"));
+    assert.ok(headerKeys.includes("strict-transport-security"));
+    assert.ok(headerKeys.includes("x-dns-prefetch-control"));
+
+    const nosniff = (globalRule.headers as { key: string; value: string }[]).find(
+      (h) => h.key.toLowerCase() === "x-content-type-options"
+    );
+    assert.equal(nosniff?.value, "nosniff");
+
+    const frame = (globalRule.headers as { key: string; value: string }[]).find(
+      (h) => h.key.toLowerCase() === "x-frame-options"
+    );
+    assert.equal(frame?.value, "DENY");
+  });
+});
+
+describe("Smoke: Search Engine and Crawler Perimeter (robots & sitemap)", () => {
+  it("robots.txt allows public marketing while disallowing private report and API routes", () => {
+    const r = robots();
+    assert.ok(r.rules);
+    const rulesArray = Array.isArray(r.rules) ? r.rules : [r.rules];
+    assert.ok(rulesArray.length > 0);
+    const starRule = rulesArray.find((item) => item.userAgent === "*");
+    assert.ok(starRule);
+    assert.equal(starRule.allow, "/");
+
+    const disallow = Array.isArray(starRule.disallow) ? starRule.disallow : [starRule.disallow];
+    assert.ok(disallow.includes("/api/"), "Disallow must contain /api/");
+    assert.ok(disallow.includes("/report/"), "Disallow must contain /report/ to protect private reports");
+    assert.ok(typeof r.sitemap === "string" && r.sitemap.endsWith("/sitemap.xml"));
+  });
+
+  it("sitemap.xml indexes canonical marketing routes and all published blog posts", () => {
+    const s = sitemap();
+    assert.ok(Array.isArray(s));
+    assert.ok(s.length >= 10);
+
+    const urls = s.map((entry) => entry.url);
+    assert.ok(urls.some((u) => u.endsWith("/scan")));
+    assert.ok(urls.some((u) => u.endsWith("/pricing")));
+    assert.ok(urls.some((u) => u.endsWith("/blog")));
+    assert.ok(urls.some((u) => u.endsWith("/case-studies")));
+    assert.ok(urls.some((u) => u.endsWith("/incident-case-studies")));
+
+    // Verifies all blog posts are mapped
+    for (const post of posts) {
+      assert.ok(urls.some((u) => u.endsWith(`/blog/${post.slug}`)), `Expected sitemap to include ${post.slug}`);
+    }
+
+    for (const entry of s) {
+      assert.ok(entry.url.startsWith("http"));
+      if (entry.priority !== undefined) {
+        assert.ok(entry.priority >= 0 && entry.priority <= 1.0);
+      }
+    }
+  });
+});
+

@@ -22,6 +22,8 @@ The brand name is a single constant: `lib/brand.ts` (`BRAND_NAME`). Change it th
 
 - **Strict SSRF Boundary:** Only public `http` and `https` schemes on ports `80` and `443` are permitted. All loopback, RFC 1918 private, link-local / cloud metadata (`169.254.169.254`), CGNAT (`100.64.0.0/10`), anycast 6to4 relay (`192.88.99.0/24`), multicast, documentation (`2001:db8::/32`), benchmarking, overlay, and non-global IPv6 ranges are blocked at parse time and connection lookup time (`lib/scan/ssrf.ts`). Special-use domains and TLDs (RFC 2606, RFC 6761, RFC 7686, RFC 8375: `.test`, `.invalid`, `.localhost`, `.local`, `.internal`, `.onion`, `.home.arpa`, `.lan`, `.corp`, `.home`) and cloud metadata hostnames (`metadata.google.internal`) are rejected unconditionally.
 - **Passive Only & Evidence Redaction:** Automated scans are strictly passive public checks (DNS, TLS on port 443, public headers, and basic homepage heuristics). No active probing, port scanning, prompt injection attacks, authenticated testing, or crawler swarms are ever executed. Checks that cannot be completed remain marked as `pending`. Any secret-shaped token discovered in evidence is automatically redacted (`[redacted]`), and cookie session values are completely discarded.
+- **HTTP Security Headers & Tracing Boundary:** Native Next.js response headers (`next.config.mjs`) enforce `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy`, and disable DNS prefetch.
+- **Search Engine & Crawler Perimeter:** Search engine routes (`app/robots.ts`, `app/sitemap.ts`) index canonical marketing and technical blog pages while explicitly disallowing automated crawling of `/api/` and ephemeral report sessions `/report/`.
 - **Human Scoped Assessments:** Deep technical review (tool permissions, secret sprawl, agent sandboxes, prompt injection defenses) is delivered exclusively by people through written client engagements.
 - **No Deceptive Claims:** No monitoring platform, no persistent background sensors, no unverified certifications (SOC 2, ISO), no fictitious client logos, and no invented statistics.
 - **Zero Secrets & Ephemeral Store:** In-memory store uses HMAC-SHA256 signed tokens (`id~mac`) with a 2-hour TTL and LRU pruning (`lib/scan/store.ts`). `.env.example` contains variable names only without values.
@@ -33,6 +35,7 @@ The brand name is a single constant: `lib/brand.ts` (`BRAND_NAME`). Change it th
 - `app/blog/` and `lib/posts.ts`: Technical blog index and posts
 - `app/pricing/page.tsx`, `lib/scanTiers.ts`, and `lib/tiers.ts`: Automated scan tiers and human assessment comparisons
 - `app/case-studies/page.tsx`: Self-engagement case study
+- `app/robots.ts` and `app/sitemap.ts`: Dynamic metadata route generation
 
 ## Develop & Verify
 
@@ -43,7 +46,7 @@ npm ci
 # Run TypeScript static type check
 npm run typecheck
 
-# Run smoke tests (brand invariants, tiers, SSRF boundaries, store tokens, rate limiters, API routes)
+# Run smoke tests (brand invariants, tiers, SSRF boundaries, store tokens, rate limiters, API routes, report engine, security headers, robots/sitemap)
 npm run test:smoke
 
 # Run complete test suite (unit + smoke tests)
