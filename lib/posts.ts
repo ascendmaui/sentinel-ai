@@ -59,8 +59,8 @@ export const posts: Post[] = [
         "Give tasks a safe way to stop. An agent with no exit and a lot of budget will look for other exits.",
         "Volume is the new difficulty. Hugging Face says its defenders had to correlate thousands of low-signal events. Fewer easy paths means less noise to sort."
       ] },
-      { t: "h2", x: "Where Seraphim AI fits, and where it does not" },
-      { t: "p", x: "We are a service, not a detection product. We do passive public recon (DNS and mail authentication, TLS, security headers, certificate transparency), Scoped Assessments of applications and AI agent systems with written client authorization, and remediation guidance with retest. We use private local models to design scenarios, so you can see how modest weaknesses chain together." },
+      { t: "h2", x: "Where Seraphim Scan AI fits, and where it does not" },
+      { t: "p", x: "We offer a passive automated scan of public information (DNS, TLS, headers, and page heuristics) and a separate human Scoped Assessment. We are not a monitoring or detection platform. Scoped Assessments of applications and AI agent systems require written client authorization, and they include remediation guidance with retest. We use private local models to design scenarios for that human work, so you can see how modest weaknesses chain together. The automated scan does not send prompts or run active tests." },
       { t: "p", x: "Applied to this incident's shape, a Scoped Assessment would review the egress paths from an agent environment, anonymous access on internal services, shared writable storage, what secrets a runtime can reach, and whether a pipeline that processes user-supplied files could be pointed at local resources. It would help you prepare. It would not discover unknown flaws in a vendor's product, and we do not claim it would have prevented this incident. For a conceptual walk-through of the sandbox-with-one-route problem, read scenario H6 in the hypothetical scenarios on our Incident Case Studies page." },
       { t: "h2", x: "What the sources do not say" },
       { t: "p", x: "Some secondary accounts, including a Wikipedia article that itself carries a warning about reliance on primary sources, describe further activity such as uploads to a package registry or an unrelated government breach. We could not confirm those from OpenAI, Hugging Face or METR, so we do not repeat them. If you see them cited, ask for a primary source." },
@@ -105,7 +105,7 @@ export const posts: Post[] = [
         "Run secret scanning on repositories, notebooks and build artifacts, including public ones.",
         "Treat any code path that executes model output or a downloaded artifact as a boundary and sandbox it."
       ] },
-      { t: "h2", x: "How Seraphim AI helps, honestly" },
+      { t: "h2", x: "How Seraphim Scan AI helps, honestly" },
       { t: "p", x: "We can review how your pipelines fetch and load third-party models and datasets, where your tokens live and how broadly they are scoped, and whether model output is ever executed without checks. That is a Scoped Assessment with your written authorization, following passive recon of your public footprint, with remediation guidance and a retest. We do not scan public model hubs, we do not vet individual models, and we cannot assess Hugging Face's own infrastructure. For the July 2026 chain in full, see the Incident Case Studies page." },
     ],
     sources: ["hfSpaces", "jfPickle", "oaiAug", "hfDisc", "hfTime", "gtig"],
@@ -148,7 +148,7 @@ export const posts: Post[] = [
         "Output: allowlist outbound destinations for tools; filter links and images; require approval for destructive or external actions.",
         "Verification: test these controls with realistic scenarios, then retest after every change."
       ] },
-      { t: "h2", x: "What Seraphim AI does with this" },
+      { t: "h2", x: "What Seraphim Scan AI does with this" },
       { t: "p", x: "A Scoped Assessment of an agent system, with the client's written authorization, walks exactly those three questions: tool permissions and secrets (reach), prompt-injection paths (input), and sandbox and egress boundaries (output). We design scenarios with private local models, report what holds and what does not, provide remediation guidance and retest. Passive recon comes first, to see what an outsider sees. We are not a monitoring product and do not claim we would have prevented any of these cases. See the hypothetical scenarios on our Incident Case Studies page, especially H5, for the conceptual version." },
     ],
     sources: ["o1", "replit", "echo", "gem", "anth", "oaiAug", "hfTime"],
@@ -188,7 +188,7 @@ export const posts: Post[] = [
         "Practice the decision. A rehearsed runbook is faster than a written one.",
         "Keep a capable model you can run on your own infrastructure available for incident analysis. Hugging Face reports that hosted models refused parts of its forensic work and that it used an open-weights model on its own hardware instead, which also kept attacker data and credentials in-house."
       ] },
-      { t: "p", x: "This section is where we are careful about our own role. Seraphim AI does not run a monitoring platform, sensors or a security operations center, and we do not offer real-time blocking. We help you decide what to instrument and how to respond, through assessment findings and advisory." },
+      { t: "p", x: "This section is where we are careful about our own role. Seraphim Scan AI does not run a monitoring platform, sensors or a security operations center, and we do not offer real-time blocking. The automated scan is a one-time passive look at public information. We help you decide what to instrument and how to respond, through assessment findings and advisory." },
       { t: "h2", x: "After: verify, do not assume" },
       { t: "p", x: "Every fix should be retested. Hugging Face describes checking repositories for unauthorized changes and verifying published container images and packages against their expected digests before saying its supply chain was clean. That is the standard: evidence, not assurance." },
       { t: "h2", x: "A one-page version" },

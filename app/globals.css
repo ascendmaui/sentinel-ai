@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Seraphim AI site styles (design system shared with Agent Overlord). Every color comes from tokens.css, which is
+   Seraphim Scan AI site styles (design system shared with Agent Overlord). Every color comes from tokens.css, which is
    generated from brand/tokens.json (node brand/build-tokens.mjs).
    Themes: [data-theme="dark"] (default), "light", "high-contrast".
    The app illustrations (.mock-*) intentionally stay dark in every theme:
@@ -211,6 +211,7 @@ button { font: inherit; }
   box-shadow: var(--ao-shadow-nav);
 }
 .nav-brand { margin-right: auto; }
+.nav-brand .wordmark-text { font-size: 15px; letter-spacing: -0.03em; }
 .wordmark { display: inline-flex; align-items: center; gap: 10px; }
 .wordmark-text { font-family: var(--font-heading); font-weight: 700; font-size: 18px; letter-spacing: -0.02em; white-space: nowrap; }
 .wordmark-text span { color: var(--ao-primary); margin-left: 0.18em; }
@@ -663,3 +664,62 @@ ul, ol { color: var(--ao-muted); }
 .post .post-src li { font-size: 14px; }
 .post blockquote { margin: 18px 0; padding: 4px 0 4px 18px; border-left: 2px solid var(--ao-primary); color: var(--ao-muted); }
 .post-cta { margin-top: 48px; }
+
+/* ---------- Scan and report ---------- */
+.scan-class { font-weight: 500; color: var(--ao-muted); }
+.scan-form { display: grid; gap: 22px; max-width: 860px; }
+.scan-fields { display: grid; gap: 16px; }
+.optional { font-weight: 400; }
+.tier-pick { border: 0; margin: 0; padding: 0; display: grid; gap: 10px; }
+.tier-pick legend { font-family: var(--font-code); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ao-primary); margin-bottom: 4px; }
+.tier-pick-grid { display: grid; gap: 10px; }
+.tier-option {
+  display: grid; grid-template-columns: auto auto 1fr; gap: 12px; align-items: center;
+  padding: 14px 16px; border-radius: 16px; border: 1px solid var(--ao-line); background: var(--ao-glass); cursor: pointer;
+}
+.tier-option input { width: auto; accent-color: var(--ao-primary); }
+.tier-option .tier-emblem-wrap { width: 44px; height: 44px; border-radius: 12px; }
+.tier-option-copy { display: grid; gap: 2px; }
+.tier-option-copy strong { color: var(--ao-text); }
+.tier-option-copy span { color: var(--ao-muted); font-size: 14px; }
+.tier-option.is-selected { border-color: var(--ao-line-gold); background: radial-gradient(400px 80px at 0% 0%, var(--ao-tint-gold), transparent 70%), var(--ao-glass); }
+.check-line { grid-template-columns: auto 1fr; align-items: start; gap: 12px; color: var(--ao-text); }
+.check-line input { width: 18px; height: 18px; margin-top: 4px; accent-color: var(--ao-primary); }
+.form-error { color: var(--ao-danger); margin: 0; }
+button.btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+.report-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 22px 0; }
+.report-meta div { padding: 12px 14px; border-radius: 14px; border: 1px solid var(--ao-line-soft); background: var(--ao-inset); }
+.report-meta dt { font-family: var(--font-code); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ao-muted); }
+.report-meta dd { margin: 4px 0 0; word-break: break-word; }
+.count-row { list-style: none; padding: 0; margin: 8px 0 22px; display: flex; flex-wrap: wrap; gap: 8px; }
+.count { min-width: 92px; padding: 10px 12px; border-radius: 14px; border: 1px solid var(--ao-line); background: var(--ao-glass); display: grid; }
+.count strong { font-family: var(--font-heading); font-size: 22px; line-height: 1; }
+.count span { color: var(--ao-muted); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; }
+.count-critical strong, .sev-critical { color: var(--ao-danger); }
+.count-high strong, .sev-high { color: var(--ao-danger); }
+.count-medium strong, .sev-medium { color: var(--ao-primary); }
+.count-low strong, .sev-low, .count-pending strong, .count-manual strong { color: var(--ao-muted); }
+.report-section { margin-top: 48px; }
+.report-section.is-locked { opacity: 0.85; }
+.finding-list, .plan-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+.finding { padding: 16px 18px; border-radius: 16px; border: 1px solid var(--ao-line); background: var(--ao-glass); }
+.finding-top { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
+.finding-top h3 { margin: 0; font-size: 18px; }
+.finding p { margin: 0; color: var(--ao-muted); }
+.evidence {
+  margin: 10px 0 0; padding: 10px 12px; border-radius: 10px; overflow-x: auto;
+  font-family: var(--font-code); font-size: 12.5px; line-height: 1.5; white-space: pre-wrap; word-break: break-word;
+  background: var(--ao-inset); color: var(--ao-text); border: 1px solid var(--ao-line-soft);
+}
+.remediation { margin-top: 10px !important; }
+.pill, .sev { font-family: var(--font-code); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--ao-border); }
+.pill-pass { color: var(--ao-success); border-color: var(--ao-success); }
+.pill-fail { color: var(--ao-danger); border-color: var(--ao-danger); }
+.pill-pending, .pill-not-in-tier, .pill-info { color: var(--ao-muted); }
+.pill-requires-engagement { color: var(--ao-primary); border-color: var(--ao-primary); }
+.plan-list li { display: grid; gap: 6px; padding: 14px 16px; border-radius: 14px; border: 1px solid var(--ao-line-soft); background: var(--ao-inset); }
+.plan-meta { color: var(--ao-muted); font-size: 14px; }
+@media (max-width: 720px) {
+  .tier-option { grid-template-columns: auto 1fr; }
+  .tier-option .tier-emblem-wrap { display: none; }
+}

@@ -25,7 +25,7 @@ const mono = JetBrains_Mono({
   preload: false,
 });
 
-const description = `${BRAND_NAME} runs scoped security assessments in three phases: passive recon of public information, a Scoped Assessment within an agreed scope and written client authorization, and remediation with retest. Built for teams shipping AI agents and the systems around them.`;
+const description = `${BRAND_NAME} scans a website you are authorized to check and delivers a passive report: DNS, TLS, headers, and public signs of AI-agent exposure. Active testing stays a human Scoped Assessment with a written scope.`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

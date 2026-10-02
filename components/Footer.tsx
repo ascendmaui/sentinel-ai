@@ -11,10 +11,10 @@ export function Footer() {
           <Wordmark id="footer" size={24} />
         </Link>
         <nav className="footer-links" aria-label="Footer">
-          <Link href="/#phases">Phases</Link>
-          <Link href="/#who">Who it&apos;s for</Link>
-          <Link href="/#how">How it works</Link>
+          <Link href="/scan">Scan</Link>
           <Link href="/pricing">Services</Link>
+          <Link href="/#phases">Phases</Link>
+          <Link href="/#how">How it works</Link>
           <Link href="/incident-case-studies">Incidents</Link>
           <Link href="/blog">Blog</Link>
           <Link href="/case-studies">Case studies</Link>
