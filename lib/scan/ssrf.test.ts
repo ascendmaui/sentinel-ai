@@ -80,6 +80,22 @@ describe("parsePublicUrl", () => {
       "http://api.internal",
       "http://test",
       "http://invalid",
+      "http://instance-data",
+      "http://instance-data.ec2.internal",
+      "http://docker.internal",
+      "http://host.docker.internal",
+      "http://gateway.docker.internal",
+      "http://kubernetes.default.svc.cluster.local",
+      "http://app.cluster.local",
+      "http://api.svc",
+      "http://foo.alt",
+      "http://bar.example",
+      "http://127.0.0.1.nip.io",
+      "http://app.sslip.io",
+      "http://localtest.me",
+      "http://sub.localtest.me",
+      "http://foo.lvh.me",
+      "http://bar.vcap.me",
     ]) {
       const parsed = parsePublicUrl(input);
       assert.equal(parsed.ok, false, input);

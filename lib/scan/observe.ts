@@ -4,7 +4,7 @@ import https from "node:https";
 import { isIP } from "node:net";
 import tls from "node:tls";
 import { headerMap, mailDomain, sitemapUrlsFromRobots, summarizeSetCookie } from "./parse";
-import { bareHostname, isBlockedIp, parsePublicUrl, publicErrorMessage, safeLookup } from "./ssrf";
+import { bareHostname, isBlockedHostname, isBlockedIp, parsePublicUrl, publicErrorMessage, safeLookup } from "./ssrf";
 import type { AuxResult, CtResult, DnsResult, FetchResult, TlsResult } from "./types";
 
 const TIMEOUT_MS = 8_000;
@@ -133,6 +133,9 @@ export async function observeHttp(input: string, maxBytes = 1_200_000, sameHostO
 export async function observeDns(host: string): Promise<DnsResult> {
   const mailHost = mailDomain(host);
   const empty: DnsResult = { ok: true, mailHost, a: [], aaaa: [], ns: [], mx: [], txt: [], dmarcTxt: [] };
+  if (isBlockedHostname(host) || (isIP(host) && isBlockedIp(host))) {
+    return { ...empty, ok: false, error: "That hostname is not allowed." };
+  }
   if (isIP(host)) {
     return {
       ...empty,
@@ -170,7 +173,9 @@ export async function observeDns(host: string): Promise<DnsResult> {
  * No HTTP request is sent on this socket.
  */
 export function observeTls(host: string): Promise<TlsResult> {
-  if (isIP(host) && isBlockedIp(host)) return Promise.resolve({ ok: false, error: "That address is not allowed." });
+  if (isBlockedHostname(host) || (isIP(host) && isBlockedIp(host))) {
+    return Promise.resolve({ ok: false, error: isIP(host) ? "That address is not allowed." : "That hostname is not allowed." });
+  }
   return new Promise((resolve) => {
     let settled = false;
     let socket: tls.TLSSocket;
@@ -210,9 +215,15 @@ export function observeTls(host: string): Promise<TlsResult> {
 }
 
 export async function observeCt(host: string): Promise<CtResult> {
+  if (isIP(host)) {
+    return { state: "pending", reason: "Certificate transparency is not queried for a raw IP address." };
+  }
   const queryHost = mailDomain(host);
   if (isIP(queryHost)) {
     return { state: "pending", reason: "Certificate transparency is not queried for a raw IP address." };
+  }
+  if (isBlockedHostname(host) || isBlockedHostname(queryHost)) {
+    return { state: "pending", reason: "Certificate transparency is not queried for blocked or local hostnames." };
   }
   const url = new URL(`https://crt.sh/?q=${encodeURIComponent(queryHost)}&output=json`);
   try {

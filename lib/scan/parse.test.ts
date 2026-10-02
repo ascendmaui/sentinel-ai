@@ -23,6 +23,33 @@ describe("findSecretHits", () => {
     assert.equal(hits[0].redacted.includes(secret), false);
     assert.match(hits[0].redacted, /\[redacted\]/);
   });
+
+  it("redacts an OpenAI-shaped project key", () => {
+    const secret = "sk-proj-abc12345678901234567890";
+    const hits = findSecretHits(`<div>OpenAI credential: ${secret}</div>`);
+    assert.equal(hits.length, 1);
+    assert.equal(hits[0].kind, "openai-api-key");
+    assert.equal(hits[0].redacted.includes(secret), false);
+    assert.match(hits[0].redacted, /\[redacted\]/);
+  });
+
+  it("redacts an Anthropic-shaped key", () => {
+    const secret = "sk-ant-api03-abcdefghijklmnopqrstuvwxyz123456";
+    const hits = findSecretHits(`<script>var k = "${secret}";</script>`);
+    assert.equal(hits.length, 1);
+    assert.equal(hits[0].kind, "anthropic-api-key");
+    assert.equal(hits[0].redacted.includes(secret), false);
+    assert.match(hits[0].redacted, /\[redacted\]/);
+  });
+
+  it("redacts a Google Gemini-shaped key", () => {
+    const secret = "AIzaSyAbCdEfGhIjKlMnOpQrStUvWxYz0123456";
+    const hits = findSecretHits(`https://generativelanguage.googleapis.com/v1beta/models?key=${secret}`);
+    assert.equal(hits.length, 1);
+    assert.equal(hits[0].kind, "google-api-key");
+    assert.equal(hits[0].redacted.includes(secret), false);
+    assert.match(hits[0].redacted, /\[redacted\]/);
+  });
 });
 
 describe("mail records", () => {

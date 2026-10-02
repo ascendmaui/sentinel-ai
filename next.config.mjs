@@ -36,6 +36,14 @@ const nextConfig = {
             key: "X-DNS-Prefetch-Control",
             value: "off",
           },
+          {
+            key: "Cross-Origin-Opener-Policy",
+            value: "same-origin",
+          },
+          {
+            key: "X-Permitted-Cross-Domain-Policies",
+            value: "none",
+          },
         ],
       },
     ];

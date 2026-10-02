@@ -28,6 +28,10 @@ import { GET } from "../../app/api/scan/[id]/route";
 import robots from "../../app/robots";
 import sitemap from "../../app/sitemap";
 import { posts } from "../posts";
+import { incidents } from "../incidents";
+import { findings } from "../caseStudies";
+import { S } from "../sources";
+import { observeDns, observeCt } from "./observe";
 import nextConfig from "../../next.config.mjs";
 
 describe("Smoke: Brand consistency and invariants", () => {
@@ -163,6 +167,22 @@ describe("Smoke: SSRF boundary defense", () => {
       "router.home.arpa",
       "mesh.lan",
       "corp.home",
+      "instance-data",
+      "instance-data.ec2.internal",
+      "docker.internal",
+      "host.docker.internal",
+      "gateway.docker.internal",
+      "kubernetes.default.svc.cluster.local",
+      "app.cluster.local",
+      "api.svc",
+      "service.alt",
+      "isolated.example",
+      "127.0.0.1.nip.io",
+      "service.sslip.io",
+      "localtest.me",
+      "sub.localtest.me",
+      "app.lvh.me",
+      "tenant.vcap.me",
       "metadata.google.internal",
       "metadata.goog",
     ];
@@ -181,6 +201,30 @@ describe("Smoke: Evidence redaction, sanitization, and security scoring", () => 
     assert.equal(hits[0].kind, "aws-access-key");
     assert.match(hits[0].redacted, /\[redacted\]/);
     assert.doesNotMatch(hits[0].redacted, /AKIAIOSFODNN7EXAMPLE/);
+  });
+
+  it("redacts OpenAI, Anthropic, and Google Gemini API keys in evidence strings", () => {
+    const oaiKey = "sk-proj-9876543210abcdefghijklmnop";
+    const anthKey = "sk-ant-api03-1234567890abcdefghijklmnopqr";
+    const googKey = "AIzaSyD-1234567890abcdefghijklmnopqrst";
+
+    const oaiHits = findSecretHits(`<div>OpenAI: ${oaiKey}</div>`);
+    assert.equal(oaiHits.length, 1);
+    assert.equal(oaiHits[0].kind, "openai-api-key");
+    assert.match(oaiHits[0].redacted, /\[redacted\]/);
+    assert.doesNotMatch(oaiHits[0].redacted, new RegExp(oaiKey));
+
+    const anthHits = findSecretHits(`<div>Anthropic: ${anthKey}</div>`);
+    assert.equal(anthHits.length, 1);
+    assert.equal(anthHits[0].kind, "anthropic-api-key");
+    assert.match(anthHits[0].redacted, /\[redacted\]/);
+    assert.doesNotMatch(anthHits[0].redacted, new RegExp(anthKey));
+
+    const googHits = findSecretHits(`<div>Google: ${googKey}</div>`);
+    assert.equal(googHits.length, 1);
+    assert.equal(googHits[0].kind, "google-api-key");
+    assert.match(googHits[0].redacted, /\[redacted\]/);
+    assert.doesNotMatch(googHits[0].redacted, new RegExp(googKey));
   });
 
   it("summarizes cookies without revealing session values", () => {
@@ -662,6 +706,8 @@ describe("Smoke: Next.js Security Headers & Host Hardening", () => {
     assert.ok(headerKeys.includes("permissions-policy"));
     assert.ok(headerKeys.includes("strict-transport-security"));
     assert.ok(headerKeys.includes("x-dns-prefetch-control"));
+    assert.ok(headerKeys.includes("cross-origin-opener-policy"));
+    assert.ok(headerKeys.includes("x-permitted-cross-domain-policies"));
 
     const nosniff = (globalRule.headers as { key: string; value: string }[]).find(
       (h) => h.key.toLowerCase() === "x-content-type-options"
@@ -672,6 +718,16 @@ describe("Smoke: Next.js Security Headers & Host Hardening", () => {
       (h) => h.key.toLowerCase() === "x-frame-options"
     );
     assert.equal(frame?.value, "DENY");
+
+    const coop = (globalRule.headers as { key: string; value: string }[]).find(
+      (h) => h.key.toLowerCase() === "cross-origin-opener-policy"
+    );
+    assert.equal(coop?.value, "same-origin");
+
+    const crossDomain = (globalRule.headers as { key: string; value: string }[]).find(
+      (h) => h.key.toLowerCase() === "x-permitted-cross-domain-policies"
+    );
+    assert.equal(crossDomain?.value, "none");
   });
 });
 
@@ -713,6 +769,99 @@ describe("Smoke: Search Engine and Crawler Perimeter (robots & sitemap)", () => 
       if (entry.priority !== undefined) {
         assert.ok(entry.priority >= 0 && entry.priority <= 1.0);
       }
+    }
+  });
+});
+
+describe("Smoke: DNS & Certificate Transparency Guard Invariants", () => {
+  it("observeDns refuses blocked and local hostnames without opening queries", async () => {
+    const blockedHosts = [
+      "127.0.0.1",
+      "localhost",
+      "instance-data",
+      "docker.internal",
+      "kubernetes.default.svc",
+      "localtest.me",
+    ];
+    for (const host of blockedHosts) {
+      const res = await observeDns(host);
+      assert.equal(res.ok, false);
+      assert.match(res.error || "", /That (?:hostname|address) is not allowed\./);
+    }
+  });
+
+  it("observeCt marks blocked or raw IP hostnames as pending without external network requests", async () => {
+    const blockedHosts = ["127.0.0.1", "localhost", "docker.internal", "localtest.me"];
+    for (const host of blockedHosts) {
+      const res = await observeCt(host);
+      assert.equal(res.state, "pending");
+      assert.ok(res.reason);
+    }
+  });
+});
+
+describe("Smoke: Content, Incident, & Editorial Schema Invariants", () => {
+  it("validates all published blog posts conform to editorial schema", () => {
+    assert.ok(posts.length >= 4);
+    const slugs = new Set<string>();
+    for (const post of posts) {
+      assert.ok(post.slug, "Post must have a slug");
+      assert.ok(/^[a-z0-9-]+$/.test(post.slug), `Slug ${post.slug} must be URL-safe`);
+      assert.equal(slugs.has(post.slug), false, `Duplicate slug ${post.slug}`);
+      slugs.add(post.slug);
+
+      assert.ok(post.title && post.title.trim().length > 0, `Post ${post.slug} missing title`);
+      assert.ok(post.date && post.date.trim().length > 0, `Post ${post.slug} missing date`);
+      assert.ok(post.description && post.description.trim().length > 0, `Post ${post.slug} missing description`);
+      assert.ok(Array.isArray(post.body) && post.body.length > 0, `Post ${post.slug} body must contain blocks`);
+      assert.ok(post.readMins > 0, `Post ${post.slug} readMins must be positive`);
+      for (const s of post.sources) {
+        assert.ok(S[s], `Post ${post.slug} references unknown source ${s}`);
+      }
+    }
+  });
+
+  it("validates all incident studies have unique IDs, structured timeline, and valid sources", () => {
+    assert.ok(incidents.length > 0);
+    const incidentIds = new Set<string>();
+    for (const inc of incidents) {
+      assert.ok(inc.id, "Incident must have an ID");
+      assert.equal(incidentIds.has(inc.id), false, `Duplicate incident ID ${inc.id}`);
+      incidentIds.add(inc.id);
+
+      assert.ok(inc.title && inc.title.length > 0);
+      assert.ok(inc.date && inc.date.length > 0);
+      assert.ok(inc.kicker && inc.kicker.length > 0);
+      assert.ok(inc.oneLine && inc.oneLine.length > 0);
+      assert.ok(Array.isArray(inc.timeline) && inc.timeline.length > 0);
+      assert.ok(Array.isArray(inc.vuln) && inc.vuln.length > 0);
+      assert.ok(Array.isArray(inc.impact) && inc.impact.length > 0);
+      assert.ok(inc.seraphim && inc.seraphim.limits);
+
+      // Verify all cited sources exist in the canonical registry S
+      for (const sourceKey of inc.sources) {
+        assert.ok(S[sourceKey], `Incident ${inc.id} references unknown source ${sourceKey}`);
+        assert.ok(S[sourceKey].url.startsWith("http"), `Source ${sourceKey} must have valid URL`);
+      }
+    }
+  });
+
+  it("validates all case studies have structured findings with truthful statuses", () => {
+    assert.ok(findings.length > 0);
+    const findingIds = new Set<string>();
+    for (const finding of findings) {
+      assert.ok(finding.id, "Finding must have an ID");
+      assert.equal(findingIds.has(finding.id), false, `Duplicate finding ID ${finding.id}`);
+      findingIds.add(finding.id);
+
+      assert.ok(finding.title && finding.title.length > 0);
+      assert.ok(["Critical", "High", "Medium", "Low", "Info"].includes(finding.severity));
+      assert.ok(finding.rationale && finding.rationale.length > 0);
+      assert.ok(finding.what && finding.what.length > 0);
+      assert.ok(finding.before && finding.before.length > 0);
+      assert.ok(finding.after && finding.after.length > 0);
+      assert.ok(finding.fix && finding.fix.length > 0);
+      assert.ok(finding.status && finding.status.length > 0);
     }
   });
 });

@@ -372,7 +372,7 @@ function aiSection(observation: Observation, tier: ScanTierId): ReportSection {
       title: "Secret-shaped strings in public HTML",
       status: "pass",
       severity: "info",
-      summary: "No AWS key, private-key block, live Stripe secret, GitHub token, Slack token, or assigned secret pattern was found in the fetched HTML.",
+      summary: "No AWS key, private-key block, live Stripe secret, GitHub token, Slack token, OpenAI/Anthropic/Google AI key, or assigned secret pattern was found in the fetched HTML.",
     });
   } else {
     for (const hit of secrets) {

@@ -22,6 +22,15 @@ const BLOCKED_HOSTS = new Set([
   "metadata",
   "metadata.google.internal",
   "metadata.goog",
+  "instance-data",
+  "instance-data.ec2.internal",
+  "docker.internal",
+  "host.docker.internal",
+  "gateway.docker.internal",
+  "kubernetes",
+  "kubernetes.default",
+  "kubernetes.default.svc",
+  "kubernetes.default.svc.cluster.local",
   "invalid",
   "test",
   "local",
@@ -29,6 +38,13 @@ const BLOCKED_HOSTS = new Set([
   "lan",
   "corp",
   "home",
+  "alt",
+  "example",
+  "nip.io",
+  "sslip.io",
+  "localtest.me",
+  "lvh.me",
+  "vcap.me",
 ]);
 
 function ipv4ToInt(ip: string): number | null {
@@ -173,7 +189,17 @@ export function isBlockedHostname(hostname: string): boolean {
     host.endsWith(".home.arpa") ||
     host.endsWith(".lan") ||
     host.endsWith(".corp") ||
-    host.endsWith(".home")
+    host.endsWith(".home") ||
+    host.endsWith(".alt") ||
+    host.endsWith(".example") ||
+    host.endsWith(".docker.internal") ||
+    host.endsWith(".cluster.local") ||
+    host.endsWith(".svc") ||
+    host.endsWith(".nip.io") ||
+    host.endsWith(".sslip.io") ||
+    host.endsWith(".localtest.me") ||
+    host.endsWith(".lvh.me") ||
+    host.endsWith(".vcap.me")
   ) {
     return true;
   }

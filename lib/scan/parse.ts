@@ -4,6 +4,9 @@ const SECRET_RULES: { kind: string; re: RegExp }[] = [
   { kind: "aws-access-key", re: /\bAKIA[0-9A-Z]{16}\b/ },
   { kind: "private-key-block", re: /-----BEGIN (?:RSA |OPENSSH |EC |DSA )?PRIVATE KEY-----/ },
   { kind: "stripe-live-secret", re: /\bsk_live_[0-9a-zA-Z]{10,}\b/ },
+  { kind: "anthropic-api-key", re: /\bsk-ant-[a-zA-Z0-9_-]{20,}\b/ },
+  { kind: "openai-api-key", re: /\bsk-(?!ant-)(?:proj-|admin-)?[a-zA-Z0-9_-]{20,}\b/ },
+  { kind: "google-api-key", re: /\bAIzaSy[0-9A-Za-z_-]{30,35}\b/ },
   { kind: "github-token", re: /\bgh[pousr]_[A-Za-z0-9]{20,}\b/ },
   { kind: "slack-token", re: /\bxox[baprs]-[A-Za-z0-9-]{10,}\b/ },
   { kind: "assigned-secret", re: /\b(?:api[_-]?key|secret|password|token)\b\s*[:=]\s*['"][^'"\s]{12,}['"]/i },
@@ -201,7 +204,12 @@ export function headerScore(headers: HeaderMap): number {
   return Math.round((got / total) * 100);
 }
 
+function isIpAddress(host: string): boolean {
+  return /^(\d{1,3}\.){3}\d{1,3}$/.test(host) || host.includes(":");
+}
+
 export function mailDomain(host: string): string {
+  if (isIpAddress(host)) return host;
   const labels = host.toLowerCase().split(".").filter(Boolean);
   if (labels.length <= 2) return labels.join(".");
   return labels.slice(1).join(".");
