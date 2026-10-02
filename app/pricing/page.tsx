@@ -4,10 +4,12 @@ import { Icon } from "../../components/Icons";
 import { TierEmblem } from "../../components/TierEmblem";
 import { TrustBadges } from "../../components/TrustBadges";
 import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME } from "../../lib/brand";
+import { ScanTierStrip } from "../../components/ScanTierStrip";
 import { ENGAGEMENT_TERMS, helper, matrix, tierHref, tiers, type TierId } from "../../lib/tiers";
+import { scanTierHref, scanTiers } from "../../lib/scanTiers";
 
-const title = "Services and tiers";
-const description = `${BRAND_NAME} offers four ways to work together: Seraphim, Cherubim, Thrones and Angels. Compare scope, cadence and who each tier is for. No prices are published; every engagement is scoped in writing.`;
+const title = "Scans and services";
+const description = `${BRAND_NAME} offers four passive scan tiers, from Basic to Full, and four human Scoped Assessment tiers. No prices are published. Automated scans stay passive. Active work stays a written engagement.`;
 
 export const metadata: Metadata = {
   title,
@@ -32,12 +34,11 @@ export default function PricingPage() {
       <header className="cs-head">
         <p className="eyebrow">Services</p>
         <h1>
-          Four tiers. <span className="gold-text">One honest method.</span>
+          Scan tiers, then <span className="gold-text">a person if you need one.</span>
         </h1>
         <p className="lead">
-          {BRAND_NAME} is passive public recon, Scoped Assessments of applications and AI agent systems, and remediation
-          with retest. The tiers below are simply different amounts of that work, over different periods. Pick the
-          one that fits, or start small and move up.
+          {BRAND_NAME} delivers a passive report from a site you are authorized to check. The scan tiers below are that
+          product. The human tiers further down are Scoped Assessments: written, staffed, and not started by the scan form.
         </p>
         <TrustBadges />
         <p className="fine">
@@ -46,10 +47,62 @@ export default function PricingPage() {
         </p>
       </header>
 
-      <section className="section" aria-labelledby="tiers-h">
+      <section className="section" id="scans" aria-labelledby="scans-h">
         <div className="section-head">
-          <p className="eyebrow">The line-up</p>
-          <h2 id="tiers-h">From full engagement to a light first look</h2>
+          <p className="eyebrow">Automated</p>
+          <h2 id="scans-h">Passive scan tiers</h2>
+          <p className="lead">
+            Basic through Full. Each tier adds report sections. None of them turn on active testing. No dollar prices are
+            published: positioning words only, until a price is set in writing.
+          </p>
+        </div>
+        <ScanTierStrip />
+        <div className="tier-grid" style={{ marginTop: 18 }}>
+          {scanTiers.map((tier) => (
+            <article key={tier.id} id={`scan-${tier.id}`} className={tier.id === "full" ? "card tier-card tier-flagship" : "card tier-card"}>
+              <div className="tier-top">
+                <span className="tier-emblem-wrap">
+                  <TierEmblem id={tier.emblem} size={tier.id === "full" ? 56 : 40} />
+                </span>
+                <div>
+                  <p className="tier-rank">
+                    {tier.label} · {tier.className}
+                  </p>
+                  <h3>{tier.label}</h3>
+                </div>
+              </div>
+              <span className="tier-pos">{tier.positioning}</span>
+              <p className="tier-tag">{tier.tagline}</p>
+              <p>{tier.summary}</p>
+              <h4>Runs now</h4>
+              <ul>
+                {tier.runsNow.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+              <h4>Not automatic</h4>
+              <ul className="tier-not">
+                {tier.notAutomatic.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+              <div className="tier-cta">
+                <Link className={tier.id === "full" ? "btn btn-gold" : "btn btn-glass"} href={scanTierHref(tier.id)}>
+                  Run the {tier.label} scan
+                </Link>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="section" id="engagements" aria-labelledby="tiers-h">
+        <div className="section-head">
+          <p className="eyebrow">Human</p>
+          <h2 id="tiers-h">Scoped Assessment tiers</h2>
+          <p className="lead">
+            People, a written scope, and a retest where the tier includes one. These are not started by the scan button.
+          </p>
         </div>
         <div className="tier-grid">
           {[flagship, ...rest].map((t) => (
