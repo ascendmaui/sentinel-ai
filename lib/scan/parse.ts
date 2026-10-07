@@ -12,6 +12,11 @@ const SECRET_RULES: { kind: string; re: RegExp }[] = [
   { kind: "slack-token", re: /\bxox[baprs]-[A-Za-z0-9-]{10,}\b/ },
   { kind: "sendgrid-api-key", re: /\bSG\.[a-zA-Z0-9_-]{22}\.[a-zA-Z0-9_-]{43}\b/ },
   { kind: "postman-api-key", re: /\bPMAK-[0-9a-f]{24}-[0-9a-f]{34}\b/ },
+  { kind: "cohere-api-key", re: /\bco-[a-zA-Z0-9_-]{20,40}\b/ },
+  { kind: "replicate-api-token", re: /\br8_[a-zA-Z0-9]{32,40}\b/ },
+  { kind: "pinecone-api-key", re: /\bpcsk_[a-zA-Z0-9_-]{40,}\b/ },
+  { kind: "gitlab-token", re: /\bglpat-[0-9a-zA-Z_-]{20,}\b/ },
+  { kind: "npm-token", re: /\bnpm_[a-zA-Z0-9]{36}\b/ },
   { kind: "assigned-secret", re: /\b(?:api[_-]?key|secret|password|token)\b\s*[:=]\s*['"][^'"\s]{12,}['"]/i },
 ];
 
@@ -103,6 +108,14 @@ const AI_WIDGET_HOSTS = [
   "dialogflow.cloud.google.com",
   "elevenlabs.io",
   "vapi.ai",
+  "groq.com",
+  "replicate.com",
+  "cohere.com",
+  "pinecone.io",
+  "retellai.com",
+  "bland.ai",
+  "langchain.com",
+  "langfuse.com",
 ];
 
 export type PromptSurface = { label: string };

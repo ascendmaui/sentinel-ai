@@ -77,6 +77,51 @@ describe("findSecretHits", () => {
     assert.equal(hits[0].redacted.includes(secret), false);
     assert.match(hits[0].redacted, /\[redacted\]/);
   });
+
+  it("redacts a Cohere API key", () => {
+    const secret = "co-1234567890abcdefghijklmnopqrstuv";
+    const hits = findSecretHits(`cohere_api_key="${secret}"`);
+    assert.equal(hits.length, 1);
+    assert.equal(hits[0].kind, "cohere-api-key");
+    assert.equal(hits[0].redacted.includes(secret), false);
+    assert.match(hits[0].redacted, /\[redacted\]/);
+  });
+
+  it("redacts a Replicate API token", () => {
+    const secret = "r8_1234567890abcdefghijklmnopqrstuvwx";
+    const hits = findSecretHits(`REPLICATE_API_TOKEN=${secret}`);
+    assert.equal(hits.length, 1);
+    assert.equal(hits[0].kind, "replicate-api-token");
+    assert.equal(hits[0].redacted.includes(secret), false);
+    assert.match(hits[0].redacted, /\[redacted\]/);
+  });
+
+  it("redacts a Pinecone API key", () => {
+    const secret = "pcsk_1234567890abcdefghijklmnopqrstuvwxyz1234567890";
+    const hits = findSecretHits(`<div>Pinecone credential: ${secret}</div>`);
+    assert.equal(hits.length, 1);
+    assert.equal(hits[0].kind, "pinecone-api-key");
+    assert.equal(hits[0].redacted.includes(secret), false);
+    assert.match(hits[0].redacted, /\[redacted\]/);
+  });
+
+  it("redacts a GitLab personal access token", () => {
+    const secret = "glpat-1234567890abcdefghij";
+    const hits = findSecretHits(`GITLAB_TOKEN="${secret}"`);
+    assert.equal(hits.length, 1);
+    assert.equal(hits[0].kind, "gitlab-token");
+    assert.equal(hits[0].redacted.includes(secret), false);
+    assert.match(hits[0].redacted, /\[redacted\]/);
+  });
+
+  it("redacts an npm access token", () => {
+    const secret = "npm_1234567890abcdefghijklmnopqrstuvwxyz";
+    const hits = findSecretHits(`//registry.npmjs.org/:_authToken=${secret}`);
+    assert.equal(hits.length, 1);
+    assert.equal(hits[0].kind, "npm-token");
+    assert.equal(hits[0].redacted.includes(secret), false);
+    assert.match(hits[0].redacted, /\[redacted\]/);
+  });
 });
 
 describe("mail records", () => {

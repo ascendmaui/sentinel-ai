@@ -21,6 +21,7 @@ describe("isBlockedIp", () => {
     "fd00::1",
     "fe80::1",
     "::ffff:127.0.0.1",
+    "::ffff:0:127.0.0.1",
     "2001:db8::1",
     "2001:2::1",
     "2001:10::1",
@@ -106,6 +107,16 @@ describe("parsePublicUrl", () => {
       "http://0x7f.0.0.1",
       "http://192.52.193.1",
       "http://192.175.48.1",
+      "http://127.0.0.0x1",
+      "http://test.oastify.com",
+      "http://sub.oast.me",
+      "http://probe.interact.sh",
+      "http://app.traefik.me",
+      "http://dns.myip.ninja",
+      "http://box.furious.pro",
+      "http://metadata.azure.com",
+      "http://metadata.oraclecloud.com",
+      "http://[::ffff:0:127.0.0.1]",
     ]) {
       const parsed = parsePublicUrl(input);
       assert.equal(parsed.ok, false, input);

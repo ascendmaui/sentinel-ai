@@ -18,7 +18,7 @@ import { scanTiers, SCAN_TIER_ORDER, tierAtLeast, AUTHORIZATION_STATEMENT, type 
 import { tiers, type TierId } from "../tiers";
 import { isBlockedIp, isBlockedHostname, parsePublicUrl } from "./ssrf";
 import { cleanCompanyName, parseScanRequest } from "./request";
-import { findSecretHits, headerScore, summarizeSetCookie } from "./parse";
+import { findSecretHits, headerScore, promptSurfaceHints, summarizeSetCookie } from "./parse";
 import { buildReport } from "./report";
 import { newReportToken, verifyReportToken, saveReport, getReport } from "./store";
 import { allowScan, clientKey } from "./limit";
@@ -1013,6 +1013,178 @@ describe("Smoke: End-to-end evidence redaction in report engine", () => {
     assert.ok(sgFinding, "SendGrid secret finding must exist");
     assert.equal(sgFinding.status, "fail");
     assert.ok(sgFinding.evidence?.includes("[redacted]"));
+  });
+});
+
+describe("Smoke: Mixed-radix, non-standard IP octets, and OAST / DNS rebinding defenses", () => {
+  it("rejects mixed-radix hexadecimal octets and SIIT-translated addresses", () => {
+    const mixed = [
+      "127.0.0.0x1",
+      "0x7f.0.0.1",
+      "10.0x1.0.1",
+      "192.168.0.0x1",
+      "0177.0.0.0x1",
+    ];
+    for (const host of mixed) {
+      assert.equal(isBlockedHostname(host), true, `Mixed host ${host} must be blocked`);
+      const parsed = parsePublicUrl(`http://${host}`);
+      assert.equal(parsed.ok, false, `URL http://${host} must be rejected`);
+    }
+
+    // SIIT translated IPv4
+    assert.equal(isBlockedIp("::ffff:0:127.0.0.1"), true, "SIIT loopback must be blocked");
+    assert.equal(isBlockedIp("::ffff:0:10.0.0.1"), true, "SIIT RFC1918 must be blocked");
+    assert.equal(isBlockedIp("::ffff:0:169.254.169.254"), true, "SIIT metadata must be blocked");
+  });
+
+  it("blocks out-of-band security testing and wildcard rebinding hostnames", () => {
+    const oastHosts = [
+      "oastify.com",
+      "app.oastify.com",
+      "oast.me",
+      "sub.oast.me",
+      "target.oast.live",
+      "node.oast.site",
+      "probe.oast.online",
+      "bot.oast.fun",
+      "interact.sh",
+      "probe.interact.sh",
+      "traefik.me",
+      "app.traefik.me",
+      "myip.ninja",
+      "dns.myip.ninja",
+      "furious.pro",
+      "cluster.furious.pro",
+      "metadata.azure.com",
+      "sub.metadata.azure.com",
+      "metadata.oraclecloud.com",
+      "node.metadata.oraclecloud.com",
+    ];
+    for (const host of oastHosts) {
+      assert.equal(isBlockedHostname(host), true, `OAST/rebinding host ${host} must be blocked`);
+      const parsed = parsePublicUrl(`https://${host}`);
+      assert.equal(parsed.ok, false, `URL https://${host} must be rejected`);
+    }
+  });
+});
+
+describe("Smoke: Modern AI agent and cloud developer credential redaction", () => {
+  it("redacts Cohere, Replicate, Pinecone, GitLab, and npm secrets from HTML and reports", () => {
+    const cohere = "co-1234567890abcdefghijklmnopqrstuv";
+    const replicate = "r8_1234567890abcdefghijklmnopqrstuvwx";
+    const pinecone = "pcsk_1234567890abcdefghijklmnopqrstuvwxyz1234567890";
+    const gitlab = "glpat-1234567890abcdefghij";
+    const npm = "npm_1234567890abcdefghijklmnopqrstuvwxyz";
+
+    const html = `
+      <div>Cohere: ${cohere}</div>
+      <div>Replicate: ${replicate}</div>
+      <div>Pinecone: ${pinecone}</div>
+      <div>GitLab: ${gitlab}</div>
+      <div>npm: ${npm}</div>
+    `;
+
+    const hits = findSecretHits(html);
+    assert.equal(hits.length, 5);
+
+    const kinds = hits.map((h) => h.kind);
+    assert.ok(kinds.includes("cohere-api-key"));
+    assert.ok(kinds.includes("replicate-api-token"));
+    assert.ok(kinds.includes("pinecone-api-key"));
+    assert.ok(kinds.includes("gitlab-token"));
+    assert.ok(kinds.includes("npm-token"));
+
+    for (const hit of hits) {
+      assert.match(hit.redacted, /\[redacted\]/);
+      assert.doesNotMatch(hit.redacted, new RegExp(cohere));
+      assert.doesNotMatch(hit.redacted, new RegExp(replicate));
+      assert.doesNotMatch(hit.redacted, new RegExp(pinecone));
+      assert.doesNotMatch(hit.redacted, new RegExp(gitlab));
+      assert.doesNotMatch(hit.redacted, new RegExp(npm));
+    }
+  });
+
+  it("detects modern AI agent and orchestration endpoints in prompt surfaces", () => {
+    const testScripts = [
+      "https://cdn.groq.com/widget.js",
+      "https://api.replicate.com/sdk.js",
+      "https://widgets.cohere.com/embed.js",
+      "https://client.pinecone.io/v1.js",
+      "https://cdn.retellai.com/agent.js",
+      "https://voice.bland.ai/call.js",
+      "https://cdn.langchain.com/web.js",
+      "https://telemetry.langfuse.com/events.js",
+    ];
+
+    const hints = promptSurfaceHints("<html><body><main></main></body></html>", testScripts);
+    assert.equal(hints.length, 8);
+    for (const h of hints) {
+      assert.match(h.label, /Script loaded from (?:groq|replicate|cohere|pinecone|retellai|bland|langchain|langfuse)\.(?:com|io|ai)/);
+    }
+  });
+});
+
+describe("Smoke: Route-level anti-caching & crawler boundary headers", () => {
+  it("enforces no-store caching and noindex crawler policies on API routes", async () => {
+    assert.ok(typeof nextConfig.headers === "function");
+    const rules = await nextConfig.headers!();
+    assert.ok(Array.isArray(rules));
+    const apiRule = rules.find((r: { source: string }) => r.source === "/api/:path*");
+    assert.ok(apiRule, "Expected route header rule for /api/:path*");
+
+    const cacheHeader = (apiRule.headers as { key: string; value: string }[]).find(
+      (h) => h.key.toLowerCase() === "cache-control"
+    );
+    assert.equal(cacheHeader?.value, "no-store, no-cache, must-revalidate");
+
+    const robotsHeader = (apiRule.headers as { key: string; value: string }[]).find(
+      (h) => h.key.toLowerCase() === "x-robots-tag"
+    );
+    assert.equal(robotsHeader?.value, "noindex, nofollow, noarchive");
+  });
+
+  it("enforces private cache and noarchive crawler policies on report routes", async () => {
+    assert.ok(typeof nextConfig.headers === "function");
+    const rules = await nextConfig.headers!();
+    assert.ok(Array.isArray(rules));
+    const reportRule = rules.find((r: { source: string }) => r.source === "/report/:path*");
+    assert.ok(reportRule, "Expected route header rule for /report/:path*");
+
+    const cacheHeader = (reportRule.headers as { key: string; value: string }[]).find(
+      (h) => h.key.toLowerCase() === "cache-control"
+    );
+    assert.equal(cacheHeader?.value, "private, no-cache, no-store, must-revalidate");
+
+    const robotsHeader = (reportRule.headers as { key: string; value: string }[]).find(
+      (h) => h.key.toLowerCase() === "x-robots-tag"
+    );
+    assert.equal(robotsHeader?.value, "noindex, nofollow, noarchive");
+  });
+});
+
+describe("Smoke: Client rate-limiter IP normalization & IPv6 zone stripping", () => {
+  it("normalizes bracketed IPv6 client IP headers and strips ports", () => {
+    const bracketHeaders = new Headers({
+      "cf-connecting-ip": "[2001:db8::1]",
+    });
+    assert.equal(clientKey(bracketHeaders), "2001:db8::1");
+
+    const bracketWithPort = new Headers({
+      "cf-connecting-ip": "[2001:db8::1]:8443",
+    });
+    assert.equal(clientKey(bracketWithPort), "2001:db8::1");
+  });
+
+  it("normalizes IPv4 addresses formatted with port numbers in forwarded headers", () => {
+    const v4PortHeaders = new Headers({
+      "x-forwarded-for": "198.51.100.25:8080, 10.0.0.1",
+    });
+    assert.equal(clientKey(v4PortHeaders), "198.51.100.25");
+
+    const realIpPortHeaders = new Headers({
+      "x-real-ip": "198.51.100.99:443",
+    });
+    assert.equal(clientKey(realIpPortHeaders), "198.51.100.99");
   });
 });
 

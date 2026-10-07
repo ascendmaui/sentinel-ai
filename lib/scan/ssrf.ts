@@ -45,6 +45,18 @@ const BLOCKED_HOSTS = new Set([
   "localtest.me",
   "lvh.me",
   "vcap.me",
+  "traefik.me",
+  "myip.ninja",
+  "furious.pro",
+  "interact.sh",
+  "oastify.com",
+  "oast.me",
+  "oast.live",
+  "oast.site",
+  "oast.online",
+  "oast.fun",
+  "metadata.azure.com",
+  "metadata.oraclecloud.com",
 ]);
 
 function ipv4ToInt(ip: string): number | null {
@@ -142,6 +154,10 @@ export function isBlockedIpv6(ip: string): boolean {
   if (g0 === 0 && g1 === 0 && g2 === 0 && g3 === 0 && g4 === 0 && g5 === 0xffff) {
     return isBlockedIpv4(ipv4FromInt(((g6 << 16) | g7) >>> 0));
   }
+  // ::ffff:0:0:0/96 — IPv4-translated (SIIT, RFC 2765 / RFC 6052)
+  if (g0 === 0 && g1 === 0 && g2 === 0 && g3 === 0 && g4 === 0xffff && g5 === 0) {
+    return isBlockedIpv4(ipv4FromInt(((g6 << 16) | g7) >>> 0));
+  }
   // 2002::/16 — 6to4 embeds an IPv4 address
   if (g0 === 0x2002) {
     return isBlockedIpv4(ipv4FromInt(((g1 << 16) | g2) >>> 0));
@@ -203,12 +219,26 @@ export function isBlockedHostname(hostname: string): boolean {
     host.endsWith(".sslip.io") ||
     host.endsWith(".localtest.me") ||
     host.endsWith(".lvh.me") ||
-    host.endsWith(".vcap.me")
+    host.endsWith(".vcap.me") ||
+    host.endsWith(".traefik.me") ||
+    host.endsWith(".myip.ninja") ||
+    host.endsWith(".furious.pro") ||
+    host.endsWith(".interact.sh") ||
+    host.endsWith(".oastify.com") ||
+    host.endsWith(".oast.me") ||
+    host.endsWith(".oast.live") ||
+    host.endsWith(".oast.site") ||
+    host.endsWith(".oast.online") ||
+    host.endsWith(".oast.fun") ||
+    host.endsWith(".metadata.azure.com") ||
+    host.endsWith(".metadata.oraclecloud.com")
   ) {
     return true;
   }
   if (host.endsWith(".metadata.google.internal") || host === "metadata.google.internal") return true;
   if (/^0x[0-9a-f.]+$/i.test(host)) return true;
+  const dotParts = host.split(".");
+  if (dotParts.some((p) => /^0x[0-9a-f]+$/i.test(p))) return true;
   if (/^[\d.]+$/.test(host)) {
     const parts = host.split(".");
     if (parts.length === 1) return true;

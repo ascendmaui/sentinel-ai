@@ -21,9 +21,21 @@ export function allowScan(key: string, now = Date.now()): boolean {
   return true;
 }
 
+function normalizeIp(raw: string): string {
+  const trimmed = raw.trim();
+  const bracketMatch = /^\[([a-f0-9:]+)\](?::\d+)?$/i.exec(trimmed);
+  if (bracketMatch) return bracketMatch[1].toLowerCase();
+  const portMatch = /^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):\d+$/.exec(trimmed);
+  if (portMatch) return portMatch[1];
+  return trimmed;
+}
+
 export function clientKey(headers: Headers): string {
   const cf = headers.get("cf-connecting-ip")?.trim();
-  if (cf) return cf;
+  if (cf) return normalizeIp(cf);
   const forwarded = headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  return forwarded || headers.get("x-real-ip")?.trim() || "local";
+  if (forwarded) return normalizeIp(forwarded);
+  const real = headers.get("x-real-ip")?.trim();
+  if (real) return normalizeIp(real);
+  return "local";
 }
