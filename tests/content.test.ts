@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, BRAND_SUFFIX, BRAND_WORD, SITE_URL, TRUE_BADGES } from "../lib/brand";
-import { findings, findingById, remediation, severityCounts } from "../lib/caseStudies";
+import { badgeByKey, BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, BRAND_SUFFIX, BRAND_WORD, SITE_URL, TRUE_BADGES } from "../lib/brand";
+import { findings, findingById, remediation, remediationById, severityCounts } from "../lib/caseStudies";
 import { incidents, incidentById, scenarios, scenarioById } from "../lib/incidents";
 import { posts, postBySlug, postWords } from "../lib/posts";
 import { S, sources, sourceById } from "../lib/sources";
@@ -20,13 +20,18 @@ describe("brand", () => {
     expect(() => new URL(SITE_URL)).not.toThrow();
   });
 
-  it("defines unique, honest trust badges", () => {
+  it("defines unique, honest trust badges and supports defensive badgeByKey lookup", () => {
     const keys = TRUE_BADGES.map((b) => b.key);
     expect(new Set(keys).size).toBe(TRUE_BADGES.length);
     for (const b of TRUE_BADGES) {
       expect(b.label.length).toBeGreaterThan(0);
       expect(b.note.length).toBeGreaterThan(0);
+      expect(badgeByKey(b.key)).toBe(b);
+      expect(badgeByKey(b.key.toUpperCase())).toBe(b);
     }
+    expect(badgeByKey("nonexistent")).toBeUndefined();
+    expect(badgeByKey("")).toBeUndefined();
+    expect(badgeByKey(undefined as unknown as string)).toBeUndefined();
   });
 });
 
@@ -100,6 +105,8 @@ describe("posts", () => {
   it("postBySlug does not match inherited object properties", () => {
     expect(postBySlug("toString")).toBeUndefined();
     expect(postBySlug(posts[0].slug)).toBe(posts[0]);
+    expect(postBySlug("")).toBeUndefined();
+    expect(postBySlug(undefined as unknown as string)).toBeUndefined();
   });
 
   it("calculates positive word counts and validates block text", () => {
@@ -126,6 +133,8 @@ describe("tiers", () => {
     expect(tierById("SERAPHIM")).toBeDefined();
     expect(tierById("unknown")).toBeUndefined();
     expect(tierById("toString")).toBeUndefined();
+    expect(tierById("")).toBeUndefined();
+    expect(tierById(undefined as unknown as string)).toBeUndefined();
   });
 
   it("matrix and helper cover all tiers correctly", () => {
@@ -160,6 +169,8 @@ describe("incidents", () => {
     expect(incidentById(first.id.toUpperCase())).toBe(first);
     expect(incidentById("unknown-incident")).toBeUndefined();
     expect(incidentById("constructor")).toBeUndefined();
+    expect(incidentById("")).toBeUndefined();
+    expect(incidentById(undefined as unknown as string)).toBeUndefined();
   });
 
   it("scenarios have unique ids and cite only registered sources", () => {
@@ -175,6 +186,8 @@ describe("incidents", () => {
     expect(scenarioById(first.id.toUpperCase())).toBe(first);
     expect(scenarioById("unknown-scenario")).toBeUndefined();
     expect(scenarioById("constructor")).toBeUndefined();
+    expect(scenarioById("")).toBeUndefined();
+    expect(scenarioById(undefined as unknown as string)).toBeUndefined();
   });
 });
 
@@ -194,6 +207,17 @@ describe("case studies / findings", () => {
     expect(findingById("f-01")?.id).toBe("F-01");
     expect(findingById("F-99")).toBeUndefined();
     expect(findingById("toString")).toBeUndefined();
+    expect(findingById("")).toBeUndefined();
+    expect(findingById(undefined as unknown as string)).toBeUndefined();
+  });
+
+  it("remediationById handles case-insensitivity and returns undefined for unknown", () => {
+    expect(remediationById("F-01")).toBeDefined();
+    expect(remediationById("f-01")?.id).toBe("F-01");
+    expect(remediationById("F-99")).toBeUndefined();
+    expect(remediationById("toString")).toBeUndefined();
+    expect(remediationById("")).toBeUndefined();
+    expect(remediationById(undefined as unknown as string)).toBeUndefined();
   });
 
   it("severityCounts matches findings tally", () => {

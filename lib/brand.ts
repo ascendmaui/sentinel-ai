@@ -41,3 +41,13 @@ export const TRUE_BADGES = [
   { key: "retest", label: "Remediation and retest", note: "Fixes verified, not assumed" },
   { key: "local", label: "Private local models", note: "Scenario design stays on our hardware" },
 ] as const;
+
+export type TrustBadge = (typeof TRUE_BADGES)[number];
+
+export function badgeByKey(key: string): TrustBadge | undefined {
+  if (!key || typeof key !== "string") return undefined;
+  const target = key.toLowerCase();
+  return TRUE_BADGES.find((b) => b.key.toLowerCase() === target);
+}
+
+
