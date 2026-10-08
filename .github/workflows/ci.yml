@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Least privilege: CI only reads the repo. No secrets are used or required.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Unit and API integration tests
+        run: npm test
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+      - name: Smoke test the production server
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+        run: |
+          npm run start -- -p 3000 > server.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -fsS http://localhost:3000/api/health > /dev/null && break
+            sleep 1
+          done
+          node scripts/smoke.mjs http://localhost:3000 || { cat server.log; exit 1; }
+
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Fail on critical advisories in production dependencies
+        run: npm audit --omit=dev --audit-level=critical
+      - name: Report high advisories (informational)
+        run: npm audit --omit=dev --audit-level=high
+        continue-on-error: true
