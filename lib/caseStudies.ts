@@ -213,3 +213,7 @@ export const remediation: Remediation[] = [
     checked: "Migration present on current main. That it is applied to the live database is from the remediation log, not re-checked.",
   },
 ];
+
+export const findingById = (id: string): Finding | undefined =>
+  findings.find((f) => f.id.toLowerCase() === id.toLowerCase());
+

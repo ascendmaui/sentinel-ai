@@ -1,12 +1,22 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { GET as health } from "../app/api/health/route";
 import { GET as postsIndex } from "../app/api/posts/route";
-import { GET as postOne, generateStaticParams } from "../app/api/posts/[slug]/route";
+import { GET as postOne, generateStaticParams as postParams } from "../app/api/posts/[slug]/route";
+import { GET as incidentsIndex } from "../app/api/incidents/route";
+import { GET as incidentOne, generateStaticParams as incidentParams } from "../app/api/incidents/[id]/route";
+import { GET as caseStudiesIndex } from "../app/api/case-studies/route";
+import { GET as caseStudyOne, generateStaticParams as caseStudyParams } from "../app/api/case-studies/[id]/route";
+import { GET as tiersIndex } from "../app/api/tiers/route";
+import { GET as tierOne, generateStaticParams as tierParams } from "../app/api/tiers/[id]/route";
 import { BRAND_NAME } from "../lib/brand";
 import { posts } from "../lib/posts";
+import { incidents } from "../lib/incidents";
+import { findings } from "../lib/caseStudies";
+import { tiers } from "../lib/tiers";
 import { S } from "../lib/sources";
 
-const ctx = (slug: string) => ({ params: Promise.resolve({ slug }) });
+const slugCtx = (slug: string) => ({ params: Promise.resolve({ slug }) });
+const idCtx = (id: string) => ({ params: Promise.resolve({ id }) });
 const req = (path: string) => new Request(`http://localhost${path}`);
 
 afterEach(() => vi.unstubAllEnvs());
@@ -65,7 +75,7 @@ describe("GET /api/posts", () => {
 describe("GET /api/posts/[slug]", () => {
   it("returns every known post with resolved source records", async () => {
     for (const p of posts) {
-      const res = await postOne(req(`/api/posts/${p.slug}`), ctx(p.slug));
+      const res = await postOne(req(`/api/posts/${p.slug}`), slugCtx(p.slug));
       expect(res.status).toBe(200);
       const body = await res.json();
       expect(body.slug).toBe(p.slug);
@@ -78,7 +88,7 @@ describe("GET /api/posts/[slug]", () => {
   it.each(["nope", "", "../etc/passwd", "%2e%2e", "__proto__", "constructor", "toString"])(
     "returns a JSON 404 for %j",
     async (slug) => {
-      const res = await postOne(req(`/api/posts/${slug}`), ctx(slug));
+      const res = await postOne(req(`/api/posts/${slug}`), slugCtx(slug));
       expect(res.status).toBe(404);
       expect(res.headers.get("content-type")).toContain("application/json");
       expect(await res.json()).toMatchObject({ error: "not_found" });
@@ -86,6 +96,163 @@ describe("GET /api/posts/[slug]", () => {
   );
 
   it("generateStaticParams covers every post", () => {
-    expect(generateStaticParams()).toEqual(posts.map((p) => ({ slug: p.slug })));
+    expect(postParams()).toEqual(posts.map((p) => ({ slug: p.slug })));
+  });
+});
+
+describe("GET /api/incidents", () => {
+  it("returns incident list, counts, disclaimer, and cache headers", async () => {
+    const res = incidentsIndex();
+    expect(res.status).toBe(200);
+    expect(res.headers.get("cache-control")).toContain("s-maxage");
+    const body = await res.json();
+    expect(body.count).toBe(incidents.length);
+    expect(body.incidents).toHaveLength(incidents.length);
+    expect(body.disclaimer).toBeDefined();
+    for (const inc of body.incidents) {
+      expect(inc.id).toBeDefined();
+      expect(inc.title.length).toBeGreaterThan(0);
+      expect(inc.url).toBe(`/incident-case-studies#${inc.id}`);
+      expect(inc.sourcesCount).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe("GET /api/incidents/[id]", () => {
+  it("returns every known incident with resolved sources and timeline", async () => {
+    for (const inc of incidents) {
+      const res = await incidentOne(req(`/api/incidents/${inc.id}`), idCtx(inc.id));
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.id).toBe(inc.id);
+      expect(body.timeline.length).toBeGreaterThan(0);
+      expect(body.sources).toHaveLength(inc.sources.length);
+      for (const s of body.sources) expect(s.url).toBe(S[s.id].url);
+    }
+  });
+
+  it("supports case-insensitive incident lookup", async () => {
+    const first = incidents[0];
+    const res = await incidentOne(req(`/api/incidents/${first.id.toUpperCase()}`), idCtx(first.id.toUpperCase()));
+    expect(res.status).toBe(200);
+    expect((await res.json()).id).toBe(first.id);
+  });
+
+  it.each(["nonexistent-incident", "../etc/passwd", "__proto__", "constructor", "toString"])(
+    "returns a JSON 404 for %j",
+    async (id) => {
+      const res = await incidentOne(req(`/api/incidents/${id}`), idCtx(id));
+      expect(res.status).toBe(404);
+      expect(res.headers.get("content-type")).toContain("application/json");
+      expect(await res.json()).toMatchObject({ error: "not_found" });
+    },
+  );
+
+  it("generateStaticParams covers every incident", () => {
+    expect(incidentParams()).toEqual(incidents.map((i) => ({ id: i.id })));
+  });
+});
+
+describe("GET /api/case-studies", () => {
+  it("returns findings list, severityCounts, and cache headers", async () => {
+    const res = caseStudiesIndex();
+    expect(res.status).toBe(200);
+    expect(res.headers.get("cache-control")).toContain("s-maxage");
+    const body = await res.json();
+    expect(body.count).toBe(findings.length);
+    expect(body.findings).toHaveLength(findings.length);
+    expect(body.severityCounts).toBeDefined();
+    for (const f of body.findings) {
+      expect(f.id).toBeDefined();
+      expect(f.title.length).toBeGreaterThan(0);
+      expect(f.severity).toBeDefined();
+      expect(f.url).toBe(`/case-studies#${f.id.toLowerCase()}`);
+    }
+  });
+});
+
+describe("GET /api/case-studies/[id]", () => {
+  it("returns every finding by ID with before/after details", async () => {
+    for (const f of findings) {
+      const res = await caseStudyOne(req(`/api/case-studies/${f.id}`), idCtx(f.id));
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.id).toBe(f.id);
+      expect(body.before.length).toBeGreaterThan(0);
+      expect(body.after.length).toBeGreaterThan(0);
+      expect(body.fix.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("supports case-insensitive finding lookup", async () => {
+    const res = await caseStudyOne(req("/api/case-studies/f-01"), idCtx("f-01"));
+    expect(res.status).toBe(200);
+    expect((await res.json()).id).toBe("F-01");
+  });
+
+  it.each(["F-999", "unknown", "__proto__", "constructor", "toString"])(
+    "returns a JSON 404 for %j",
+    async (id) => {
+      const res = await caseStudyOne(req(`/api/case-studies/${id}`), idCtx(id));
+      expect(res.status).toBe(404);
+      expect(res.headers.get("content-type")).toContain("application/json");
+      expect(await res.json()).toMatchObject({ error: "not_found" });
+    },
+  );
+
+  it("generateStaticParams covers every finding", () => {
+    expect(caseStudyParams()).toEqual(findings.map((f) => ({ id: f.id.toLowerCase() })));
+  });
+});
+
+describe("GET /api/tiers", () => {
+  it("returns all four tiers, matrix, terms, and cache headers", async () => {
+    const res = tiersIndex();
+    expect(res.status).toBe(200);
+    expect(res.headers.get("cache-control")).toContain("s-maxage");
+    const body = await res.json();
+    expect(body.count).toBe(4);
+    expect(body.tiers).toHaveLength(4);
+    expect(body.matrix.length).toBeGreaterThan(0);
+    expect(body.terms.length).toBeGreaterThan(0);
+    for (const t of body.tiers) {
+      expect(t.name).toBeDefined();
+      expect(t.rank).toBeGreaterThanOrEqual(1);
+      expect(t.url).toBe(`/pricing#${t.id}`);
+    }
+  });
+});
+
+describe("GET /api/tiers/[id]", () => {
+  it("returns each tier with included items and fit criteria", async () => {
+    for (const t of tiers) {
+      const res = await tierOne(req(`/api/tiers/${t.id}`), idCtx(t.id));
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.id).toBe(t.id);
+      expect(body.name).toBe(t.name);
+      expect(body.included.length).toBeGreaterThan(0);
+      expect(body.forWho.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("supports case-insensitive tier lookup", async () => {
+    const res = await tierOne(req("/api/tiers/SERAPHIM"), idCtx("SERAPHIM"));
+    expect(res.status).toBe(200);
+    expect((await res.json()).id).toBe("seraphim");
+  });
+
+  it.each(["free", "enterprise-plus", "__proto__", "constructor", "toString"])(
+    "returns a JSON 404 for %j",
+    async (id) => {
+      const res = await tierOne(req(`/api/tiers/${id}`), idCtx(id));
+      expect(res.status).toBe(404);
+      expect(res.headers.get("content-type")).toContain("application/json");
+      expect(await res.json()).toMatchObject({ error: "not_found" });
+    },
+  );
+
+  it("generateStaticParams covers all four tiers", () => {
+    expect(tierParams()).toEqual(tiers.map((t) => ({ id: t.id })));
   });
 });

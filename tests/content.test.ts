@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { BRAND_MAIL, BRAND_NAME, BRAND_SUFFIX, BRAND_WORD } from "../lib/brand";
-import { incidents } from "../lib/incidents";
+import { findings, findingById } from "../lib/caseStudies";
+import { incidents, incidentById } from "../lib/incidents";
 import { posts, postBySlug } from "../lib/posts";
 import { S } from "../lib/sources";
 import { tierById, tiers } from "../lib/tiers";
@@ -60,6 +61,12 @@ describe("tiers", () => {
     expect(new Set(tiers.map((t) => t.id)).size).toBe(tiers.length);
     expect(tiers.map((t) => t.rank).sort()).toEqual(tiers.map((_, i) => i + 1));
   });
+
+  it("tierById handles case-insensitivity and returns undefined for unknown", () => {
+    expect(tierById("SERAPHIM")).toBeDefined();
+    expect(tierById("unknown")).toBeUndefined();
+    expect(tierById("toString")).toBeUndefined();
+  });
 });
 
 describe("incidents", () => {
@@ -70,4 +77,32 @@ describe("incidents", () => {
       for (const id of inc.sources) expect(S[id], `${inc.id} -> ${id}`).toBeDefined();
     }
   });
+
+  it("incidentById handles case-insensitivity and returns undefined for unknown", () => {
+    const first = incidents[0];
+    expect(incidentById(first.id.toUpperCase())).toBe(first);
+    expect(incidentById("unknown-incident")).toBeUndefined();
+    expect(incidentById("constructor")).toBeUndefined();
+  });
 });
+
+describe("case studies / findings", () => {
+  it("have unique IDs and recognized severity levels", () => {
+    expect(new Set(findings.map((f) => f.id)).size).toBe(findings.length);
+    const validSeverities = new Set(["Critical", "High", "Medium", "Low", "Info"]);
+    for (const f of findings) {
+      expect(validSeverities.has(f.severity), `${f.id} severity ${f.severity}`).toBe(true);
+      expect(f.title.length).toBeGreaterThan(0);
+      expect(f.fix.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("findingById handles case-insensitivity and returns undefined for unknown", () => {
+    expect(findingById("F-01")).toBeDefined();
+    expect(findingById("f-01")?.id).toBe("F-01");
+    expect(findingById("F-99")).toBeUndefined();
+    expect(findingById("toString")).toBeUndefined();
+  });
+});
+
+

@@ -5,6 +5,7 @@ import { BRAND_EMAIL, BRAND_MAIL } from "../lib/brand";
 /** Inline call to action pointing at one tier and the full comparison. */
 export function TierCta({ tier, lead }: { tier: TierId; lead: string }) {
   const t = tierById(tier);
+  if (!t) return null;
   return (
     <aside className="tier-cta-inline" aria-label={`${t.name} tier`}>
       <p>

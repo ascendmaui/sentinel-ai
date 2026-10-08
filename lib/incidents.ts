@@ -575,3 +575,7 @@ export const scenarios: Scenario[] = [
 ];
 
 export const INCIDENTS_DISCLAIMER = `This page is analysis based on public reporting. It is not a statement about any specific client, and ${BRAND_NAME} has no past engagements to report. Reports may change or be corrected, so follow the source links. Sections marked Known cite a source; sections marked Inferred are our own analysis.`;
+
+export const incidentById = (id: string): Incident | undefined =>
+  incidents.find((i) => i.id === id || i.id.toLowerCase() === id.toLowerCase());
+

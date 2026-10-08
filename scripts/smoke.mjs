@@ -9,25 +9,57 @@ const get = (path, init) => fetch(base + path, { redirect: "manual", ...init });
 const pages = ["/", "/pricing", "/blog", "/case-studies", "/incident-case-studies"];
 const seen = new Set(pages);
 
-const posts = await (await get("/api/posts")).json();
-check(Array.isArray(posts.posts) && posts.count === posts.posts.length && posts.count > 0, "GET /api/posts shape");
-for (const p of posts.posts) { pages.push(p.url); seen.add(p.url); }
-
+// 1. Health check
 const h = await get("/api/health");
 check(h.status === 200 && (await h.json()).status === "ok", "GET /api/health ok");
 check(h.headers.get("cache-control") === "no-store", "/api/health is not cacheable");
+check(h.headers.get("x-content-type-options") === "nosniff", "/api/health nosniff header");
+
+const post = await get("/api/health", { method: "POST" });
+check(post.status === 405, "POST /api/health -> 405");
+
+// 2. Posts API
+const posts = await (await get("/api/posts")).json();
+check(Array.isArray(posts.posts) && posts.count === posts.posts.length && posts.count > 0, "GET /api/posts shape");
+for (const p of posts.posts) { pages.push(p.url); seen.add(p.url); }
 
 for (const p of posts.posts) {
   const r = await get(`/api/posts/${p.slug}`);
   const b = await r.json();
   check(r.status === 200 && b.slug === p.slug && b.sources.every(Boolean), `GET /api/posts/${p.slug}`);
 }
-const missing = await get("/api/posts/does-not-exist");
-check(missing.status === 404 && (await missing.json()).error === "not_found", "unknown post -> JSON 404");
-const post = await get("/api/health", { method: "POST" });
-check(post.status === 405, "POST /api/health -> 405");
+const missingPost = await get("/api/posts/does-not-exist");
+check(missingPost.status === 404 && (await missingPost.json()).error === "not_found", "unknown post -> JSON 404");
 check((await get("/blog/does-not-exist")).status === 404, "unknown blog page -> 404");
 
+// 3. Incidents API
+const incs = await (await get("/api/incidents")).json();
+check(Array.isArray(incs.incidents) && incs.count === incs.incidents.length && incs.count > 0, "GET /api/incidents shape");
+for (const inc of incs.incidents) {
+  const r = await get(`/api/incidents/${inc.id}`);
+  const b = await r.json();
+  check(r.status === 200 && b.id === inc.id && Array.isArray(b.timeline), `GET /api/incidents/${inc.id}`);
+}
+const missingInc = await get("/api/incidents/does-not-exist");
+check(missingInc.status === 404 && (await missingInc.json()).error === "not_found", "unknown incident -> JSON 404");
+
+// 4. Case Studies API
+const cs = await (await get("/api/case-studies")).json();
+check(Array.isArray(cs.findings) && cs.count === cs.findings.length && cs.count > 0, "GET /api/case-studies shape");
+const csOne = await get("/api/case-studies/f-01");
+check(csOne.status === 200 && (await csOne.json()).id === "F-01", "GET /api/case-studies/f-01 (case-insensitive)");
+const missingCs = await get("/api/case-studies/f-999");
+check(missingCs.status === 404 && (await missingCs.json()).error === "not_found", "unknown case study -> JSON 404");
+
+// 5. Tiers API
+const tiersRes = await (await get("/api/tiers")).json();
+check(Array.isArray(tiersRes.tiers) && tiersRes.count === 4, "GET /api/tiers shape");
+const tierOne = await get("/api/tiers/seraphim");
+check(tierOne.status === 200 && (await tierOne.json()).name === "Seraphim", "GET /api/tiers/seraphim");
+const missingTier = await get("/api/tiers/does-not-exist");
+check(missingTier.status === 404 && (await missingTier.json()).error === "not_found", "unknown tier -> JSON 404");
+
+// 6. Crawl internal page links
 const links = new Set();
 for (const path of pages) {
   const r = await get(path);
