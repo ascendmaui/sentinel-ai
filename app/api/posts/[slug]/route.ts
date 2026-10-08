@@ -13,5 +13,5 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
   const { slug } = await params;
   const p = postBySlug(slug);
   if (!p) return notFound("post");
-  return json({ ...p, sources: p.sources.map((id) => S[id]) }, { cacheControl: PUBLIC_CACHE });
+  return json({ ...p, sources: p.sources.map((id) => S[id]).filter(Boolean) }, { cacheControl: PUBLIC_CACHE });
 }

@@ -2,6 +2,7 @@
 export const SECURITY_HEADERS = {
   "X-Content-Type-Options": "nosniff",
   "Referrer-Policy": "no-referrer",
+  "X-Frame-Options": "DENY",
 } as const;
 
 export function json(data: unknown, init: { status?: number; cacheControl?: string } = {}): Response {

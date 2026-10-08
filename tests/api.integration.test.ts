@@ -28,6 +28,7 @@ describe("GET /api/health", () => {
     expect(res.headers.get("content-type")).toContain("application/json");
     expect(res.headers.get("cache-control")).toBe("no-store");
     expect(res.headers.get("x-content-type-options")).toBe("nosniff");
+    expect(res.headers.get("x-frame-options")).toBe("DENY");
     expect(await res.json()).toMatchObject({ status: "ok", service: BRAND_NAME });
   });
 
@@ -84,6 +85,14 @@ describe("GET /api/posts/[slug]", () => {
       for (const s of body.sources) expect(s.url).toBe(S[s.id].url);
     }
   });
+
+  it("supports case-insensitive post slug lookup", async () => {
+    const first = posts[0];
+    const res = await postOne(req(`/api/posts/${first.slug.toUpperCase()}`), slugCtx(first.slug.toUpperCase()));
+    expect(res.status).toBe(200);
+    expect((await res.json()).slug).toBe(first.slug);
+  });
+
 
   it.each(["nope", "", "../etc/passwd", "%2e%2e", "__proto__", "constructor", "toString"])(
     "returns a JSON 404 for %j",
