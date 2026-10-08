@@ -198,7 +198,7 @@ export const remediation: Remediation[] = [
   },
   {
     id: "F-07",
-    title: "Charge idempotency key included the amount",
+    title: "Charge idempotency key included the amount, allowing a second payment intent",
     severity: "Medium",
     found: "A fare that moved during card authentication produced a new key and a second payment intent.",
     changed: "Keys are built from stable identifiers plus a generation marker that changes only after a successful charge; the existing payment intent is retrieved and reused.",

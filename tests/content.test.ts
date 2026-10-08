@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { BRAND_MAIL, BRAND_NAME, BRAND_SUFFIX, BRAND_WORD } from "../lib/brand";
-import { findings, findingById } from "../lib/caseStudies";
+import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, BRAND_SUFFIX, BRAND_WORD, SITE_URL, TRUE_BADGES } from "../lib/brand";
+import { findings, findingById, remediation, severityCounts } from "../lib/caseStudies";
 import { incidents, incidentById, scenarios, scenarioById } from "../lib/incidents";
-import { posts, postBySlug } from "../lib/posts";
+import { posts, postBySlug, postWords } from "../lib/posts";
 import { S, sources, sourceById } from "../lib/sources";
-import { tierById, tiers } from "../lib/tiers";
+import { helper, matrix, tierById, tierHref, tiers } from "../lib/tiers";
+import { THEME_BOOT_SCRIPT, THEME_META, THEME_NAMES } from "../lib/theme";
 import robots from "../app/robots";
 import sitemap from "../app/sitemap";
 
@@ -13,7 +14,37 @@ describe("brand", () => {
     expect(`${BRAND_WORD} ${BRAND_SUFFIX}`.trim()).toBe(BRAND_NAME);
     expect(BRAND_MAIL).toBe(encodeURIComponent(BRAND_NAME));
   });
+
+  it("has valid BRAND_EMAIL and SITE_URL", () => {
+    expect(BRAND_EMAIL).toMatch(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
+    expect(() => new URL(SITE_URL)).not.toThrow();
+  });
+
+  it("defines unique, honest trust badges", () => {
+    const keys = TRUE_BADGES.map((b) => b.key);
+    expect(new Set(keys).size).toBe(TRUE_BADGES.length);
+    for (const b of TRUE_BADGES) {
+      expect(b.label.length).toBeGreaterThan(0);
+      expect(b.note.length).toBeGreaterThan(0);
+    }
+  });
 });
+
+describe("theme and tokens", () => {
+  it("theme names match tokens and THEME_META keys", () => {
+    expect(THEME_NAMES).toEqual(["dark", "light", "high-contrast"]);
+    expect(Object.keys(THEME_META).sort()).toEqual([...THEME_NAMES].sort());
+    for (const name of THEME_NAMES) {
+      expect(THEME_META[name]).toMatch(/^#[0-9A-Fa-f]{6}$/);
+    }
+  });
+
+  it("theme boot script is valid executable JavaScript", () => {
+    expect(THEME_BOOT_SCRIPT.length).toBeGreaterThan(0);
+    expect(() => new Function(THEME_BOOT_SCRIPT)).not.toThrow();
+  });
+});
+
 
 describe("sources registry", () => {
   it("has ids that match their keys and well-formed https URLs", () => {
@@ -70,6 +101,19 @@ describe("posts", () => {
     expect(postBySlug("toString")).toBeUndefined();
     expect(postBySlug(posts[0].slug)).toBe(posts[0]);
   });
+
+  it("calculates positive word counts and validates block text", () => {
+    for (const p of posts) {
+      expect(postWords(p)).toBeGreaterThan(100);
+      for (const b of p.body) {
+        if (b.t === "ul" || b.t === "ol") {
+          expect(b.x.length).toBeGreaterThan(0);
+        } else {
+          expect(b.x.length).toBeGreaterThan(0);
+        }
+      }
+    }
+  });
 });
 
 describe("tiers", () => {
@@ -83,7 +127,24 @@ describe("tiers", () => {
     expect(tierById("unknown")).toBeUndefined();
     expect(tierById("toString")).toBeUndefined();
   });
+
+  it("matrix and helper cover all tiers correctly", () => {
+    expect(matrix.length).toBe(8);
+    for (const row of matrix) {
+      for (const t of tiers) {
+        expect(row.values[t.id]).toBeDefined();
+      }
+    }
+    for (const q of helper) {
+      expect(q.a.length).toBe(4);
+      for (const a of q.a) {
+        expect(tierById(a.tier)).toBeDefined();
+        expect(tierHref(a.tier)).toBe(`/pricing#${a.tier}`);
+      }
+    }
+  });
 });
+
 
 describe("incidents", () => {
   it("have unique ids and cite only registered sources", () => {
@@ -134,7 +195,27 @@ describe("case studies / findings", () => {
     expect(findingById("F-99")).toBeUndefined();
     expect(findingById("toString")).toBeUndefined();
   });
+
+  it("severityCounts matches findings tally", () => {
+    const manualTally: Record<string, number> = {};
+    for (const f of findings) {
+      manualTally[f.severity] = (manualTally[f.severity] ?? 0) + 1;
+    }
+    expect(severityCounts).toEqual(manualTally);
+  });
+
+  it("remediation entries match findings one-to-one", () => {
+    expect(remediation.length).toBe(findings.length);
+    for (const r of remediation) {
+      const f = findingById(r.id);
+      expect(f).toBeDefined();
+      expect(r.title).toBe(f?.title);
+      expect(r.severity).toBe(f?.severity);
+      expect(r.checked.length).toBeGreaterThan(0);
+    }
+  });
 });
+
 
 describe("metadata routes", () => {
   it("robots generates permissive crawling rule and sitemap reference", () => {
