@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { BRAND_MAIL, BRAND_NAME, BRAND_SUFFIX, BRAND_WORD } from "../lib/brand";
 import { findings, findingById } from "../lib/caseStudies";
-import { incidents, incidentById } from "../lib/incidents";
+import { incidents, incidentById, scenarios } from "../lib/incidents";
 import { posts, postBySlug } from "../lib/posts";
 import { S } from "../lib/sources";
 import { tierById, tiers } from "../lib/tiers";
@@ -83,6 +83,13 @@ describe("incidents", () => {
     expect(incidentById(first.id.toUpperCase())).toBe(first);
     expect(incidentById("unknown-incident")).toBeUndefined();
     expect(incidentById("constructor")).toBeUndefined();
+  });
+
+  it("scenarios have unique ids and cite only registered sources", () => {
+    expect(new Set(scenarios.map((s) => s.id)).size).toBe(scenarios.length);
+    for (const sc of scenarios) {
+      for (const id of sc.refs) expect(S[id], `${sc.id} -> ${id}`).toBeDefined();
+    }
   });
 });
 
