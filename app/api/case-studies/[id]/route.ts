@@ -1,5 +1,5 @@
 import { json, notFound, PUBLIC_CACHE } from "../../../../lib/http";
-import { findings, findingById } from "../../../../lib/caseStudies";
+import { findings, findingById, remediationById } from "../../../../lib/caseStudies";
 
 export const dynamicParams = true;
 
@@ -12,5 +12,6 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const { id } = await params;
   const finding = findingById(id);
   if (!finding) return notFound("case study finding");
-  return json(finding, { cacheControl: PUBLIC_CACHE });
+  const rem = remediationById(id);
+  return json({ ...finding, remediation: rem ?? null }, { cacheControl: PUBLIC_CACHE });
 }
