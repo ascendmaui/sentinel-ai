@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { BRAND_MAIL, BRAND_NAME, BRAND_SUFFIX, BRAND_WORD } from "../lib/brand";
 import { findings, findingById } from "../lib/caseStudies";
-import { incidents, incidentById, scenarios } from "../lib/incidents";
+import { incidents, incidentById, scenarios, scenarioById } from "../lib/incidents";
 import { posts, postBySlug } from "../lib/posts";
-import { S } from "../lib/sources";
+import { S, sources, sourceById } from "../lib/sources";
 import { tierById, tiers } from "../lib/tiers";
+import robots from "../app/robots";
+import sitemap from "../app/sitemap";
 
 describe("brand", () => {
   it("derives the two-tone wordmark from BRAND_NAME", () => {
@@ -22,7 +24,21 @@ describe("sources registry", () => {
       expect(new URL(s.url).protocol).toBe("https:");
     }
   });
+
+  it("sources array matches S values", () => {
+    expect(sources).toHaveLength(Object.keys(S).length);
+    expect(new Set(sources.map((s) => s.id)).size).toBe(sources.length);
+  });
+
+  it("sourceById handles exact, case-insensitive, and invalid lookups", () => {
+    expect(sourceById("oaiAug")).toBe(S.oaiAug);
+    expect(sourceById("OAIAUG")).toBe(S.oaiAug);
+    expect(sourceById("unknown")).toBeUndefined();
+    expect(sourceById("toString")).toBeUndefined();
+    expect(sourceById("__proto__")).toBeUndefined();
+  });
 });
+
 
 describe("posts", () => {
   it("have unique slugs that are URL-safe", () => {
@@ -91,6 +107,14 @@ describe("incidents", () => {
       for (const id of sc.refs) expect(S[id], `${sc.id} -> ${id}`).toBeDefined();
     }
   });
+
+  it("scenarioById handles exact, case-insensitive, and invalid lookups", () => {
+    const first = scenarios[0];
+    expect(scenarioById(first.id)).toBe(first);
+    expect(scenarioById(first.id.toUpperCase())).toBe(first);
+    expect(scenarioById("unknown-scenario")).toBeUndefined();
+    expect(scenarioById("constructor")).toBeUndefined();
+  });
 });
 
 describe("case studies / findings", () => {
@@ -111,5 +135,26 @@ describe("case studies / findings", () => {
     expect(findingById("toString")).toBeUndefined();
   });
 });
+
+describe("metadata routes", () => {
+  it("robots generates permissive crawling rule and sitemap reference", () => {
+    const r = robots();
+    expect(r.rules).toBeDefined();
+    expect(r.sitemap).toMatch(/^https?:\/\/.*\/sitemap\.xml$/);
+  });
+
+  it("sitemap includes all main pages and every blog post", () => {
+    const s = sitemap();
+    const urls = s.map((entry) => entry.url);
+    expect(urls).toContainEqual(expect.stringMatching(/\/pricing$/));
+    expect(urls).toContainEqual(expect.stringMatching(/\/incident-case-studies$/));
+    expect(urls).toContainEqual(expect.stringMatching(/\/blog$/));
+    expect(urls).toContainEqual(expect.stringMatching(/\/case-studies$/));
+    for (const post of posts) {
+      expect(urls).toContainEqual(expect.stringContaining(`/blog/${post.slug}`));
+    }
+  });
+});
+
 
 

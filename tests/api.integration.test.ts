@@ -8,12 +8,17 @@ import { GET as caseStudiesIndex } from "../app/api/case-studies/route";
 import { GET as caseStudyOne, generateStaticParams as caseStudyParams } from "../app/api/case-studies/[id]/route";
 import { GET as tiersIndex } from "../app/api/tiers/route";
 import { GET as tierOne, generateStaticParams as tierParams } from "../app/api/tiers/[id]/route";
+import { GET as scenariosIndex } from "../app/api/scenarios/route";
+import { GET as scenarioOne, generateStaticParams as scenarioParams } from "../app/api/scenarios/[id]/route";
+import { GET as sourcesIndex } from "../app/api/sources/route";
+import { GET as sourceOne, generateStaticParams as sourceParams } from "../app/api/sources/[id]/route";
 import { BRAND_NAME } from "../lib/brand";
 import { posts } from "../lib/posts";
-import { incidents } from "../lib/incidents";
+import { incidents, scenarios } from "../lib/incidents";
 import { findings } from "../lib/caseStudies";
 import { tiers } from "../lib/tiers";
-import { S } from "../lib/sources";
+import { S, sources } from "../lib/sources";
+import { methodNotAllowed, SECURITY_HEADERS } from "../lib/http";
 
 const slugCtx = (slug: string) => ({ params: Promise.resolve({ slug }) });
 const idCtx = (id: string) => ({ params: Promise.resolve({ id }) });
@@ -29,6 +34,9 @@ describe("GET /api/health", () => {
     expect(res.headers.get("cache-control")).toBe("no-store");
     expect(res.headers.get("x-content-type-options")).toBe("nosniff");
     expect(res.headers.get("x-frame-options")).toBe("DENY");
+    expect(res.headers.get("referrer-policy")).toBe("no-referrer");
+    expect(res.headers.get("permissions-policy")).toContain("camera=()");
+    expect(res.headers.get("x-dns-prefetch-control")).toBe("off");
     expect(await res.json()).toMatchObject({ status: "ok", service: BRAND_NAME });
   });
 
@@ -265,3 +273,122 @@ describe("GET /api/tiers/[id]", () => {
     expect(tierParams()).toEqual(tiers.map((t) => ({ id: t.id })));
   });
 });
+
+describe("methodNotAllowed helper", () => {
+  it("returns 405 with JSON body, Allow header, and hardening headers", async () => {
+    const res = methodNotAllowed(["GET", "HEAD"]);
+    expect(res.status).toBe(405);
+    expect(res.headers.get("allow")).toBe("GET, HEAD");
+    expect(res.headers.get("content-type")).toContain("application/json");
+    expect(res.headers.get("cache-control")).toBe("no-store");
+    expect(res.headers.get("x-frame-options")).toBe("DENY");
+    expect(await res.json()).toMatchObject({ error: "method_not_allowed" });
+  });
+});
+
+describe("GET /api/scenarios", () => {
+  it("returns all scenarios, count, and cache headers", async () => {
+    const res = scenariosIndex();
+    expect(res.status).toBe(200);
+    expect(res.headers.get("cache-control")).toContain("s-maxage");
+    const body = await res.json();
+    expect(body.count).toBe(scenarios.length);
+    expect(body.scenarios).toHaveLength(scenarios.length);
+    for (const sc of body.scenarios) {
+      expect(sc.id).toBeDefined();
+      expect(sc.title.length).toBeGreaterThan(0);
+      expect(sc.target.length).toBeGreaterThan(0);
+      expect(sc.url).toBe(`/incident-case-studies#${sc.id}`);
+      expect(sc.refsCount).toBeGreaterThanOrEqual(0);
+    }
+  });
+});
+
+describe("GET /api/scenarios/[id]", () => {
+  it("returns each scenario with resolved source references", async () => {
+    for (const sc of scenarios) {
+      const res = await scenarioOne(req(`/api/scenarios/${sc.id}`), idCtx(sc.id));
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.id).toBe(sc.id);
+      expect(body.title).toBe(sc.title);
+      expect(body.approach.length).toBeGreaterThan(0);
+      expect(body.controls.length).toBeGreaterThan(0);
+      expect(body.refs).toHaveLength(sc.refs.length);
+      for (const r of body.refs) expect(r.url).toBe(S[r.id].url);
+    }
+  });
+
+  it("supports case-insensitive scenario lookup", async () => {
+    const first = scenarios[0];
+    const res = await scenarioOne(req(`/api/scenarios/${first.id.toUpperCase()}`), idCtx(first.id.toUpperCase()));
+    expect(res.status).toBe(200);
+    expect((await res.json()).id).toBe(first.id);
+  });
+
+  it.each(["nonexistent-scenario", "../etc/passwd", "__proto__", "constructor", "toString"])(
+    "returns a JSON 404 for %j",
+    async (id) => {
+      const res = await scenarioOne(req(`/api/scenarios/${id}`), idCtx(id));
+      expect(res.status).toBe(404);
+      expect(res.headers.get("content-type")).toContain("application/json");
+      expect(await res.json()).toMatchObject({ error: "not_found" });
+    },
+  );
+
+  it("generateStaticParams covers all scenarios", () => {
+    expect(scenarioParams()).toEqual(scenarios.map((s) => ({ id: s.id })));
+  });
+});
+
+describe("GET /api/sources", () => {
+  it("returns all registered sources with count and cache headers", async () => {
+    const res = sourcesIndex();
+    expect(res.status).toBe(200);
+    expect(res.headers.get("cache-control")).toContain("s-maxage");
+    const body = await res.json();
+    expect(body.count).toBe(sources.length);
+    expect(body.sources).toHaveLength(sources.length);
+    for (const src of body.sources) {
+      expect(src.id).toBeDefined();
+      expect(src.label.length).toBeGreaterThan(0);
+      expect(src.url).toMatch(/^https:\/\//);
+      expect(src.date.length).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe("GET /api/sources/[id]", () => {
+  it("returns each source by ID", async () => {
+    for (const src of sources) {
+      const res = await sourceOne(req(`/api/sources/${src.id}`), idCtx(src.id));
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.id).toBe(src.id);
+      expect(body.label).toBe(src.label);
+      expect(body.url).toBe(src.url);
+    }
+  });
+
+  it("supports case-insensitive source lookup", async () => {
+    const first = sources[0];
+    const res = await sourceOne(req(`/api/sources/${first.id.toUpperCase()}`), idCtx(first.id.toUpperCase()));
+    expect(res.status).toBe(200);
+    expect((await res.json()).id).toBe(first.id);
+  });
+
+  it.each(["nonexistent-source", "../etc/passwd", "__proto__", "constructor", "toString"])(
+    "returns a JSON 404 for %j",
+    async (id) => {
+      const res = await sourceOne(req(`/api/sources/${id}`), idCtx(id));
+      expect(res.status).toBe(404);
+      expect(res.headers.get("content-type")).toContain("application/json");
+      expect(await res.json()).toMatchObject({ error: "not_found" });
+    },
+  );
+
+  it("generateStaticParams covers all sources", () => {
+    expect(sourceParams()).toEqual(sources.map((s) => ({ id: s.id })));
+  });
+});
+

@@ -579,3 +579,6 @@ export const INCIDENTS_DISCLAIMER = `This page is analysis based on public repor
 export const incidentById = (id: string): Incident | undefined =>
   incidents.find((i) => i.id === id || i.id.toLowerCase() === id.toLowerCase());
 
+export const scenarioById = (id: string): Scenario | undefined =>
+  scenarios.find((s) => s.id === id || s.id.toLowerCase() === id.toLowerCase());
+
