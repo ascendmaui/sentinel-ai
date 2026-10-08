@@ -59,7 +59,30 @@ check(tierOne.status === 200 && (await tierOne.json()).name === "Seraphim", "GET
 const missingTier = await get("/api/tiers/does-not-exist");
 check(missingTier.status === 404 && (await missingTier.json()).error === "not_found", "unknown tier -> JSON 404");
 
-// 6. Crawl internal page links
+// 6. Scenarios API
+const scRes = await (await get("/api/scenarios")).json();
+check(Array.isArray(scRes.scenarios) && scRes.count > 0, "GET /api/scenarios shape");
+const scOne = await get("/api/scenarios/legacy-internal-app");
+check(scOne.status === 200 && (await scOne.json()).id === "legacy-internal-app", "GET /api/scenarios/legacy-internal-app");
+const missingSc = await get("/api/scenarios/does-not-exist");
+check(missingSc.status === 404 && (await missingSc.json()).error === "not_found", "unknown scenario -> JSON 404");
+
+// 7. Sources API
+const srcRes = await (await get("/api/sources")).json();
+check(Array.isArray(srcRes.sources) && srcRes.count > 0, "GET /api/sources shape");
+const srcOne = await get("/api/sources/oaiAug");
+check(srcOne.status === 200 && (await srcOne.json()).id === "oaiAug", "GET /api/sources/oaiAug");
+const missingSrc = await get("/api/sources/does-not-exist");
+check(missingSrc.status === 404 && (await missingSrc.json()).error === "not_found", "unknown source -> JSON 404");
+
+// 8. Robots and Sitemap
+const robotsRes = await get("/robots.txt");
+check(robotsRes.status === 200 && (await robotsRes.text()).includes("sitemap.xml"), "GET /robots.txt ok");
+const sitemapRes = await get("/sitemap.xml");
+check(sitemapRes.status === 200 && (await sitemapRes.text()).includes("urlset"), "GET /sitemap.xml ok");
+
+// 9. Crawl internal page links
+
 const links = new Set();
 for (const path of pages) {
   const r = await get(path);
