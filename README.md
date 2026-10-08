@@ -35,11 +35,12 @@ All endpoints export HTTP/REST JSON contracts with security headers (`X-Content-
 - `GET /api/scenarios`: Conceptual threat scenarios with speed and control comparisons.
 - `GET /api/scenarios/[id]`: Scenario details with defender controls and related sources.
 - `GET /api/case-studies`: Remediation findings and severity distributions.
-- `GET /api/case-studies/[id]`: Finding details with before/after fixes and verification notes.
+- `GET /api/case-studies/[id]`: Finding details with before/after fixes and remediation verification notes.
 - `GET /api/tiers`: Service tier matrix, comparison details, and engagement terms.
 - `GET /api/tiers/[id]`: Single tier deliverables, target audience, and exclusions.
 - `GET /api/sources`: Authoritative primary and secondary sources registry.
 - `GET /api/sources/[id]`: Single source record with URL and credibility note.
+- `GET /api/brand`: Brand identity metadata, contact mailto, trust badges, and theme configuration.
 
 ## Metadata & Discovery
 
@@ -49,7 +50,7 @@ All endpoints export HTTP/REST JSON contracts with security headers (`X-Content-
 
 ## Verification & Testing
 
-- `npm test`: Run 87 unit, content integrity, and API integration test suites via Vitest.
+- `npm test`: Run 89 unit, content integrity, and API integration test suites via Vitest.
 - `npm run typecheck`: Strict TypeScript typecheck across all routes and components (`tsc --noEmit`).
 - `npm run smoke`: Black-box smoke test validating running server endpoints, API contracts, 404 responses, and internal link resolution.
 - `npm run build`: Production Next.js build generating static HTML and JSON routes with SSG.

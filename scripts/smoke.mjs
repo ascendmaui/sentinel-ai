@@ -47,7 +47,8 @@ check(missingInc.status === 404 && (await missingInc.json()).error === "not_foun
 const cs = await (await get("/api/case-studies")).json();
 check(Array.isArray(cs.findings) && cs.count === cs.findings.length && cs.count > 0, "GET /api/case-studies shape");
 const csOne = await get("/api/case-studies/f-01");
-check(csOne.status === 200 && (await csOne.json()).id === "F-01", "GET /api/case-studies/f-01 (case-insensitive)");
+const csOneBody = await csOne.json();
+check(csOne.status === 200 && csOneBody.id === "F-01" && csOneBody.remediation?.id === "F-01", "GET /api/case-studies/f-01 (case-insensitive with remediation)");
 const missingCs = await get("/api/case-studies/f-999");
 check(missingCs.status === 404 && (await missingCs.json()).error === "not_found", "unknown case study -> JSON 404");
 
@@ -75,13 +76,20 @@ check(srcOne.status === 200 && (await srcOne.json()).id === "oaiAug", "GET /api/
 const missingSrc = await get("/api/sources/does-not-exist");
 check(missingSrc.status === 404 && (await missingSrc.json()).error === "not_found", "unknown source -> JSON 404");
 
-// 8. Robots and Sitemap
+// 8. Brand API
+const brandRes = await get("/api/brand");
+const brandBody = await brandRes.json();
+check(brandRes.status === 200 && brandBody.name === "Seraphim AI" && Array.isArray(brandBody.badges) && brandBody.badges.length > 0, "GET /api/brand shape and badges");
+check(brandRes.headers.get("x-frame-options") === "DENY", "/api/brand X-Frame-Options DENY");
+check(brandRes.headers.get("x-dns-prefetch-control") === "off", "/api/brand X-DNS-Prefetch-Control off");
+
+// 9. Robots and Sitemap
 const robotsRes = await get("/robots.txt");
 check(robotsRes.status === 200 && (await robotsRes.text()).includes("sitemap.xml"), "GET /robots.txt ok");
 const sitemapRes = await get("/sitemap.xml");
 check(sitemapRes.status === 200 && (await sitemapRes.text()).includes("urlset"), "GET /sitemap.xml ok");
 
-// 9. Crawl internal page links
+// 10. Crawl internal page links
 
 const links = new Set();
 for (const path of pages) {

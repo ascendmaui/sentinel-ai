@@ -12,7 +12,9 @@ import { GET as scenariosIndex } from "../app/api/scenarios/route";
 import { GET as scenarioOne, generateStaticParams as scenarioParams } from "../app/api/scenarios/[id]/route";
 import { GET as sourcesIndex } from "../app/api/sources/route";
 import { GET as sourceOne, generateStaticParams as sourceParams } from "../app/api/sources/[id]/route";
-import { BRAND_NAME } from "../lib/brand";
+import { GET as brandEndpoint } from "../app/api/brand/route";
+import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, BRAND_PARENT, BRAND_SUFFIX, BRAND_TAGLINE, BRAND_WORD, SHOW_CODE_RAIN, SITE_URL, TRUE_BADGES } from "../lib/brand";
+import { THEME_META, THEME_NAMES } from "../lib/theme";
 import { posts } from "../lib/posts";
 import { incidents, scenarios } from "../lib/incidents";
 import { findings } from "../lib/caseStudies";
@@ -198,6 +200,9 @@ describe("GET /api/case-studies/[id]", () => {
       expect(body.before.length).toBeGreaterThan(0);
       expect(body.after.length).toBeGreaterThan(0);
       expect(body.fix.length).toBeGreaterThan(0);
+      expect(body.remediation).toBeDefined();
+      expect(body.remediation.id).toBe(f.id);
+      expect(body.remediation.checked.length).toBeGreaterThan(0);
     }
   });
 
@@ -391,4 +396,34 @@ describe("GET /api/sources/[id]", () => {
     expect(sourceParams()).toEqual(sources.map((s) => ({ id: s.id })));
   });
 });
+
+describe("GET /api/brand", () => {
+  it("returns brand metadata, trust badges, theme config, and cache headers", async () => {
+    const res = brandEndpoint();
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toContain("application/json");
+    expect(res.headers.get("cache-control")).toContain("s-maxage");
+    expect(res.headers.get("x-content-type-options")).toBe("nosniff");
+    expect(res.headers.get("x-frame-options")).toBe("DENY");
+    expect(res.headers.get("referrer-policy")).toBe("no-referrer");
+    expect(res.headers.get("x-dns-prefetch-control")).toBe("off");
+    const body = await res.json();
+    expect(body.name).toBe(BRAND_NAME);
+    expect(body.word).toBe(BRAND_WORD);
+    expect(body.suffix).toBe(BRAND_SUFFIX);
+    expect(body.parent).toBe(BRAND_PARENT);
+    expect(body.email).toBe(BRAND_EMAIL);
+    expect(body.mailSubject).toBe(`${BRAND_MAIL}%20inquiry`);
+    expect(body.tagline).toBe(BRAND_TAGLINE);
+    expect(body.siteUrl).toBe(SITE_URL);
+    expect(body.showCodeRain).toBe(SHOW_CODE_RAIN);
+    expect(body.badges).toEqual(TRUE_BADGES);
+    expect(body.theme).toEqual({
+      default: "dark",
+      names: THEME_NAMES,
+      meta: THEME_META,
+    });
+  });
+});
+
 
