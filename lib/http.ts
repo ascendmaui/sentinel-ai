@@ -7,18 +7,24 @@ export const SECURITY_HEADERS = {
   "X-DNS-Prefetch-Control": "off",
 } as const;
 
-export function json(data: unknown, init: { status?: number; cacheControl?: string } = {}): Response {
+export function json(
+  data: unknown,
+  init: { status?: number; cacheControl?: string; headers?: Record<string, string> } = {}
+): Response {
   return new Response(JSON.stringify(data), {
     status: init.status ?? 200,
     headers: {
       "Content-Type": "application/json; charset=utf-8",
       "Cache-Control": init.cacheControl ?? "no-store",
       ...SECURITY_HEADERS,
+      ...(init.headers ?? {}),
     },
   });
 }
 
 export const notFound = (what: string) => json({ error: "not_found", message: `${what} not found` }, { status: 404 });
+
+export const badRequest = (message: string) => json({ error: "bad_request", message }, { status: 400 });
 
 export function methodNotAllowed(allowed: string[] = ["GET", "HEAD"]): Response {
   return new Response(

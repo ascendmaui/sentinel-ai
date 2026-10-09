@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { badgeByKey, BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, BRAND_SUFFIX, BRAND_WORD, SITE_URL, TRUE_BADGES } from "../lib/brand";
+import { badgeByKey, BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, BRAND_SUFFIX, BRAND_WORD, resolveSiteUrl, SITE_URL, TRUE_BADGES } from "../lib/brand";
 import { findings, findingById, remediation, remediationById, severityCounts } from "../lib/caseStudies";
 import { incidents, incidentById, scenarios, scenarioById } from "../lib/incidents";
 import { posts, postBySlug, postWords } from "../lib/posts";
@@ -18,6 +18,12 @@ describe("brand", () => {
   it("has valid BRAND_EMAIL and SITE_URL", () => {
     expect(BRAND_EMAIL).toMatch(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
     expect(() => new URL(SITE_URL)).not.toThrow();
+  });
+
+  it("resolves site URL correctly across environments", () => {
+    expect(resolveSiteUrl({ VERCEL_ENV: "production", VERCEL_PROJECT_PRODUCTION_URL: "seraphim.ai" })).toBe("https://seraphim.ai");
+    expect(resolveSiteUrl({ VERCEL_URL: "preview-123.vercel.app" })).toBe("https://preview-123.vercel.app");
+    expect(resolveSiteUrl({})).toBe("http://localhost:3000");
   });
 
   it("defines unique, honest trust badges and supports defensive badgeByKey lookup", () => {

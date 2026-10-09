@@ -20,7 +20,7 @@ import { incidents, scenarios } from "../lib/incidents";
 import { findings } from "../lib/caseStudies";
 import { tiers } from "../lib/tiers";
 import { S, sources } from "../lib/sources";
-import { methodNotAllowed, SECURITY_HEADERS } from "../lib/http";
+import { badRequest, json, methodNotAllowed, notFound, SECURITY_HEADERS } from "../lib/http";
 
 const slugCtx = (slug: string) => ({ params: Promise.resolve({ slug }) });
 const idCtx = (id: string) => ({ params: Promise.resolve({ id }) });
@@ -350,8 +350,8 @@ describe("GET /api/tiers/[id]", () => {
   });
 });
 
-describe("methodNotAllowed helper", () => {
-  it("returns 405 with JSON body, Allow header, and hardening headers", async () => {
+describe("HTTP helper utilities", () => {
+  it("methodNotAllowed returns 405 with JSON body, Allow header, and hardening headers", async () => {
     const res = methodNotAllowed(["GET", "HEAD"]);
     expect(res.status).toBe(405);
     expect(res.headers.get("allow")).toBe("GET, HEAD");
@@ -359,6 +359,36 @@ describe("methodNotAllowed helper", () => {
     expect(res.headers.get("cache-control")).toBe("no-store");
     expect(res.headers.get("x-frame-options")).toBe("DENY");
     expect(await res.json()).toMatchObject({ error: "method_not_allowed" });
+  });
+
+  it("badRequest returns 400 with error and custom message", async () => {
+    const res = badRequest("Invalid parameter format");
+    expect(res.status).toBe(400);
+    expect(res.headers.get("content-type")).toContain("application/json");
+    expect(res.headers.get("x-content-type-options")).toBe("nosniff");
+    const body = await res.json();
+    expect(body).toEqual({ error: "bad_request", message: "Invalid parameter format" });
+  });
+
+  it("notFound returns 404 with error and message", async () => {
+    const res = notFound("target document");
+    expect(res.status).toBe(404);
+    const body = await res.json();
+    expect(body).toEqual({ error: "not_found", message: "target document not found" });
+  });
+
+  it("json helper merges custom headers, custom cacheControl, and security headers", () => {
+    const res = json({ hello: "world" }, {
+      status: 201,
+      cacheControl: "private, max-age=60",
+      headers: { "X-Custom-Header": "custom-val" },
+    });
+    expect(res.status).toBe(201);
+    expect(res.headers.get("cache-control")).toBe("private, max-age=60");
+    expect(res.headers.get("x-custom-header")).toBe("custom-val");
+    for (const [key, val] of Object.entries(SECURITY_HEADERS)) {
+      expect(res.headers.get(key.toLowerCase())).toBe(val);
+    }
   });
 });
 
