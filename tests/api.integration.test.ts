@@ -39,7 +39,9 @@ describe("GET /api/health", () => {
     expect(res.headers.get("referrer-policy")).toBe("no-referrer");
     expect(res.headers.get("permissions-policy")).toContain("camera=()");
     expect(res.headers.get("x-dns-prefetch-control")).toBe("off");
-    expect(await res.json()).toMatchObject({ status: "ok", service: BRAND_NAME });
+    const body = await res.json();
+    expect(body).toMatchObject({ status: "ok", service: BRAND_NAME });
+    expect(new Date(body.timestamp).getTime()).not.toBeNaN();
   });
 
   it("exposes only a short public commit SHA and never other env", async () => {
@@ -80,6 +82,36 @@ describe("GET /api/posts", () => {
     const before = posts.map((p) => p.slug);
     postsIndex();
     expect(posts.map((p) => p.slug)).toEqual(before);
+  });
+
+  it("filters by tier query parameter", async () => {
+    const res = postsIndex(req("/api/posts?tier=seraphim"));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.posts.every((p: { tier: string }) => p.tier === "seraphim")).toBe(true);
+    expect(body.count).toBe(body.posts.length);
+    expect(body.totalCount).toBe(posts.length);
+  });
+
+  it("filters by search query parameter q", async () => {
+    const res = postsIndex(req("/api/posts?q=hugging"));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.count).toBeGreaterThan(0);
+    for (const p of body.posts) {
+      const match =
+        p.title.toLowerCase().includes("hugging") || p.description.toLowerCase().includes("hugging");
+      expect(match).toBe(true);
+    }
+  });
+
+  it("limits result count using limit query parameter", async () => {
+    const res = postsIndex(req("/api/posts?limit=2"));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.posts).toHaveLength(2);
+    expect(body.count).toBe(2);
+    expect(body.totalCount).toBe(posts.length);
   });
 });
 
@@ -135,6 +167,16 @@ describe("GET /api/incidents", () => {
       expect(inc.sourcesCount).toBeGreaterThan(0);
     }
   });
+
+  it("filters incidents by search query q and includes unverified array", async () => {
+    const res = incidentsIndex(req("/api/incidents?q=modal"));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.count).toBeGreaterThan(0);
+    expect(body.totalCount).toBe(incidents.length);
+    expect(Array.isArray(body.unverified)).toBe(true);
+    expect(body.unverified.length).toBe(body.unverifiedCount);
+  });
 });
 
 describe("GET /api/incidents/[id]", () => {
@@ -187,6 +229,27 @@ describe("GET /api/case-studies", () => {
       expect(f.severity).toBeDefined();
       expect(f.url).toBe(`/case-studies#${f.id.toLowerCase()}`);
     }
+  });
+
+  it("filters findings by severity and status", async () => {
+    const res = caseStudiesIndex(req("/api/case-studies?severity=high"));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.count).toBeGreaterThan(0);
+    expect(body.findings.every((f: { severity: string }) => f.severity === "High")).toBe(true);
+    expect(body.totalCount).toBe(findings.length);
+
+    const statusRes = caseStudiesIndex(req("/api/case-studies?status=fixed"));
+    const statusBody = await statusRes.json();
+    expect(statusBody.count).toBeGreaterThan(0);
+  });
+
+  it("filters findings by search query q", async () => {
+    const res = caseStudiesIndex(req("/api/case-studies?q=timezone"));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.count).toBe(1);
+    expect(body.findings[0].id).toBe("F-02");
   });
 });
 
@@ -242,6 +305,14 @@ describe("GET /api/tiers", () => {
       expect(t.rank).toBeGreaterThanOrEqual(1);
       expect(t.url).toBe(`/pricing#${t.id}`);
     }
+  });
+
+  it("filters tiers by search query q", async () => {
+    const res = tiersIndex(req("/api/tiers?q=advisory"));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.count).toBeGreaterThan(0);
+    expect(body.totalCount).toBe(tiers.length);
   });
 });
 
@@ -307,6 +378,15 @@ describe("GET /api/scenarios", () => {
       expect(sc.refsCount).toBeGreaterThanOrEqual(0);
     }
   });
+
+  it("filters scenarios by search query q", async () => {
+    const res = scenariosIndex(req("/api/scenarios?q=domain"));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.count).toBe(1);
+    expect(body.scenarios[0].id).toBe("onprem-domain");
+    expect(body.totalCount).toBe(scenarios.length);
+  });
 });
 
 describe("GET /api/scenarios/[id]", () => {
@@ -360,6 +440,18 @@ describe("GET /api/sources", () => {
       expect(src.url).toMatch(/^https:\/\//);
       expect(src.date.length).toBeGreaterThan(0);
     }
+  });
+
+  it("filters sources by year and query q", async () => {
+    const res = sourcesIndex(req("/api/sources?year=2026"));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.count).toBeGreaterThan(0);
+    expect(body.totalCount).toBe(sources.length);
+
+    const qRes = sourcesIndex(req("/api/sources?q=anthropic"));
+    const qBody = await qRes.json();
+    expect(qBody.count).toBeGreaterThan(0);
   });
 });
 

@@ -11,7 +11,8 @@ const seen = new Set(pages);
 
 // 1. Health check
 const h = await get("/api/health");
-check(h.status === 200 && (await h.json()).status === "ok", "GET /api/health ok");
+const hBody = await h.json();
+check(h.status === 200 && hBody.status === "ok" && typeof hBody.timestamp === "string", "GET /api/health ok with timestamp");
 check(h.headers.get("cache-control") === "no-store", "/api/health is not cacheable");
 check(h.headers.get("x-content-type-options") === "nosniff", "/api/health nosniff header");
 
@@ -22,6 +23,9 @@ check(post.status === 405, "POST /api/health -> 405");
 const posts = await (await get("/api/posts")).json();
 check(Array.isArray(posts.posts) && posts.count === posts.posts.length && posts.count > 0, "GET /api/posts shape");
 for (const p of posts.posts) { pages.push(p.url); seen.add(p.url); }
+
+const filteredPosts = await (await get("/api/posts?tier=seraphim")).json();
+check(filteredPosts.count > 0 && filteredPosts.posts.every(p => p.tier === "seraphim"), "GET /api/posts?tier=seraphim filter");
 
 for (const p of posts.posts) {
   const r = await get(`/api/posts/${p.slug}`);
@@ -35,6 +39,7 @@ check((await get("/blog/does-not-exist")).status === 404, "unknown blog page -> 
 // 3. Incidents API
 const incs = await (await get("/api/incidents")).json();
 check(Array.isArray(incs.incidents) && incs.count === incs.incidents.length && incs.count > 0, "GET /api/incidents shape");
+check(Array.isArray(incs.unverified) && incs.unverified.length > 0, "GET /api/incidents returns unverified claims");
 for (const inc of incs.incidents) {
   const r = await get(`/api/incidents/${inc.id}`);
   const b = await r.json();
@@ -46,6 +51,8 @@ check(missingInc.status === 404 && (await missingInc.json()).error === "not_foun
 // 4. Case Studies API
 const cs = await (await get("/api/case-studies")).json();
 check(Array.isArray(cs.findings) && cs.count === cs.findings.length && cs.count > 0, "GET /api/case-studies shape");
+const csCrit = await (await get("/api/case-studies?severity=Critical")).json();
+check(Array.isArray(csCrit.findings) && csCrit.findings.every(f => f.severity === "Critical"), "GET /api/case-studies?severity=Critical filter");
 const csOne = await get("/api/case-studies/f-01");
 const csOneBody = await csOne.json();
 check(csOne.status === 200 && csOneBody.id === "F-01" && csOneBody.remediation?.id === "F-01", "GET /api/case-studies/f-01 (case-insensitive with remediation)");
@@ -63,6 +70,8 @@ check(missingTier.status === 404 && (await missingTier.json()).error === "not_fo
 // 6. Scenarios API
 const scRes = await (await get("/api/scenarios")).json();
 check(Array.isArray(scRes.scenarios) && scRes.count > 0, "GET /api/scenarios shape");
+const scFiltered = await (await get("/api/scenarios?q=domain")).json();
+check(scFiltered.count === 1 && scFiltered.scenarios[0].id === "onprem-domain", "GET /api/scenarios?q=domain filter");
 const scOne = await get("/api/scenarios/legacy-internal-app");
 check(scOne.status === 200 && (await scOne.json()).id === "legacy-internal-app", "GET /api/scenarios/legacy-internal-app");
 const missingSc = await get("/api/scenarios/does-not-exist");
@@ -71,6 +80,8 @@ check(missingSc.status === 404 && (await missingSc.json()).error === "not_found"
 // 7. Sources API
 const srcRes = await (await get("/api/sources")).json();
 check(Array.isArray(srcRes.sources) && srcRes.count > 0, "GET /api/sources shape");
+const srcFiltered = await (await get("/api/sources?year=2026")).json();
+check(srcFiltered.count > 0 && srcFiltered.sources.every(s => s.date.includes("2026")), "GET /api/sources?year=2026 filter");
 const srcOne = await get("/api/sources/oaiAug");
 check(srcOne.status === 200 && (await srcOne.json()).id === "oaiAug", "GET /api/sources/oaiAug");
 const missingSrc = await get("/api/sources/does-not-exist");
