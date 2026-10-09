@@ -1,3 +1,5 @@
+import React from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { Icon, type IconName } from "../components/Icons";
 import { Mark, Wordmark } from "../components/Logo";
@@ -8,6 +10,9 @@ import { TierCta } from "../components/TierCta";
 import { Nav } from "../components/Nav";
 import { Footer } from "../components/Footer";
 import { HeroStage } from "../components/HeroStage";
+import { HeroFigure } from "../components/HeroFigure";
+import { CodeRain } from "../components/CodeRain";
+import { ThemeSwitcher } from "../components/ThemeSwitcher";
 import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, BRAND_PARENT, BRAND_SUFFIX, BRAND_WORD, TRUE_BADGES } from "../lib/brand";
 import { tiers, type TierId } from "../lib/tiers";
 
@@ -214,7 +219,7 @@ describe("HeroStage component", () => {
     expect(el.props.className).toBe("hero-stage");
     expect(el.props["data-hero-stage"]).toBe(true);
 
-    const [rings, mark] = el.props.children;
+    const [rings, mark, figure] = el.props.children;
     expect(rings.props.className).toBe("hero-rings");
     expect(rings.props["aria-hidden"]).toBe("true");
 
@@ -222,5 +227,52 @@ describe("HeroStage component", () => {
     expect(mark.props.size).toBe(220);
     expect(mark.props.id).toBe("hero");
     expect(mark.props.title).toBe(`${BRAND_NAME} seraphim mark`);
+
+    expect(figure.type).toBe(HeroFigure);
+  });
+});
+
+describe("HeroFigure component", () => {
+  it("renders hero canvas with accessibility and styling attributes", () => {
+    const html = renderToStaticMarkup(React.createElement(HeroFigure));
+    expect(html).toContain('class="hero-canvas"');
+    expect(html).toContain('aria-hidden="true"');
+    expect(html).toMatch(/^<canvas[^>]*><\/canvas>$/);
+  });
+});
+
+describe("CodeRain component", () => {
+  it("renders background matrix code canvas with accessibility attributes", () => {
+    const html = renderToStaticMarkup(React.createElement(CodeRain));
+    expect(html).toContain('class="code-rain"');
+    expect(html).toContain('aria-hidden="true"');
+    expect(html).toMatch(/^<canvas[^>]*><\/canvas>$/);
+  });
+});
+
+describe("ThemeSwitcher component", () => {
+  it("renders radiogroup with dark, light, and high-contrast theme options", () => {
+    const html = renderToStaticMarkup(React.createElement(ThemeSwitcher));
+    expect(html).toContain('role="radiogroup"');
+    expect(html).toContain('class="theme-switch"');
+    expect(html).toContain('Color theme');
+    expect(html).toContain('data-theme-option="dark"');
+    expect(html).toContain('data-theme-option="light"');
+    expect(html).toContain('data-theme-option="high-contrast"');
+    expect(html).toContain('aria-label="Dark theme"');
+    expect(html).toContain('aria-label="Light theme"');
+    expect(html).toContain('aria-label="High-contrast theme"');
+    // Without showLabels, text span is not rendered
+    expect(html).not.toContain('<span>Dark</span>');
+  });
+
+  it("renders short labels when showLabels is true and accepts custom className", () => {
+    const html = renderToStaticMarkup(
+      React.createElement(ThemeSwitcher, { showLabels: true, className: "nav-theme" })
+    );
+    expect(html).toContain('class="theme-switch has-labels nav-theme"');
+    expect(html).toContain("<span>Dark</span>");
+    expect(html).toContain("<span>Light</span>");
+    expect(html).toContain("<span>Contrast</span>");
   });
 });
