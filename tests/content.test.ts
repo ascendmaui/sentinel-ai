@@ -21,8 +21,10 @@ describe("brand", () => {
   });
 
   it("resolves site URL correctly across environments", () => {
-    expect(resolveSiteUrl({ VERCEL_ENV: "production", VERCEL_PROJECT_PRODUCTION_URL: "seraphim.ai" })).toBe("https://seraphim.ai");
-    expect(resolveSiteUrl({ VERCEL_URL: "preview-123.vercel.app" })).toBe("https://preview-123.vercel.app");
+    expect(resolveSiteUrl({ NEXT_PUBLIC_SITE_URL: "https://custom.seraphim.ai/" })).toBe("https://custom.seraphim.ai");
+    expect(resolveSiteUrl({ SITE_URL: "https://env.seraphim.ai" })).toBe("https://env.seraphim.ai");
+    expect(resolveSiteUrl({ VERCEL_ENV: "production", VERCEL_PROJECT_PRODUCTION_URL: "seraphim.ai/" })).toBe("https://seraphim.ai");
+    expect(resolveSiteUrl({ VERCEL_URL: "preview-123.vercel.app/" })).toBe("https://preview-123.vercel.app");
     expect(resolveSiteUrl({})).toBe("http://localhost:3000");
   });
 

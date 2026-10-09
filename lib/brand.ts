@@ -20,11 +20,17 @@ export const BRAND_MAIL = encodeURIComponent(BRAND_NAME);
 
 /** Resolves current site origin from environment variables with localhost fallback. */
 export function resolveSiteUrl(env: Record<string, string | undefined> = process.env): string {
+  if (env.NEXT_PUBLIC_SITE_URL) {
+    return env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
+  }
+  if (env.SITE_URL) {
+    return env.SITE_URL.replace(/\/$/, "");
+  }
   if (env.VERCEL_ENV === "production" && env.VERCEL_PROJECT_PRODUCTION_URL) {
-    return `https://${env.VERCEL_PROJECT_PRODUCTION_URL}`;
+    return `https://${env.VERCEL_PROJECT_PRODUCTION_URL.replace(/\/$/, "")}`;
   }
   if (env.VERCEL_URL) {
-    return `https://${env.VERCEL_URL}`;
+    return `https://${env.VERCEL_URL.replace(/\/$/, "")}`;
   }
   return "http://localhost:3000";
 }
