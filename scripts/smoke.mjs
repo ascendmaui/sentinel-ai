@@ -1,0 +1,174 @@
+#!/usr/bin/env node
+// Black-box smoke test against a running server: node scripts/smoke.mjs [baseUrl]
+// Checks pages, API contracts, error handling, and that every internal link on every page resolves.
+const base = (process.argv[2] || process.env.BASE_URL || "http://localhost:3000").replace(/\/$/, "");
+const failures = [];
+const check = (ok, msg) => { if (!ok) { failures.push(msg); console.error(`FAIL ${msg}`); } else console.log(`ok   ${msg}`); };
+const get = (path, init) => fetch(base + path, { redirect: "manual", ...init });
+
+const pages = ["/", "/pricing", "/blog", "/case-studies", "/incident-case-studies"];
+const seen = new Set(pages);
+
+const checkSecurityHeaders = (r, label) => {
+  check(r.headers.get("x-content-type-options") === "nosniff", `${label} nosniff header`);
+  check(r.headers.get("x-frame-options") === "DENY", `${label} X-Frame-Options DENY`);
+  check(r.headers.get("referrer-policy") === "no-referrer", `${label} Referrer-Policy no-referrer`);
+  check(r.headers.get("x-dns-prefetch-control") === "off", `${label} X-DNS-Prefetch-Control off`);
+  check(Boolean(r.headers.get("permissions-policy")?.includes("camera=()")), `${label} Permissions-Policy camera=()`);
+};
+
+// 1. Health check & HEAD requests
+const h = await get("/api/health");
+const hBody = await h.json();
+check(h.status === 200 && hBody.status === "ok" && typeof hBody.timestamp === "string", "GET /api/health ok with timestamp");
+check(h.headers.get("cache-control") === "no-store", "/api/health is not cacheable");
+checkSecurityHeaders(h, "GET /api/health");
+
+const headHealth = await get("/api/health", { method: "HEAD" });
+check(headHealth.status === 200, "HEAD /api/health -> 200");
+checkSecurityHeaders(headHealth, "HEAD /api/health");
+
+const headBrand = await get("/api/brand", { method: "HEAD" });
+check(headBrand.status === 200, "HEAD /api/brand -> 200");
+
+const headPosts = await get("/api/posts", { method: "HEAD" });
+check(headPosts.status === 200, "HEAD /api/posts -> 200");
+
+// 2. Posts API
+const posts = await (await get("/api/posts")).json();
+check(Array.isArray(posts.posts) && posts.count === posts.posts.length && posts.count > 0, "GET /api/posts shape");
+for (const p of posts.posts) { pages.push(p.url); seen.add(p.url); }
+
+const filteredPosts = await (await get("/api/posts?tier=seraphim")).json();
+check(filteredPosts.count > 0 && filteredPosts.posts.every(p => p.tier === "seraphim"), "GET /api/posts?tier=seraphim filter");
+
+const limitedPosts = await (await get("/api/posts?limit=2")).json();
+check(limitedPosts.count === 2 && limitedPosts.posts.length === 2 && limitedPosts.totalCount === posts.posts.length, "GET /api/posts?limit=2");
+
+for (const p of posts.posts) {
+  const r = await get(`/api/posts/${p.slug}`);
+  const b = await r.json();
+  check(r.status === 200 && b.slug === p.slug && b.sources.every(Boolean), `GET /api/posts/${p.slug}`);
+}
+const missingPost = await get("/api/posts/does-not-exist");
+check(missingPost.status === 404 && (await missingPost.json()).error === "not_found", "unknown post -> JSON 404");
+check((await get("/blog/does-not-exist")).status === 404, "unknown blog page -> 404");
+
+// 3. Incidents API
+const incs = await (await get("/api/incidents")).json();
+check(Array.isArray(incs.incidents) && incs.count === incs.incidents.length && incs.count > 0, "GET /api/incidents shape");
+check(Array.isArray(incs.unverified) && incs.unverified.length > 0, "GET /api/incidents returns unverified claims");
+
+const limitedIncs = await (await get("/api/incidents?limit=2")).json();
+check(limitedIncs.count === 2 && limitedIncs.incidents.length === 2, "GET /api/incidents?limit=2");
+
+for (const inc of incs.incidents) {
+  const r = await get(`/api/incidents/${inc.id}`);
+  const b = await r.json();
+  check(r.status === 200 && b.id === inc.id && Array.isArray(b.timeline), `GET /api/incidents/${inc.id}`);
+}
+const missingInc = await get("/api/incidents/does-not-exist");
+check(missingInc.status === 404 && (await missingInc.json()).error === "not_found", "unknown incident -> JSON 404");
+
+// 4. Case Studies API
+const cs = await (await get("/api/case-studies")).json();
+check(Array.isArray(cs.findings) && cs.count === cs.findings.length && cs.count > 0, "GET /api/case-studies shape");
+const csCrit = await (await get("/api/case-studies?severity=Critical")).json();
+check(Array.isArray(csCrit.findings) && csCrit.findings.every(f => f.severity === "Critical"), "GET /api/case-studies?severity=Critical filter");
+
+const limitedCs = await (await get("/api/case-studies?limit=2")).json();
+check(limitedCs.count === 2 && limitedCs.findings.length === 2, "GET /api/case-studies?limit=2");
+
+const csOne = await get("/api/case-studies/f-01");
+const csOneBody = await csOne.json();
+check(csOne.status === 200 && csOneBody.id === "F-01" && csOneBody.remediation?.id === "F-01", "GET /api/case-studies/f-01 (case-insensitive with remediation)");
+const missingCs = await get("/api/case-studies/f-999");
+check(missingCs.status === 404 && (await missingCs.json()).error === "not_found", "unknown case study -> JSON 404");
+
+// 5. Tiers API
+const tiersRes = await (await get("/api/tiers")).json();
+check(Array.isArray(tiersRes.tiers) && tiersRes.count === 4, "GET /api/tiers shape");
+
+const limitedTiers = await (await get("/api/tiers?limit=2")).json();
+check(limitedTiers.count === 2 && limitedTiers.tiers.length === 2, "GET /api/tiers?limit=2");
+
+const tierOne = await get("/api/tiers/seraphim");
+check(tierOne.status === 200 && (await tierOne.json()).name === "Seraphim", "GET /api/tiers/seraphim");
+const missingTier = await get("/api/tiers/does-not-exist");
+check(missingTier.status === 404 && (await missingTier.json()).error === "not_found", "unknown tier -> JSON 404");
+
+// 6. Scenarios API
+const scRes = await (await get("/api/scenarios")).json();
+check(Array.isArray(scRes.scenarios) && scRes.count > 0, "GET /api/scenarios shape");
+const scFiltered = await (await get("/api/scenarios?q=domain")).json();
+check(scFiltered.count === 1 && scFiltered.scenarios[0].id === "onprem-domain", "GET /api/scenarios?q=domain filter");
+
+const limitedSc = await (await get("/api/scenarios?limit=2")).json();
+check(limitedSc.count === 2 && limitedSc.scenarios.length === 2, "GET /api/scenarios?limit=2");
+
+const scOne = await get("/api/scenarios/legacy-internal-app");
+check(scOne.status === 200 && (await scOne.json()).id === "legacy-internal-app", "GET /api/scenarios/legacy-internal-app");
+const missingSc = await get("/api/scenarios/does-not-exist");
+check(missingSc.status === 404 && (await missingSc.json()).error === "not_found", "unknown scenario -> JSON 404");
+
+// 7. Sources API
+const srcRes = await (await get("/api/sources")).json();
+check(Array.isArray(srcRes.sources) && srcRes.count > 0, "GET /api/sources shape");
+const srcFiltered = await (await get("/api/sources?year=2026")).json();
+check(srcFiltered.count > 0 && srcFiltered.sources.every(s => s.date.includes("2026")), "GET /api/sources?year=2026 filter");
+
+const limitedSrc = await (await get("/api/sources?limit=2")).json();
+check(limitedSrc.count === 2 && limitedSrc.sources.length === 2, "GET /api/sources?limit=2");
+
+const srcOne = await get("/api/sources/oaiAug");
+check(srcOne.status === 200 && (await srcOne.json()).id === "oaiAug", "GET /api/sources/oaiAug");
+const missingSrc = await get("/api/sources/does-not-exist");
+check(missingSrc.status === 404 && (await missingSrc.json()).error === "not_found", "unknown source -> JSON 404");
+
+// 8. Brand API
+const brandRes = await get("/api/brand");
+const brandBody = await brandRes.json();
+check(brandRes.status === 200 && brandBody.name === "Seraphim AI" && Array.isArray(brandBody.badges) && brandBody.badges.length > 0, "GET /api/brand shape and badges");
+checkSecurityHeaders(brandRes, "GET /api/brand");
+
+// 9. Method Not Allowed on API endpoints
+for (const endpoint of ["/api/health", "/api/brand", "/api/posts", "/api/incidents", "/api/case-studies", "/api/scenarios", "/api/sources", "/api/tiers"]) {
+  const postRes = await get(endpoint, { method: "POST" });
+  check(postRes.status === 405, `POST ${endpoint} -> 405`);
+  const putRes = await get(endpoint, { method: "PUT" });
+  check(putRes.status === 405, `PUT ${endpoint} -> 405`);
+  const delRes = await get(endpoint, { method: "DELETE" });
+  check(delRes.status === 405, `DELETE ${endpoint} -> 405`);
+}
+
+// 10. Robots, Sitemap, and Static Assets
+const headRobots = await get("/robots.txt", { method: "HEAD" });
+check(headRobots.status === 200, "HEAD /robots.txt -> 200");
+const robotsRes = await get("/robots.txt");
+check(robotsRes.status === 200 && (await robotsRes.text()).includes("sitemap.xml"), "GET /robots.txt ok");
+
+const headSitemap = await get("/sitemap.xml", { method: "HEAD" });
+check(headSitemap.status === 200, "HEAD /sitemap.xml -> 200");
+const sitemapRes = await get("/sitemap.xml");
+check(sitemapRes.status === 200 && (await sitemapRes.text()).includes("urlset"), "GET /sitemap.xml ok");
+
+const iconRes = await get("/icon.svg");
+check(iconRes.status === 200 && (await iconRes.text()).includes("<svg"), "GET /icon.svg returns SVG");
+
+// 11. Crawl internal page links
+
+const links = new Set();
+for (const path of pages) {
+  const r = await get(path);
+  check(r.status === 200, `GET ${path} -> 200`);
+  const html = await r.text();
+  for (const m of html.matchAll(/href="(\/[^"#?]*)(?:[#?][^"]*)?"/g)) links.add(m[1]);
+}
+for (const l of links) {
+  if (seen.has(l) || l.startsWith("/_next/")) continue;
+  const r = await get(l);
+  check(r.status === 200, `internal link ${l} resolves (${r.status})`);
+}
+
+if (failures.length) { console.error(`\n${failures.length} smoke check(s) failed`); process.exit(1); }
+console.log("\nall smoke checks passed");

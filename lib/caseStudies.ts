@@ -198,7 +198,7 @@ export const remediation: Remediation[] = [
   },
   {
     id: "F-07",
-    title: "Charge idempotency key included the amount",
+    title: "Charge idempotency key included the amount, allowing a second payment intent",
     severity: "Medium",
     found: "A fare that moved during card authentication produced a new key and a second payment intent.",
     changed: "Keys are built from stable identifiers plus a generation marker that changes only after a successful charge; the existing payment intent is retrieved and reused.",
@@ -213,3 +213,17 @@ export const remediation: Remediation[] = [
     checked: "Migration present on current main. That it is applied to the live database is from the remediation log, not re-checked.",
   },
 ];
+
+export const findingById = (id: string): Finding | undefined => {
+  if (!id || typeof id !== "string") return undefined;
+  const target = id.toLowerCase();
+  return findings.find((f) => f.id.toLowerCase() === target);
+};
+
+export const remediationById = (id: string): Remediation | undefined => {
+  if (!id || typeof id !== "string") return undefined;
+  const target = id.toLowerCase();
+  return remediation.find((r) => r.id.toLowerCase() === target);
+};
+
+

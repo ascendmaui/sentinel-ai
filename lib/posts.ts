@@ -209,6 +209,14 @@ export const posts: Post[] = [
   },
 ];
 
-export const postBySlug = (slug: string) => posts.find((p) => p.slug === slug);
-export const postWords = (p: Post) =>
-  p.body.reduce((n, b) => n + (Array.isArray((b as { x: string[] | string }).x) ? ((b as { x: string[] }).x.join(" ")) : (b as { x: string }).x).split(/\s+/).length, 0);
+export const postBySlug = (slug: string): Post | undefined => {
+  if (!slug || typeof slug !== "string") return undefined;
+  const target = slug.toLowerCase();
+  return posts.find((p) => p.slug === slug || p.slug.toLowerCase() === target);
+};
+export const postWords = (p: Post): number =>
+  p.body.reduce((n, b) => {
+    const text = Array.isArray(b.x) ? b.x.join(" ") : b.x;
+    const words = text.trim().split(/\s+/).filter(Boolean);
+    return n + words.length;
+  }, 0);

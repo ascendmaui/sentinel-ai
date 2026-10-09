@@ -575,3 +575,16 @@ export const scenarios: Scenario[] = [
 ];
 
 export const INCIDENTS_DISCLAIMER = `This page is analysis based on public reporting. It is not a statement about any specific client, and ${BRAND_NAME} has no past engagements to report. Reports may change or be corrected, so follow the source links. Sections marked Known cite a source; sections marked Inferred are our own analysis.`;
+
+export const incidentById = (id: string): Incident | undefined => {
+  if (!id || typeof id !== "string") return undefined;
+  const target = id.toLowerCase();
+  return incidents.find((i) => i.id === id || i.id.toLowerCase() === target);
+};
+
+export const scenarioById = (id: string): Scenario | undefined => {
+  if (!id || typeof id !== "string") return undefined;
+  const target = id.toLowerCase();
+  return scenarios.find((s) => s.id === id || s.id.toLowerCase() === target);
+};
+

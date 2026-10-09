@@ -24,6 +24,7 @@ function SrcList({ ids }: { ids: string[] }) {
       <ul>
         {ids.map((id) => {
           const s = S[id];
+          if (!s) return null;
           return (
             <li key={id}>
               <a href={s.url} target="_blank" rel="noopener noreferrer">
@@ -216,14 +217,18 @@ export default function IncidentCaseStudiesPage() {
                 <div className="inc-src">
                   <span className="tag tag-known">Related sources</span>
                   <ul>
-                    {s.refs.map((id) => (
-                      <li key={id}>
-                        <a href={S[id].url} target="_blank" rel="noopener noreferrer">
-                          {S[id].label}
-                        </a>{" "}
-                        <span className="muted">({S[id].date})</span>
-                      </li>
-                    ))}
+                    {s.refs.map((id) => {
+                      const src = S[id];
+                      if (!src) return null;
+                      return (
+                        <li key={id}>
+                          <a href={src.url} target="_blank" rel="noopener noreferrer">
+                            {src.label}
+                          </a>{" "}
+                          <span className="muted">({src.date})</span>
+                        </li>
+                      );
+                    })}
                   </ul>
                 </div>
               ) : null}

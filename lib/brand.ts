@@ -18,12 +18,25 @@ export const BRAND_TAGLINE = "Scoped security assessments for the age of AI agen
 /** URL-encoded name for mailto subjects. */
 export const BRAND_MAIL = encodeURIComponent(BRAND_NAME);
 
+/** Resolves current site origin from environment variables with localhost fallback. */
+export function resolveSiteUrl(env: Record<string, string | undefined> = process.env): string {
+  if (env.NEXT_PUBLIC_SITE_URL) {
+    return env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
+  }
+  if (env.SITE_URL) {
+    return env.SITE_URL.replace(/\/$/, "");
+  }
+  if (env.VERCEL_ENV === "production" && env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${env.VERCEL_PROJECT_PRODUCTION_URL.replace(/\/$/, "")}`;
+  }
+  if (env.VERCEL_URL) {
+    return `https://${env.VERCEL_URL.replace(/\/$/, "")}`;
+  }
+  return "http://localhost:3000";
+}
+
 /** Preview and production builds resolve their own origin; localhost otherwise. */
-export const SITE_URL = process.env.VERCEL_ENV === "production" && process.env.VERCEL_PROJECT_PRODUCTION_URL
-  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-  : process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000";
+export const SITE_URL = resolveSiteUrl();
 
 /**
  * FLAG: faint falling-code background layer (components/CodeRain.tsx).
@@ -41,3 +54,13 @@ export const TRUE_BADGES = [
   { key: "retest", label: "Remediation and retest", note: "Fixes verified, not assumed" },
   { key: "local", label: "Private local models", note: "Scenario design stays on our hardware" },
 ] as const;
+
+export type TrustBadge = (typeof TRUE_BADGES)[number];
+
+export function badgeByKey(key: string): TrustBadge | undefined {
+  if (!key || typeof key !== "string") return undefined;
+  const target = key.toLowerCase();
+  return TRUE_BADGES.find((b) => b.key.toLowerCase() === target);
+}
+
+

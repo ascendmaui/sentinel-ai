@@ -21,3 +21,12 @@ export const S: Record<string, Source> = {
   jfPickle: { id: "jfPickle", label: "JFrog: Examining Malicious Hugging Face ML Models with Silent Backdoor", url: "https://jfrog.com/blog/data-scientists-targeted-by-malicious-hugging-face-ml-models-with-silent-backdoor/", date: "early 2024", note: "Primary. Security vendor research." },
   cs26: { id: "cs26", label: "CrowdStrike: 2026 Global Threat Report (press release)", url: "https://www.crowdstrike.com/en-us/press-releases/2026-crowdstrike-global-threat-report/", date: "24 Feb 2026", note: "Primary. Vendor's own report." },
 };
+
+export const sources: Source[] = Object.values(S);
+
+export function sourceById(id: string): Source | undefined {
+  if (!id || typeof id !== "string") return undefined;
+  if (Object.prototype.hasOwnProperty.call(S, id)) return S[id];
+  const target = id.toLowerCase();
+  return sources.find((s) => s.id.toLowerCase() === target);
+}

@@ -4,7 +4,14 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "vitest run",
+    "test:integration": "vitest run tests/api.integration.test.ts",
+    "test:content": "vitest run tests/content.test.ts",
+    "test:components": "vitest run tests/components.test.ts",
+    "test:pages": "vitest run tests/pages.test.ts",
+    "typecheck": "tsc --noEmit",
+    "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {
     "next": "^15.1.0",
@@ -15,6 +22,10 @@
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^5.0.3"
+  },
+  "engines": {
+    "node": ">=20.9"
   }
 }

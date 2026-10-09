@@ -85,14 +85,18 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
             Sources
           </h2>
           <ul>
-            {p.sources.map((id) => (
-              <li key={id}>
-                <a href={S[id].url} target="_blank" rel="noopener noreferrer">
-                  {S[id].label}
-                </a>{" "}
-                <span className="muted">({S[id].date})</span>
-              </li>
-            ))}
+            {p.sources.map((id) => {
+              const s = S[id];
+              if (!s) return null;
+              return (
+                <li key={id}>
+                  <a href={s.url} target="_blank" rel="noopener noreferrer">
+                    {s.label}
+                  </a>{" "}
+                  <span className="muted">({s.date})</span>
+                </li>
+              );
+            })}
           </ul>
         </section>
 

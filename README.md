@@ -23,6 +23,42 @@ The brand name is a single constant: `lib/brand.ts` (`BRAND_NAME`). Change it th
 
 Everything on the site describes the service as it is today: passive public recon, Scoped Assessments with written client authorization, remediation guidance and retest, private local models for scenario design. No monitoring platform, sensors, certifications, client logos or invented statistics.
 
+## API Routes
+
+All endpoints export HTTP/REST JSON contracts with security headers (`X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, `Permissions-Policy`, `X-DNS-Prefetch-Control: off`), ISO timestamps, and short-lived public caching. Index endpoints support query parameter filtering:
+
+- `GET /api/health`: Service liveness, current environment, timestamp, and commit SHA (zero secrets exposed).
+- `GET /api/posts`: Blog post index and metadata (newest first). Supports `?tier=`, `?q=`, and `?limit=`.
+- `GET /api/posts/[slug]`: Post detail with resolved primary sources.
+- `GET /api/incidents`: Documented incident list with source counts, unverified claims, and disclaimer. Supports `?q=`.
+- `GET /api/incidents/[id]`: Incident breakdown with timeline and verified references.
+- `GET /api/scenarios`: Conceptual threat scenarios with speed and control comparisons. Supports `?q=`.
+- `GET /api/scenarios/[id]`: Scenario details with defender controls and related sources.
+- `GET /api/case-studies`: Remediation findings and severity distributions. Supports `?severity=`, `?status=`, and `?q=`.
+- `GET /api/case-studies/[id]`: Finding details with before/after fixes and remediation verification notes.
+- `GET /api/tiers`: Service tier matrix, comparison details, and engagement terms. Supports `?q=`.
+- `GET /api/tiers/[id]`: Single tier deliverables, target audience, and exclusions.
+- `GET /api/sources`: Authoritative primary and secondary sources registry. Supports `?q=` and `?year=`.
+- `GET /api/sources/[id]`: Single source record with URL and credibility note.
+- `GET /api/brand`: Brand identity metadata, contact mailto, trust badges, and theme configuration.
+
+## Metadata & Discovery
+
+- `GET /robots.txt`: Generated dynamically via `app/robots.ts`, referencing the XML sitemap.
+- `GET /sitemap.xml`: Generated dynamically via `app/sitemap.ts` including all main pages and blog posts.
+- `/_not-found`: Branded custom 404 handler (`app/not-found.tsx`) with helpful navigation links.
+
+## Verification & Testing
+
+- `npm test`: Run 132 unit, component, page, content integrity, and API integration tests via Vitest across 4 test suites.
+- `npm run test:integration`: Run API endpoint integration tests.
+- `npm run test:components`: Run UI component tests (icons, emblems, logo mark, trust badges, nav, footer).
+- `npm run test:pages`: Run React Server Component page tests and metadata tests.
+- `npm run test:content`: Run content integrity and relationship verification tests.
+- `npm run typecheck`: Strict TypeScript typecheck across all routes, components, and tests (`tsc --noEmit`).
+- `npm run smoke`: Black-box smoke test validating running server endpoints, API contracts, query filtering, 404 responses, and internal link resolution.
+- `npm run build`: Production Next.js build generating static HTML and JSON routes with SSG.
+
 ## Develop
 
 ```bash
@@ -33,3 +69,4 @@ npm run dev
 ## Deploy
 
 Vercel project linked to this repo. Pull requests get preview deployments; production deploys only from `main`.
+
