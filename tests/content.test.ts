@@ -146,6 +146,25 @@ describe("posts", () => {
       }
     }
   });
+
+  it("postWords ignores extra whitespace and empty strings accurately", () => {
+    const dummyPost = {
+      slug: "dummy",
+      title: "Dummy",
+      description: "Dummy desc",
+      date: "2026-10-09",
+      readMins: 1,
+      tier: "seraphim" as const,
+      ctaLead: "Lead",
+      sources: [],
+      body: [
+        { t: "p" as const, x: "   hello   world   " },
+        { t: "ul" as const, x: ["one two", "   ", "three"] },
+        { t: "quote" as const, x: "" },
+      ],
+    };
+    expect(postWords(dummyPost)).toBe(5);
+  });
 });
 
 describe("tiers", () => {
