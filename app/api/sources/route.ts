@@ -12,19 +12,32 @@ export function GET(req?: Request): Response {
       const url = new URL(req.url);
       const q = url.searchParams.get("q");
       const year = url.searchParams.get("year");
+      const limitStr = url.searchParams.get("limit");
 
       if (year) {
-        list = list.filter((s) => s.date.includes(year));
+        const targetYear = year.trim();
+        if (targetYear.length > 0) {
+          list = list.filter((s) => s.date.includes(targetYear));
+        }
       }
       if (q) {
         const targetQ = q.trim().toLowerCase();
-        list = list.filter(
-          (s) =>
-            s.id.toLowerCase().includes(targetQ) ||
-            s.label.toLowerCase().includes(targetQ) ||
-            s.url.toLowerCase().includes(targetQ) ||
-            (s.note && s.note.toLowerCase().includes(targetQ))
-        );
+        if (targetQ.length > 0) {
+          list = list.filter(
+            (s) =>
+              s.id.toLowerCase().includes(targetQ) ||
+              s.label.toLowerCase().includes(targetQ) ||
+              s.url.toLowerCase().includes(targetQ) ||
+              (s.note && s.note.toLowerCase().includes(targetQ))
+          );
+        }
+      }
+
+      if (limitStr) {
+        const limit = parseInt(limitStr, 10);
+        if (!isNaN(limit) && limit > 0) {
+          list = list.slice(0, limit);
+        }
       }
     } catch {
       // Ignore malformed URL

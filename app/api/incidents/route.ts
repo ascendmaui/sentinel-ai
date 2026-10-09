@@ -11,20 +11,30 @@ export function GET(req?: Request): Response {
     try {
       const url = new URL(req.url);
       const q = url.searchParams.get("q");
+      const limitStr = url.searchParams.get("limit");
 
       if (q) {
         const targetQ = q.trim().toLowerCase();
-        list = list.filter(
-          (i) =>
-            i.id.toLowerCase().includes(targetQ) ||
-            i.title.toLowerCase().includes(targetQ) ||
-            i.kicker.toLowerCase().includes(targetQ) ||
-            i.oneLine.toLowerCase().includes(targetQ) ||
-            i.standing.toLowerCase().includes(targetQ) ||
-            i.timeline.some((t) => t.t.toLowerCase().includes(targetQ)) ||
-            i.did.some((d) => d.toLowerCase().includes(targetQ)) ||
-            i.howIn.some((h) => h.toLowerCase().includes(targetQ))
-        );
+        if (targetQ.length > 0) {
+          list = list.filter(
+            (i) =>
+              i.id.toLowerCase().includes(targetQ) ||
+              i.title.toLowerCase().includes(targetQ) ||
+              i.kicker.toLowerCase().includes(targetQ) ||
+              i.oneLine.toLowerCase().includes(targetQ) ||
+              i.standing.toLowerCase().includes(targetQ) ||
+              i.timeline.some((t) => t.t.toLowerCase().includes(targetQ)) ||
+              i.did.some((d) => d.toLowerCase().includes(targetQ)) ||
+              i.howIn.some((h) => h.toLowerCase().includes(targetQ))
+          );
+        }
+      }
+
+      if (limitStr) {
+        const limit = parseInt(limitStr, 10);
+        if (!isNaN(limit) && limit > 0) {
+          list = list.slice(0, limit);
+        }
       }
     } catch {
       // Ignore malformed URL

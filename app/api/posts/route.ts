@@ -20,12 +20,14 @@ export function GET(req?: Request): Response {
       }
       if (q) {
         const targetQ = q.trim().toLowerCase();
-        list = list.filter(
-          (p) =>
-            p.slug.toLowerCase().includes(targetQ) ||
-            p.title.toLowerCase().includes(targetQ) ||
-            p.description.toLowerCase().includes(targetQ)
-        );
+        if (targetQ.length > 0) {
+          list = list.filter(
+            (p) =>
+              p.slug.toLowerCase().includes(targetQ) ||
+              p.title.toLowerCase().includes(targetQ) ||
+              p.description.toLowerCase().includes(targetQ)
+          );
+        }
       }
 
       list.sort((a, b) => b.date.localeCompare(a.date));

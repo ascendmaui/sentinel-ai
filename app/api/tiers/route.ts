@@ -11,17 +11,27 @@ export function GET(req?: Request): Response {
     try {
       const url = new URL(req.url);
       const q = url.searchParams.get("q");
+      const limitStr = url.searchParams.get("limit");
 
       if (q) {
         const targetQ = q.trim().toLowerCase();
-        list = list.filter(
-          (t) =>
-            t.id.toLowerCase().includes(targetQ) ||
-            t.name.toLowerCase().includes(targetQ) ||
-            t.tagline.toLowerCase().includes(targetQ) ||
-            t.positioning.toLowerCase().includes(targetQ) ||
-            t.summary.toLowerCase().includes(targetQ)
-        );
+        if (targetQ.length > 0) {
+          list = list.filter(
+            (t) =>
+              t.id.toLowerCase().includes(targetQ) ||
+              t.name.toLowerCase().includes(targetQ) ||
+              t.tagline.toLowerCase().includes(targetQ) ||
+              t.positioning.toLowerCase().includes(targetQ) ||
+              t.summary.toLowerCase().includes(targetQ)
+          );
+        }
+      }
+
+      if (limitStr) {
+        const limit = parseInt(limitStr, 10);
+        if (!isNaN(limit) && limit > 0) {
+          list = list.slice(0, limit);
+        }
       }
     } catch {
       // Ignore malformed URL

@@ -113,6 +113,20 @@ describe("GET /api/posts", () => {
     expect(body.count).toBe(2);
     expect(body.totalCount).toBe(posts.length);
   });
+
+  it("handles whitespace search query and invalid limits gracefully", async () => {
+    const spaceRes = postsIndex(req("/api/posts?q=%20%20%20"));
+    expect(spaceRes.status).toBe(200);
+    expect((await spaceRes.json()).count).toBe(posts.length);
+
+    const invalidLimitRes = postsIndex(req("/api/posts?limit=-5"));
+    expect(invalidLimitRes.status).toBe(200);
+    expect((await invalidLimitRes.json()).count).toBe(posts.length);
+
+    const nonNumLimitRes = postsIndex(req("/api/posts?limit=abc"));
+    expect(nonNumLimitRes.status).toBe(200);
+    expect((await nonNumLimitRes.json()).count).toBe(posts.length);
+  });
 });
 
 describe("GET /api/posts/[slug]", () => {
@@ -176,6 +190,19 @@ describe("GET /api/incidents", () => {
     expect(body.totalCount).toBe(incidents.length);
     expect(Array.isArray(body.unverified)).toBe(true);
     expect(body.unverified.length).toBe(body.unverifiedCount);
+  });
+
+  it("limits incident result count and handles whitespace query", async () => {
+    const limitRes = incidentsIndex(req("/api/incidents?limit=3"));
+    expect(limitRes.status).toBe(200);
+    const limitBody = await limitRes.json();
+    expect(limitBody.incidents).toHaveLength(3);
+    expect(limitBody.count).toBe(3);
+    expect(limitBody.totalCount).toBe(incidents.length);
+
+    const spaceRes = incidentsIndex(req("/api/incidents?q=%20%20"));
+    expect(spaceRes.status).toBe(200);
+    expect((await spaceRes.json()).count).toBe(incidents.length);
   });
 });
 
@@ -251,6 +278,19 @@ describe("GET /api/case-studies", () => {
     expect(body.count).toBe(1);
     expect(body.findings[0].id).toBe("F-02");
   });
+
+  it("limits findings result count and handles whitespace query", async () => {
+    const limitRes = caseStudiesIndex(req("/api/case-studies?limit=4"));
+    expect(limitRes.status).toBe(200);
+    const limitBody = await limitRes.json();
+    expect(limitBody.findings).toHaveLength(4);
+    expect(limitBody.count).toBe(4);
+    expect(limitBody.totalCount).toBe(findings.length);
+
+    const spaceRes = caseStudiesIndex(req("/api/case-studies?q=%20%20"));
+    expect(spaceRes.status).toBe(200);
+    expect((await spaceRes.json()).count).toBe(findings.length);
+  });
 });
 
 describe("GET /api/case-studies/[id]", () => {
@@ -313,6 +353,19 @@ describe("GET /api/tiers", () => {
     const body = await res.json();
     expect(body.count).toBeGreaterThan(0);
     expect(body.totalCount).toBe(tiers.length);
+  });
+
+  it("limits tiers result count and handles whitespace query", async () => {
+    const limitRes = tiersIndex(req("/api/tiers?limit=2"));
+    expect(limitRes.status).toBe(200);
+    const limitBody = await limitRes.json();
+    expect(limitBody.tiers).toHaveLength(2);
+    expect(limitBody.count).toBe(2);
+    expect(limitBody.totalCount).toBe(tiers.length);
+
+    const spaceRes = tiersIndex(req("/api/tiers?q=%20%20"));
+    expect(spaceRes.status).toBe(200);
+    expect((await spaceRes.json()).count).toBe(tiers.length);
   });
 });
 
@@ -417,6 +470,19 @@ describe("GET /api/scenarios", () => {
     expect(body.scenarios[0].id).toBe("onprem-domain");
     expect(body.totalCount).toBe(scenarios.length);
   });
+
+  it("limits scenarios result count and handles whitespace query", async () => {
+    const limitRes = scenariosIndex(req("/api/scenarios?limit=2"));
+    expect(limitRes.status).toBe(200);
+    const limitBody = await limitRes.json();
+    expect(limitBody.scenarios).toHaveLength(2);
+    expect(limitBody.count).toBe(2);
+    expect(limitBody.totalCount).toBe(scenarios.length);
+
+    const spaceRes = scenariosIndex(req("/api/scenarios?q=%20%20"));
+    expect(spaceRes.status).toBe(200);
+    expect((await spaceRes.json()).count).toBe(scenarios.length);
+  });
 });
 
 describe("GET /api/scenarios/[id]", () => {
@@ -482,6 +548,25 @@ describe("GET /api/sources", () => {
     const qRes = sourcesIndex(req("/api/sources?q=anthropic"));
     const qBody = await qRes.json();
     expect(qBody.count).toBeGreaterThan(0);
+  });
+
+  it("limits sources result count, trims year, and handles whitespace query", async () => {
+    const limitRes = sourcesIndex(req("/api/sources?limit=3"));
+    expect(limitRes.status).toBe(200);
+    const limitBody = await limitRes.json();
+    expect(limitBody.sources).toHaveLength(3);
+    expect(limitBody.count).toBe(3);
+    expect(limitBody.totalCount).toBe(sources.length);
+
+    const yearTrimRes = sourcesIndex(req("/api/sources?year=%202026%20"));
+    expect(yearTrimRes.status).toBe(200);
+    const yearTrimBody = await yearTrimRes.json();
+    expect(yearTrimBody.count).toBeGreaterThan(0);
+    expect(yearTrimBody.sources.every((s: { date: string }) => s.date.includes("2026"))).toBe(true);
+
+    const spaceRes = sourcesIndex(req("/api/sources?q=%20%20"));
+    expect(spaceRes.status).toBe(200);
+    expect((await spaceRes.json()).count).toBe(sources.length);
   });
 });
 

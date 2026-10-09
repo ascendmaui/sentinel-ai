@@ -12,24 +12,37 @@ export function GET(req?: Request): Response {
       const severity = url.searchParams.get("severity");
       const status = url.searchParams.get("status");
       const q = url.searchParams.get("q");
+      const limitStr = url.searchParams.get("limit");
 
       if (severity) {
         const targetSev = severity.trim().toLowerCase();
-        list = list.filter((f) => f.severity.toLowerCase() === targetSev);
+        if (targetSev.length > 0) {
+          list = list.filter((f) => f.severity.toLowerCase() === targetSev);
+        }
       }
       if (status) {
         const targetStatus = status.trim().toLowerCase();
-        list = list.filter((f) => f.status.toLowerCase().includes(targetStatus));
+        if (targetStatus.length > 0) {
+          list = list.filter((f) => f.status.toLowerCase().includes(targetStatus));
+        }
       }
       if (q) {
         const targetQ = q.trim().toLowerCase();
-        list = list.filter(
-          (f) =>
-            f.id.toLowerCase().includes(targetQ) ||
-            f.title.toLowerCase().includes(targetQ) ||
-            f.rationale.toLowerCase().includes(targetQ) ||
-            f.fix.toLowerCase().includes(targetQ)
-        );
+        if (targetQ.length > 0) {
+          list = list.filter(
+            (f) =>
+              f.id.toLowerCase().includes(targetQ) ||
+              f.title.toLowerCase().includes(targetQ) ||
+              f.rationale.toLowerCase().includes(targetQ) ||
+              f.fix.toLowerCase().includes(targetQ)
+          );
+        }
+      }
+      if (limitStr) {
+        const limit = parseInt(limitStr, 10);
+        if (!isNaN(limit) && limit > 0) {
+          list = list.slice(0, limit);
+        }
       }
     } catch {
       // In case of malformed URL, default to unfiltered list
