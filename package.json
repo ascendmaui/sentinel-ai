@@ -6,6 +6,10 @@
     "build": "next build",
     "start": "next start",
     "test": "vitest run",
+    "test:integration": "vitest run tests/api.integration.test.ts",
+    "test:content": "vitest run tests/content.test.ts",
+    "test:components": "vitest run tests/components.test.ts",
+    "test:pages": "vitest run tests/pages.test.ts",
     "typecheck": "tsc --noEmit",
     "smoke": "node scripts/smoke.mjs"
   },

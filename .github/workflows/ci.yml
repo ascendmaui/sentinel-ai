@@ -39,11 +39,23 @@ jobs:
           NEXT_TELEMETRY_DISABLED: "1"
         run: |
           npm run start -- -p 3000 > server.log 2>&1 &
+          PID=$!
+          ready=0
           for i in $(seq 1 30); do
-            curl -fsS http://localhost:3000/api/health > /dev/null && break
+            if curl -fsS http://localhost:3000/api/health > /dev/null 2>&1; then
+              ready=1
+              break
+            fi
             sleep 1
           done
-          node scripts/smoke.mjs http://localhost:3000 || { cat server.log; exit 1; }
+          if [ "$ready" -ne 1 ]; then
+            echo "Production server failed to respond on /api/health within 30 seconds"
+            cat server.log
+            kill $PID 2>/dev/null || true
+            exit 1
+          fi
+          node scripts/smoke.mjs http://localhost:3000 || { cat server.log; kill $PID 2>/dev/null || true; exit 1; }
+          kill $PID 2>/dev/null || true
 
   audit:
     runs-on: ubuntu-latest
