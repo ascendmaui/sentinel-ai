@@ -44,3 +44,26 @@ export function methodNotAllowed(allowed: string[] = ["GET", "HEAD"]): Response 
 /** Short-lived shared caching for read-only content endpoints. */
 export const PUBLIC_CACHE = "public, max-age=0, s-maxage=300, stale-while-revalidate=600";
 
+/**
+ * Safely parses an optional integer limit from URL search parameters.
+ * Returns undefined if missing, non-numeric, or <= 0. Bounded by max.
+ */
+export function parseLimit(params: URLSearchParams, max = 100): number | undefined {
+  const raw = params.get("limit");
+  if (!raw) return undefined;
+  const num = parseInt(raw, 10);
+  if (isNaN(num) || num <= 0) return undefined;
+  return Math.min(num, max);
+}
+
+/**
+ * Safely extracts a trimmed lowercase query string from URL search parameters.
+ * Returns undefined if missing or containing only whitespace.
+ */
+export function parseSearchQuery(params: URLSearchParams, paramName = "q"): string | undefined {
+  const raw = params.get(paramName);
+  if (!raw) return undefined;
+  const trimmed = raw.trim().toLowerCase();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+

@@ -20,7 +20,7 @@ import { incidents, scenarios } from "../lib/incidents";
 import { findings } from "../lib/caseStudies";
 import { tiers } from "../lib/tiers";
 import { S, sources } from "../lib/sources";
-import { badRequest, json, methodNotAllowed, notFound, SECURITY_HEADERS } from "../lib/http";
+import { badRequest, json, methodNotAllowed, notFound, parseLimit, parseSearchQuery, SECURITY_HEADERS } from "../lib/http";
 
 const slugCtx = (slug: string) => ({ params: Promise.resolve({ slug }) });
 const idCtx = (id: string) => ({ params: Promise.resolve({ id }) });
@@ -442,6 +442,26 @@ describe("HTTP helper utilities", () => {
     for (const [key, val] of Object.entries(SECURITY_HEADERS)) {
       expect(res.headers.get(key.toLowerCase())).toBe(val);
     }
+  });
+
+  it("parseLimit handles valid, invalid, negative, and capped limits", () => {
+    expect(parseLimit(new URLSearchParams("limit=5"))).toBe(5);
+    expect(parseLimit(new URLSearchParams("limit=0"))).toBeUndefined();
+    expect(parseLimit(new URLSearchParams("limit=-10"))).toBeUndefined();
+    expect(parseLimit(new URLSearchParams("limit=abc"))).toBeUndefined();
+    expect(parseLimit(new URLSearchParams(""))).toBeUndefined();
+    expect(parseLimit(new URLSearchParams("limit=250"), 100)).toBe(100);
+    expect(parseLimit(new URLSearchParams("limit=50"), 100)).toBe(50);
+  });
+
+  it("parseSearchQuery handles valid, whitespace, and custom param keys", () => {
+    expect(parseSearchQuery(new URLSearchParams("q=Seraphim"))).toBe("seraphim");
+    expect(parseSearchQuery(new URLSearchParams("q=  Modal  "))).toBe("modal");
+    expect(parseSearchQuery(new URLSearchParams("q=   "))).toBeUndefined();
+    expect(parseSearchQuery(new URLSearchParams("q="))).toBeUndefined();
+    expect(parseSearchQuery(new URLSearchParams(""))).toBeUndefined();
+    expect(parseSearchQuery(new URLSearchParams("tier=CHERUBIM"), "tier")).toBe("cherubim");
+    expect(parseSearchQuery(new URLSearchParams("year=2026"), "year")).toBe("2026");
   });
 });
 

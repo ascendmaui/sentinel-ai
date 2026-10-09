@@ -1,4 +1,4 @@
-import { json, PUBLIC_CACHE } from "../../../lib/http";
+import { json, parseLimit, parseSearchQuery, PUBLIC_CACHE } from "../../../lib/http";
 import { tiers, matrix, helper, ENGAGEMENT_TERMS } from "../../../lib/tiers";
 
 /** Service tiers index as JSON: all four engagement tiers and comparison matrix. Supports ?q=. */
@@ -10,28 +10,22 @@ export function GET(req?: Request): Response {
   if (req?.url) {
     try {
       const url = new URL(req.url);
-      const q = url.searchParams.get("q");
-      const limitStr = url.searchParams.get("limit");
+      const q = parseSearchQuery(url.searchParams);
+      const limit = parseLimit(url.searchParams);
 
       if (q) {
-        const targetQ = q.trim().toLowerCase();
-        if (targetQ.length > 0) {
-          list = list.filter(
-            (t) =>
-              t.id.toLowerCase().includes(targetQ) ||
-              t.name.toLowerCase().includes(targetQ) ||
-              t.tagline.toLowerCase().includes(targetQ) ||
-              t.positioning.toLowerCase().includes(targetQ) ||
-              t.summary.toLowerCase().includes(targetQ)
-          );
-        }
+        list = list.filter(
+          (t) =>
+            t.id.toLowerCase().includes(q) ||
+            t.name.toLowerCase().includes(q) ||
+            t.tagline.toLowerCase().includes(q) ||
+            t.positioning.toLowerCase().includes(q) ||
+            t.summary.toLowerCase().includes(q)
+        );
       }
 
-      if (limitStr) {
-        const limit = parseInt(limitStr, 10);
-        if (!isNaN(limit) && limit > 0) {
-          list = list.slice(0, limit);
-        }
+      if (limit) {
+        list = list.slice(0, limit);
       }
     } catch {
       // Ignore malformed URL

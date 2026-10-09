@@ -1,4 +1,4 @@
-import { json, PUBLIC_CACHE } from "../../../lib/http";
+import { json, parseLimit, parseSearchQuery, PUBLIC_CACHE } from "../../../lib/http";
 import { incidents, scenarios, unverified, INCIDENTS_DISCLAIMER } from "../../../lib/incidents";
 
 /** Incident case studies index as JSON. Lists incidents, summaries, counts, and disclaimer. Supports ?q=. */
@@ -10,31 +10,25 @@ export function GET(req?: Request): Response {
   if (req?.url) {
     try {
       const url = new URL(req.url);
-      const q = url.searchParams.get("q");
-      const limitStr = url.searchParams.get("limit");
+      const q = parseSearchQuery(url.searchParams);
+      const limit = parseLimit(url.searchParams);
 
       if (q) {
-        const targetQ = q.trim().toLowerCase();
-        if (targetQ.length > 0) {
-          list = list.filter(
-            (i) =>
-              i.id.toLowerCase().includes(targetQ) ||
-              i.title.toLowerCase().includes(targetQ) ||
-              i.kicker.toLowerCase().includes(targetQ) ||
-              i.oneLine.toLowerCase().includes(targetQ) ||
-              i.standing.toLowerCase().includes(targetQ) ||
-              i.timeline.some((t) => t.t.toLowerCase().includes(targetQ)) ||
-              i.did.some((d) => d.toLowerCase().includes(targetQ)) ||
-              i.howIn.some((h) => h.toLowerCase().includes(targetQ))
-          );
-        }
+        list = list.filter(
+          (i) =>
+            i.id.toLowerCase().includes(q) ||
+            i.title.toLowerCase().includes(q) ||
+            i.kicker.toLowerCase().includes(q) ||
+            i.oneLine.toLowerCase().includes(q) ||
+            i.standing.toLowerCase().includes(q) ||
+            i.timeline.some((t) => t.t.toLowerCase().includes(q)) ||
+            i.did.some((d) => d.toLowerCase().includes(q)) ||
+            i.howIn.some((h) => h.toLowerCase().includes(q))
+        );
       }
 
-      if (limitStr) {
-        const limit = parseInt(limitStr, 10);
-        if (!isNaN(limit) && limit > 0) {
-          list = list.slice(0, limit);
-        }
+      if (limit) {
+        list = list.slice(0, limit);
       }
     } catch {
       // Ignore malformed URL

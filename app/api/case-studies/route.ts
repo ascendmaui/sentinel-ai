@@ -1,4 +1,4 @@
-import { json, PUBLIC_CACHE } from "../../../lib/http";
+import { json, parseLimit, parseSearchQuery, PUBLIC_CACHE } from "../../../lib/http";
 import { findings, remediation, severityCounts } from "../../../lib/caseStudies";
 
 /** Remediation findings and case studies index as JSON. Supports optional ?severity=, ?status=, and ?q= filters. */
@@ -9,40 +9,28 @@ export function GET(req?: Request): Response {
   if (req?.url) {
     try {
       const url = new URL(req.url);
-      const severity = url.searchParams.get("severity");
-      const status = url.searchParams.get("status");
-      const q = url.searchParams.get("q");
-      const limitStr = url.searchParams.get("limit");
+      const severity = parseSearchQuery(url.searchParams, "severity");
+      const status = parseSearchQuery(url.searchParams, "status");
+      const q = parseSearchQuery(url.searchParams);
+      const limit = parseLimit(url.searchParams);
 
       if (severity) {
-        const targetSev = severity.trim().toLowerCase();
-        if (targetSev.length > 0) {
-          list = list.filter((f) => f.severity.toLowerCase() === targetSev);
-        }
+        list = list.filter((f) => f.severity.toLowerCase() === severity);
       }
       if (status) {
-        const targetStatus = status.trim().toLowerCase();
-        if (targetStatus.length > 0) {
-          list = list.filter((f) => f.status.toLowerCase().includes(targetStatus));
-        }
+        list = list.filter((f) => f.status.toLowerCase().includes(status));
       }
       if (q) {
-        const targetQ = q.trim().toLowerCase();
-        if (targetQ.length > 0) {
-          list = list.filter(
-            (f) =>
-              f.id.toLowerCase().includes(targetQ) ||
-              f.title.toLowerCase().includes(targetQ) ||
-              f.rationale.toLowerCase().includes(targetQ) ||
-              f.fix.toLowerCase().includes(targetQ)
-          );
-        }
+        list = list.filter(
+          (f) =>
+            f.id.toLowerCase().includes(q) ||
+            f.title.toLowerCase().includes(q) ||
+            f.rationale.toLowerCase().includes(q) ||
+            f.fix.toLowerCase().includes(q)
+        );
       }
-      if (limitStr) {
-        const limit = parseInt(limitStr, 10);
-        if (!isNaN(limit) && limit > 0) {
-          list = list.slice(0, limit);
-        }
+      if (limit) {
+        list = list.slice(0, limit);
       }
     } catch {
       // In case of malformed URL, default to unfiltered list

@@ -1,4 +1,4 @@
-import { json, PUBLIC_CACHE } from "../../../lib/http";
+import { json, parseLimit, parseSearchQuery, PUBLIC_CACHE } from "../../../lib/http";
 import { sources } from "../../../lib/sources";
 
 /** Authoritative sources index as JSON. Lists verified research references. Supports ?q= and ?year=. */
@@ -10,34 +10,25 @@ export function GET(req?: Request): Response {
   if (req?.url) {
     try {
       const url = new URL(req.url);
-      const q = url.searchParams.get("q");
-      const year = url.searchParams.get("year");
-      const limitStr = url.searchParams.get("limit");
+      const q = parseSearchQuery(url.searchParams);
+      const year = parseSearchQuery(url.searchParams, "year");
+      const limit = parseLimit(url.searchParams);
 
       if (year) {
-        const targetYear = year.trim();
-        if (targetYear.length > 0) {
-          list = list.filter((s) => s.date.includes(targetYear));
-        }
+        list = list.filter((s) => s.date.includes(year));
       }
       if (q) {
-        const targetQ = q.trim().toLowerCase();
-        if (targetQ.length > 0) {
-          list = list.filter(
-            (s) =>
-              s.id.toLowerCase().includes(targetQ) ||
-              s.label.toLowerCase().includes(targetQ) ||
-              s.url.toLowerCase().includes(targetQ) ||
-              (s.note && s.note.toLowerCase().includes(targetQ))
-          );
-        }
+        list = list.filter(
+          (s) =>
+            s.id.toLowerCase().includes(q) ||
+            s.label.toLowerCase().includes(q) ||
+            s.url.toLowerCase().includes(q) ||
+            (s.note && s.note.toLowerCase().includes(q))
+        );
       }
 
-      if (limitStr) {
-        const limit = parseInt(limitStr, 10);
-        if (!isNaN(limit) && limit > 0) {
-          list = list.slice(0, limit);
-        }
+      if (limit) {
+        list = list.slice(0, limit);
       }
     } catch {
       // Ignore malformed URL
