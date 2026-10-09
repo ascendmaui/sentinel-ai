@@ -54,6 +54,25 @@ describe("theme and tokens", () => {
     expect(THEME_BOOT_SCRIPT.length).toBeGreaterThan(0);
     expect(() => new Function(THEME_BOOT_SCRIPT)).not.toThrow();
   });
+
+  it("theme boot script evaluates cleanly in simulated DOM environments", () => {
+    const fakeDoc = {
+      documentElement: {
+        theme: "",
+        setAttribute(k: string, v: string) {
+          if (k === "data-theme") this.theme = v;
+        },
+      },
+    };
+    const fakeStorage = { getItem: () => null };
+    const fakeMatchMedia = (query: string) => ({
+      matches: query.includes("light"),
+    });
+
+    const runScript = new Function("document", "localStorage", "window", THEME_BOOT_SCRIPT);
+    runScript(fakeDoc, fakeStorage, { matchMedia: fakeMatchMedia });
+    expect(fakeDoc.documentElement.theme).toBe("light");
+  });
 });
 
 
