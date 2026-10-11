@@ -47,12 +47,14 @@ export const PUBLIC_CACHE = "public, max-age=0, s-maxage=300, stale-while-revali
 /**
  * Safely parses an optional integer limit from URL search parameters.
  * Returns undefined if missing, non-numeric, or <= 0. Bounded by max.
+ * Only plain base-10 integers are accepted: partial numerics such as "1e3", "2.5" or "10abc"
+ * are rejected rather than silently truncated by parseInt.
  */
 export function parseLimit(params: URLSearchParams, max = 100): number | undefined {
-  const raw = params.get("limit");
-  if (!raw) return undefined;
-  const num = parseInt(raw, 10);
-  if (isNaN(num) || num <= 0) return undefined;
+  const raw = params.get("limit")?.trim();
+  if (!raw || !/^\+?\d+$/.test(raw)) return undefined;
+  const num = Number(raw);
+  if (!(num > 0)) return undefined;
   return Math.min(num, max);
 }
 

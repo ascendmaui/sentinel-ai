@@ -127,6 +127,14 @@ describe("GET /api/posts", () => {
     expect(nonNumLimitRes.status).toBe(200);
     expect((await nonNumLimitRes.json()).count).toBe(posts.length);
   });
+
+  it("ignores partial-numeric limits instead of truncating them (1e3, 1.9, 1abc)", async () => {
+    for (const bad of ["1e3", "1.9", "1abc", "0x2", "%201%202"]) {
+      const res = postsIndex(req(`/api/posts?limit=${bad}`));
+      expect(res.status).toBe(200);
+      expect((await res.json()).count, `limit=${bad}`).toBe(posts.length);
+    }
+  });
 });
 
 describe("GET /api/posts/[slug]", () => {
@@ -452,6 +460,16 @@ describe("HTTP helper utilities", () => {
     expect(parseLimit(new URLSearchParams(""))).toBeUndefined();
     expect(parseLimit(new URLSearchParams("limit=250"), 100)).toBe(100);
     expect(parseLimit(new URLSearchParams("limit=50"), 100)).toBe(50);
+    // Strict: partial numerics are rejected rather than truncated by parseInt.
+    expect(parseLimit(new URLSearchParams("limit=1e3"))).toBeUndefined();
+    expect(parseLimit(new URLSearchParams("limit=2.5"))).toBeUndefined();
+    expect(parseLimit(new URLSearchParams("limit=10abc"))).toBeUndefined();
+    expect(parseLimit(new URLSearchParams("limit=0x10"))).toBeUndefined();
+    expect(parseLimit(new URLSearchParams("limit=1 2"))).toBeUndefined();
+    // Whitespace padding and leading zeros are tolerated; huge values clamp to max.
+    expect(parseLimit(new URLSearchParams("limit=%207%20"))).toBe(7);
+    expect(parseLimit(new URLSearchParams("limit=007"))).toBe(7);
+    expect(parseLimit(new URLSearchParams(`limit=${"9".repeat(400)}`), 100)).toBe(100);
   });
 
   it("parseSearchQuery handles valid, whitespace, and custom param keys", () => {
