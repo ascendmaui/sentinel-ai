@@ -96,7 +96,7 @@ export default function HomePage() {
         <HeroStage />
       </section>
 
-      <section className="section" id="phases">
+      <section className="section section-art" id="phases">
         <div className="section-head">
           <p className="eyebrow">What it does</p>
           <h2>Three phases. One clear outcome.</h2>
@@ -216,7 +216,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="section" id="contact">
+      <section className="section section-art" id="contact">
         <div className="cta-band">
           <div>
             <h2>In the age of AI, fight rogue agents with {BRAND_NAME}.</h2>

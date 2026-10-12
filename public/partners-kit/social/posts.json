@@ -1,0 +1,74 @@
+[
+ {
+  "n": 1,
+  "network": "x",
+  "image": "post-01-x.jpg",
+  "copy": "Most AI agent risk is visible from the outside. A Scoped Assessment starts there: passive recon of public information, no probing, no surprises."
+ },
+ {
+  "n": 2,
+  "network": "x",
+  "image": "post-02-x.jpg",
+  "copy": "Agents call tools, hold keys and touch production. Ask what they can reach before someone else does. Seraphim Scan runs Scoped Assessments for agent teams."
+ },
+ {
+  "n": 3,
+  "network": "x",
+  "image": "post-03-x.jpg",
+  "copy": "Our rule: nothing beyond passive recon happens without written client authorization and an agreed scope. Every time."
+ },
+ {
+  "n": 4,
+  "network": "x",
+  "image": "post-04-x.jpg",
+  "copy": "Recon. Scoped Assessment. Remediation and Retest. Fixes verified, not assumed."
+ },
+ {
+  "n": 5,
+  "network": "linkedin",
+  "image": "post-05-linkedin.jpg",
+  "copy": "Teams shipping AI agents move fast. Security reviews often lag behind. Seraphim Scan offers a Scoped Assessment in three phases: passive recon of public information, a Scoped Assessment inside an agreed scope with written authorization, then remediation support and a retest. If your roadmap includes agents with tool access, let's talk."
+ },
+ {
+  "n": 6,
+  "network": "linkedin",
+  "image": "post-06-linkedin.jpg",
+  "copy": "What does passive recon mean for us? Public information only: DNS, certificates, published docs, public repos and what your product exposes to any visitor. No probing. It is the safest way to see your outside surface the way others can."
+ },
+ {
+  "n": 7,
+  "network": "linkedin",
+  "image": "post-07-linkedin.jpg",
+  "copy": "A finding is only useful once it is fixed. Every Seraphim Scan engagement ends with a retest so your team knows the fix holds."
+ },
+ {
+  "n": 8,
+  "network": "linkedin",
+  "image": "post-08-linkedin.jpg",
+  "copy": "Building with AI agents? Three questions worth answering this quarter: What can your agents reach? What do they trust? What would you see if one misbehaved? A Scoped Assessment helps you answer all three."
+ },
+ {
+  "n": 9,
+  "network": "instagram",
+  "image": "post-09-instagram.jpg",
+  "copy": "Six wings. One focus. Scoped Assessments for the AI agent era."
+ },
+ {
+  "n": 10,
+  "network": "instagram",
+  "image": "post-10-instagram.jpg",
+  "copy": "See what the internet already sees. Passive recon first."
+ },
+ {
+  "n": 11,
+  "network": "instagram",
+  "image": "post-11-instagram.jpg",
+  "copy": "Find it. Fix it. Retest it."
+ },
+ {
+  "n": 12,
+  "network": "instagram",
+  "image": "post-12-instagram.jpg",
+  "copy": "Written authorization. Agreed scope. Clear report."
+ }
+]

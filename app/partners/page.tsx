@@ -34,6 +34,7 @@ export default function PartnersPage() {
           <div className="row">
             <Link className="btn btn-gold" href="/start?path=call">Talk to us about partnering</Link>
             <Link className="btn btn-glass" href="/pricing">See tiers and pricing</Link>
+            <a className="btn btn-glass" href="/marketing-kit" rel="nofollow">Partner marketing kit (password)</a>
           </div>
         </div>
       </section>
