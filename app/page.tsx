@@ -1,7 +1,7 @@
 import { HeroStage } from "../components/HeroStage";
 import Link from "next/link";
 import { Icon, type IconName } from "../components/Icons";
-import { HaloIncluded } from "../components/HaloIncluded";
+import { HaloIncluded, HaloValue } from "../components/HaloIncluded";
 import { TrustBadges } from "../components/TrustBadges";
 import { TierStrip } from "../components/TierStrip";
 import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME } from "../lib/brand";
@@ -157,6 +157,7 @@ export default function HomePage() {
           <h3>Halo Scan, $99</h3>
           <p>A full passive perimeter sweep with dual-verified findings and a branded PDF report, usually in your inbox within minutes.</p>
           <HaloIncluded />
+          <HaloValue />
           <Link className="btn btn-gold" href="/start?path=basic">Get the $99 Halo Scan</Link>
         </article>
       </section>

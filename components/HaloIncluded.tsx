@@ -24,3 +24,33 @@ export function HaloIncluded({ open = false }: { open?: boolean }) {
     </details>
   );
 }
+
+/** Only lines whose checks are in HALO_INCLUDED. Exposed-files, outdated-software and CORS lines omitted: not performed. */
+export const HALO_VALUE: [string, number][] = [
+  ["SSL/TLS certificate review", 150],
+  ["Security headers audit", 150],
+  ["Cookie settings review", 75],
+  ["DNS & email security (SPF/DKIM/DMARC)", 200],
+  ["Subdomain discovery", 200],
+  ["Second-pass verification of every finding", 250],
+  ["Branded PDF report with fixes", 300],
+];
+
+export function HaloValue() {
+  const total = HALO_VALUE.reduce((s, [, v]) => s + v, 0);
+  const usd = (n: number) => `$${n.toLocaleString("en-US")}`;
+  return (
+    <div className="halo-value">
+      <h4>Value breakdown</h4>
+      <p className="fine">Estimated value if done separately by a consultant (~$150/hr)</p>
+      <table>
+        <tbody>
+          {HALO_VALUE.map(([k, v]) => <tr key={k}><td>{k}</td><td>{usd(v)}</td></tr>)}
+          <tr className="halo-value-total"><td>Total estimated value</td><td>{usd(total)}</td></tr>
+          <tr className="halo-value-price"><td>Your price</td><td className="gold-text">$99</td></tr>
+        </tbody>
+      </table>
+      <p className="fine">Estimates based on typical consultant time; not a quote from any third party.</p>
+    </div>
+  );
+}

@@ -740,3 +740,10 @@ ul, ol { color: var(--ao-muted); }
 .halo-included-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 12px; }
 .halo-included h4 { margin: 0 0 6px; font-size: 14px; }
 .halo-included ul { margin: 0; padding-left: 18px; font-size: 13.5px; line-height: 1.5; }
+.halo-value { margin: 16px 0; max-width: 520px; }
+.halo-value h4 { margin: 0 0 4px; }
+.halo-value table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.halo-value td { padding: 4px 0; border-bottom: 1px solid var(--ao-line-gold); }
+.halo-value td:last-child { text-align: right; }
+.halo-value-total td { font-weight: 600; }
+.halo-value-price td { font-weight: 700; font-size: 16px; border-bottom: 0; }

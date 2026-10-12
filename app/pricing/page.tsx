@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "../../components/Icons";
 import { TierEmblem } from "../../components/TierEmblem";
-import { HaloIncluded } from "../../components/HaloIncluded";
+import { HaloIncluded, HaloValue } from "../../components/HaloIncluded";
 import { TrustBadges } from "../../components/TrustBadges";
 import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME } from "../../lib/brand";
 import { ENGAGEMENT_TERMS, helper, matrix, tierHref, tiers, type TierId } from "../../lib/tiers";
@@ -68,6 +68,7 @@ export default function PricingPage() {
             certification. Checks are passive and limited to the one domain you authorize, and every finding is re-verified by a second check before it goes in the report.
           </p>
           <HaloIncluded />
+          <HaloValue />
           <div className="tier-cta">
             <Link className="btn btn-gold" href="/start?path=basic">Get the $99 Halo Scan</Link>
           </div>
