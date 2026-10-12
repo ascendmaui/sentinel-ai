@@ -4,13 +4,10 @@ export const SCAN_DAYS = 3;
 export const TIER_IDS = tiers.map((t) => t.id);
 export type LeadPath = "scan" | "call" | "basic";
 
-/** Seraphim Scan Basic: Stripe TEST MODE (AgentOverLord sandbox). Replace with a live Payment Link to go live. */
+/** Seraphim Scan Basic display values. Payment settings are env-driven (lib/pipeline/config.ts). */
 export const BASIC = {
-  price: "$100",
-  stripeMode: "test" as "test" | "live",
-  productId: "prod_VQh4XKRPNHZ2cR",
-  priceId: "price_1UPph2PIyQnq01k2crtjdyJW",
-  paymentLink: "https://buy.stripe.com/test_28E28tgmZ0YT1jK2nqawo00",
+  price: "$99",
+  stripeMode: (process.env.NEXT_PUBLIC_STRIPE_MODE ?? "test") as "test" | "live",
 };
 
 export type Lead = {

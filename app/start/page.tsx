@@ -5,7 +5,7 @@ import { BRAND_NAME } from "../../lib/brand";
 
 export const metadata: Metadata = {
   title: "Get started",
-  description: `Start with ${BRAND_NAME}: a free passive preliminary check, a call, or the $100 Basic Scan.`,
+  description: `Start with ${BRAND_NAME}: a free passive preliminary check, a call, or the $99 Basic Scan.`,
   alternates: { canonical: "/start" },
 };
 

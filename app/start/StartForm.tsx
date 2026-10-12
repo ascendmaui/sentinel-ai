@@ -10,7 +10,7 @@ const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 
 const PATHS: { id: Path; title: string; price: string; body: string }[] = [
   { id: "scan", title: "Free preliminary scan", price: "Free", body: `A passive check of your public footprint, reviewed by a person and delivered within ${SCAN_DAYS} business days.` },
-  { id: "basic", title: "Buy the $100 Basic Scan now", price: BASIC.price, body: `A written passive overview of your external footprint with top fixes. Delivered within ${SCAN_DAYS} business days.` },
+  { id: "basic", title: "Buy the $99 Basic Scan now", price: BASIC.price, body: `An automated passive overview of your external footprint as a PDF report with top fixes. Usually emailed within minutes of payment, always within ${SCAN_DAYS} business days.` },
   { id: "call", title: "Book a call", price: "30 min", body: "Talk through your stack and pick the right tier. We confirm a time by email." },
 ];
 
@@ -137,9 +137,12 @@ export function StartForm() {
 
           {(path === "scan" || path === "basic") && (
             <p className="fine">
-              Passive check only, delivered within {SCAN_DAYS} business days. We look at public information (DNS and mail
+              Passive check only, delivered within {SCAN_DAYS} business days at most. We look at public information (DNS and mail
               authentication, TLS, security headers, certificate transparency). No active testing, no exploitation, no
-              compliance certification. Nothing runs automatically: a person reviews every request first.
+              compliance certification.{" "}
+              {path === "scan"
+                ? "Nothing runs automatically: a person reviews every request first."
+                : "After payment, automated passive checks run on this one domain only, every finding is re-verified, and the report is emailed to you."}
             </p>
           )}
           {path === "basic" && BASIC.stripeMode === "test" && <p className="fine lead-test">Checkout is in Stripe test mode while we finish setup. No real charge is made.</p>}

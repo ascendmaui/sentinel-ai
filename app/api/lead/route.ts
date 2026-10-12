@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { put } from "@vercel/blob";
-import { BASIC, isFreeMail, validateLead } from "../../../lib/lead";
+import { isFreeMail, validateLead } from "../../../lib/lead";
+import { cfg, SITE } from "../../../lib/pipeline/config";
+import { alert } from "../../../lib/pipeline/mail";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -43,7 +45,7 @@ export async function POST(req: Request) {
     id,
     receivedAt: new Date().toISOString(),
     status: v.lead.path === "scan" ? "scan_queued_for_review" : v.lead.path === "basic" ? "basic_checkout_started" : "call_requested",
-    stripe: v.lead.path === "basic" ? { mode: BASIC.stripeMode, priceId: BASIC.priceId, paymentLink: BASIC.paymentLink, clientReferenceId: "" } : undefined,
+    stripe: v.lead.path === "basic" ? { mode: cfg.stripeMode, priceId: cfg.priceId, clientReferenceId: "" } : undefined,
     freeMail: isFreeMail(v.lead.email),
     test: raw.test === true,
     ...v.lead,
@@ -65,10 +67,15 @@ export async function POST(req: Request) {
   // No mail provider is configured for this project, so notification is a structured log line.
   // Nothing is scanned here: preliminary scans are passive and queued for human review.
   console.log(`[lead] NEW ${record.path} ${record.company} <${record.email}> tier=${record.tier} id=${id}`);
-  const checkoutUrl =
-    record.path === "basic"
-      ? `${BASIC.paymentLink}?client_reference_id=${encodeURIComponent(id)}&prefilled_email=${encodeURIComponent(record.email)}`
-      : undefined;
+  let checkoutUrl: string | undefined;
+  if (record.path === "basic") {
+    checkoutUrl = await createCheckout(id, record.email).catch((e) => {
+      console.error("[lead] checkout session failed, using payment link", e);
+      return undefined;
+    });
+    checkoutUrl ??= `${cfg.paymentLink}?client_reference_id=${encodeURIComponent(id)}&prefilled_email=${encodeURIComponent(record.email)}`;
+  }
+  await alert(`New ${record.path} lead: ${record.company || record.website}`, `${record.name || "(no name)"} <${record.email}>\nCompany: ${record.company}\nRole: ${record.role}\nWebsite: ${record.website}\nTier: ${record.tier}\nPath: ${record.path}${record.days ? `\nDays: ${record.days.join(", ")} ${record.times} ${record.timezone}` : ""}\nNotes: ${record.notes}\nLead id: ${id}${record.test ? "\n(TEST submission)" : ""}`).catch(() => {});
   return NextResponse.json({ ok: true, id, checkoutUrl });
 }
 
@@ -80,7 +87,29 @@ export async function PATCH(req: Request) {
   try { raw = await req.json(); } catch { return NextResponse.json({ ok: false }, { status: 400 }); }
   const sid = typeof raw.session_id === "string" ? raw.session_id.slice(0, 200) : "";
   if (!/^cs_(test|live)_[A-Za-z0-9]+$/.test(sid)) return NextResponse.json({ ok: false }, { status: 400 });
-  await put(`orders/${sid}.json`, JSON.stringify({ session_id: sid, returnedAt: new Date().toISOString(), status: "returned_from_checkout_unverified", mode: BASIC.stripeMode }, null, 2), { access: "private", contentType: "application/json", addRandomSuffix: false, allowOverwrite: true });
+  await put(`orders/returns/${sid}.json`, JSON.stringify({ session_id: sid, returnedAt: new Date().toISOString(), status: "returned_from_checkout_unverified", mode: cfg.stripeMode }, null, 2), { access: "private", contentType: "application/json", addRandomSuffix: false, allowOverwrite: true });
   console.log(`[lead] BASIC checkout return ${sid} (verify in Stripe, then queue passive scan)`);
   return NextResponse.json({ ok: true });
+}
+
+
+/** With STRIPE_SECRET_KEY set, create a Checkout Session with explicit success and cancel URLs.
+ * Without it (current test sandbox), fall back to the BASIC_PAYMENT_LINK Payment Link. */
+async function createCheckout(leadId: string, email: string): Promise<string | undefined> {
+  if (!cfg.stripeSecret) return undefined;
+  const body = new URLSearchParams({
+    mode: "payment",
+    "line_items[0][price]": cfg.priceId,
+    "line_items[0][quantity]": "1",
+    client_reference_id: leadId,
+    customer_email: email,
+    success_url: `${SITE}/start/thanks?path=basic&session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${SITE}/start?path=basic`,
+    "metadata[product]": "seraphim-scan-basic",
+    "metadata[lead_id]": leadId,
+  });
+  const r = await fetch("https://api.stripe.com/v1/checkout/sessions", { method: "POST", headers: { authorization: `Bearer ${cfg.stripeSecret}`, "content-type": "application/x-www-form-urlencoded" }, body });
+  const j = (await r.json()) as { url?: string; error?: { message: string } };
+  if (!r.ok || !j.url) throw new Error(j.error?.message ?? `stripe ${r.status}`);
+  return j.url;
 }
