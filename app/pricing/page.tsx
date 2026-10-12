@@ -55,19 +55,19 @@ export default function PricingPage() {
           <span className="tier-pos">Entry offer</span>
           <h3>Seraphim Scan Basic</h3>
           <p className="tier-price">
-            <strong className="gold-text" style={{ fontSize: 30 }}>$100</strong> <span className="fine">flat, one-time</span>
+            <strong className="gold-text" style={{ fontSize: 30 }}>$99</strong> <span className="fine">flat, one-time</span>
           </p>
           <p>
             A basic passive overview of your external footprint, run with your permission: DNS and mail authentication,
             TLS, security headers and certificate transparency, with a short list of what to fix first.
           </p>
-          <p className="fine"><strong>Timeline:</strong> written overview within 3 business days of payment and authorization.</p>
+          <p className="fine"><strong>Timeline:</strong> automated passive checks start after payment; the PDF report is usually emailed within minutes, and always within 3 business days.</p>
           <p className="fine">
             <strong>Not included:</strong> active testing or exploitation, application or AI agent review, retest, compliance
-            certification. Nothing runs automatically: a person reviews every order first.
+            certification. Checks are passive and limited to the one domain you authorize, and every finding is re-verified by a second check before it goes in the report.
           </p>
           <div className="tier-cta">
-            <Link className="btn btn-gold" href="/start?path=basic">Buy the $100 Basic Scan</Link>
+            <Link className="btn btn-gold" href="/start?path=basic">Buy the $99 Basic Scan</Link>
           </div>
         </article>
         <div className="tier-grid">
