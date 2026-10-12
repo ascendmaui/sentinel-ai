@@ -750,8 +750,8 @@ ul, ol { color: var(--ao-muted); }
 
 /* ---- Live-scan motion (understated, transform/opacity only; off for reduced motion) ---- */
 @media (prefers-reduced-motion: no-preference) {
-  .site-header .ss-orbit, header .ss-orbit, .hero-mark .ss-orbit { opacity: 0.55; transform-box: fill-box; transform-origin: center; animation: ss-spin 36s linear infinite; }
-  .site-header .ss-core, header .ss-core, .hero-mark .ss-core { transform-box: fill-box; transform-origin: center; animation: ss-pulse 3s ease-in-out infinite; }
+  .site-header .ss-orbit, header .ss-orbit { opacity: 0.55; transform-box: fill-box; transform-origin: center; animation: ss-spin 36s linear infinite; }
+  .site-header .ss-core, header .ss-core { transform-box: fill-box; transform-origin: center; animation: ss-pulse 3s ease-in-out infinite; }
   .hero-sweep { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
   .hero-sweep::before { content: ""; position: absolute; left: 50%; top: 50%; width: 160%; aspect-ratio: 1; translate: -50% -50%;
     background: conic-gradient(from 0deg, transparent 0 80%, rgba(242,181,68,0.07) 94%, rgba(242,181,68,0.13) 100%); border-radius: 50%; animation: ss-spin 14s linear infinite; }
