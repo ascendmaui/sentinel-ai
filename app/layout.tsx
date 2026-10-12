@@ -25,7 +25,7 @@ const mono = JetBrains_Mono({
   preload: false,
 });
 
-const description = `${BRAND_NAME} runs scoped security assessments in three phases: passive recon of public information, a Scoped Assessment within an agreed scope and written client authorization, and remediation with retest. Built for teams shipping AI agents and the systems around them.`;
+const description = `In the age of AI, fight rogue agents with ${BRAND_NAME}. ${BRAND_NAME} runs scoped security assessments in three phases: passive recon of public information, a Scoped Assessment within an agreed scope and written client authorization, and remediation with retest. Built for teams shipping AI agents and the systems around them.`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
