@@ -30,8 +30,8 @@ export function Nav() {
         </div>
         <div className="nav-actions">
           <ThemeSwitcher className="nav-theme" />
-          <a className="btn btn-gold btn-sm" href={`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}`}>
-            Talk to us
+          <a className="btn btn-gold btn-sm" href="/start">
+            Get started
           </a>
           <details className="nav-menu">
             <summary aria-label="Open menu">

@@ -51,6 +51,25 @@ export default function PricingPage() {
           <p className="eyebrow">The line-up</p>
           <h2 id="tiers-h">From full engagement to a light first look</h2>
         </div>
+        <article id="basic" className="card tier-card" style={{ marginBottom: 24, borderColor: "var(--ao-line-gold)" }}>
+          <span className="tier-pos">Entry offer</span>
+          <h3>Seraphim Scan Basic</h3>
+          <p className="tier-price">
+            <strong className="gold-text" style={{ fontSize: 30 }}>$100</strong> <span className="fine">flat, one-time</span>
+          </p>
+          <p>
+            A basic passive overview of your external footprint, run with your permission: DNS and mail authentication,
+            TLS, security headers and certificate transparency, with a short list of what to fix first.
+          </p>
+          <p className="fine"><strong>Timeline:</strong> written overview within 3 business days of payment and authorization.</p>
+          <p className="fine">
+            <strong>Not included:</strong> active testing or exploitation, application or AI agent review, retest, compliance
+            certification. Nothing runs automatically: a person reviews every order first.
+          </p>
+          <div className="tier-cta">
+            <Link className="btn btn-gold" href="/start?path=basic">Buy the $100 Basic Scan</Link>
+          </div>
+        </article>
         <div className="tier-grid">
           {[flagship, ...rest].map((t) => (
             <article
@@ -104,9 +123,9 @@ export default function PricingPage() {
               <div className="tier-cta">
                 <a
                   className={t.id === "seraphim" ? "btn btn-gold" : "btn btn-glass"}
-                  href={`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}%20${t.name}%20inquiry`}
+                  href={`/start?path=call&tier=${t.id}`}
                 >
-                  <Icon name="mail" /> Ask about {t.name}
+                  Start with {t.name}
                 </a>
               </div>
             </article>
@@ -196,8 +215,8 @@ export default function PricingPage() {
             <p className="lead">Several apps, an unusual stack, or a deadline? Tell us what you run and what worries you. We reply with scope questions, a suggested tier and a written quote.</p>
           </div>
           <div className="row">
-            <a className="btn btn-gold" href={`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}%20custom%20scope`}>
-              <Icon name="mail" /> Custom scope? Talk to us
+            <a className="btn btn-gold" href="/start?path=call">
+              Custom scope? Talk to us
             </a>
           </div>
         </div>

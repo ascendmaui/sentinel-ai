@@ -18,7 +18,8 @@ export function Footer() {
           <Link href="/incident-case-studies">Incidents</Link>
           <Link href="/blog">Blog</Link>
           <Link href="/case-studies">Case studies</Link>
-          <Link href="/#contact">Contact</Link>
+          <Link href="/partners">Partners</Link>
+          <Link href="/start">Get started</Link>
           <a href={`mailto:${BRAND_EMAIL}`}>{BRAND_EMAIL}</a>
         </nav>
         <div className="footer-theme">
