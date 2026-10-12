@@ -82,7 +82,7 @@ export function StartForm() {
             <div className="lead-tier-row">
               {tiers.map((t) => (
                 <a key={t.id} href={`/pricing#${t.id}`} className={t.id === "seraphim" ? "lead-tier flagship" : "lead-tier"}>
-                  <strong>{t.name}</strong> <span>from {t.price}</span>
+                  <strong>{t.name}</strong> <span>{t.price}</span>
                 </a>
               ))}
             </div>
@@ -106,7 +106,7 @@ export function StartForm() {
               <label>Tier you are interested in
                 <select value={tier} onChange={(e) => setTier(e.target.value)}>
                   <option value="unsure">Not sure yet</option>
-                  {tiers.map((t) => (<option key={t.id} value={t.id}>{t.name} (from {t.price})</option>))}
+                  {tiers.map((t) => (<option key={t.id} value={t.id}>{t.name} (custom quote)</option>))}
                 </select>
               </label>
             )}

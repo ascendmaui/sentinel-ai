@@ -108,7 +108,7 @@ export async function buildPdf(r: Recon, verified: Finding[], dropped: number, o
   h2("What this is not");
   for (const n of NOT_TEXT) text(`- ${n}`, { size: 10 });
   h2("Next steps");
-  text(`Want a person to go deeper? Angels (from $950) is a fuller human-written passive review with a walkthrough call. Thrones (from $4,500) is a Scoped Assessment of one system with written authorization, remediation guidance and a retest. Start at ${SITE}/start`);
+  text(`Want these fixed? Reply to the report email and we'll send a custom quote to fix every issue we found. No obligation. Or start at ${SITE}/start?path=call`);
 
   const pages = doc.getPages();
   pages.forEach((p, i) => p.drawText(`Seraphim Scan  |  Passive check, reviewed automatically  |  Page ${i + 1} of ${pages.length}`, { x: M, y: 28, size: 8, font, color: MUTED }));
