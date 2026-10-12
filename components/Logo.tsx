@@ -34,6 +34,7 @@ export function Mark({ size = 32, id, className, title, square }: MarkProps) {
           <stop offset="1" stopColor="#F2B544" />
         </radialGradient>
       </defs>
+      <circle className="ss-orbit" cx="512" cy="512" r="156" fill="none" stroke={`url(#${g})`} strokeWidth="6" strokeDasharray="18 30" opacity="0" />
       <g fill={`url(#${g})`}>
         <path d="M570.6 373.9 L777.9 196.1 L795.6 273.6 L647.9 448.6Z" />
         <path d="M453.4 373.9 L246.1 196.1 L228.4 273.6 L376.1 448.6Z" />
@@ -48,7 +49,7 @@ export function Mark({ size = 32, id, className, title, square }: MarkProps) {
         fillRule="evenodd"
       />
       <rect x="416" y="502" width="192" height="20" rx="10" fill="#FFE3A3" opacity="0.95" />
-      <circle cx="512" cy="512" r="36" fill={`url(#${c})`} />
+      <circle className="ss-core" cx="512" cy="512" r="36" fill={`url(#${c})`} />
     </svg>
   );
 }
