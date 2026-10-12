@@ -1,5 +1,8 @@
 /** All payment and email settings are env-driven so live keys can be dropped in without code changes. */
-export const SITE = "https://seraphim-scan.vercel.app";
+import { SITE_URL } from "../brand";
+
+/** Base URL of the deployed site (SITE_URL env, else the Vercel origin). */
+export const SITE = SITE_URL;
 export const cfg = {
   stripeMode: (process.env.STRIPE_MODE ?? "test") as "test" | "live",
   stripeSecret: process.env.STRIPE_SECRET_KEY ?? "",

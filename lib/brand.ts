@@ -21,7 +21,9 @@ export const BRAND_TAGLINE = "Scoped security assessments for the age of AI agen
 export const BRAND_MAIL = encodeURIComponent(BRAND_NAME);
 
 /** Preview and production builds resolve their own origin; localhost otherwise. */
-export const SITE_URL = process.env.VERCEL_ENV === "production" && process.env.VERCEL_PROJECT_PRODUCTION_URL
+export const SITE_URL = process.env.SITE_URL
+  ? process.env.SITE_URL.replace(/\/$/, "")
+  : process.env.VERCEL_ENV === "production" && process.env.VERCEL_PROJECT_PRODUCTION_URL
   ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
   : process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
