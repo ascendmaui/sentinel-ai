@@ -7,7 +7,7 @@ import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME } from "../../lib/brand";
 import { ENGAGEMENT_TERMS, helper, matrix, tierHref, tiers, type TierId } from "../../lib/tiers";
 
 const title = "Services and tiers";
-const description = `${BRAND_NAME} offers four ways to work together: Seraphim, Cherubim, Thrones and Angels. Compare scope, cadence and who each tier is for. No prices are published; every engagement is scoped in writing.`;
+const description = `${BRAND_NAME} offers four ways to work together: Seraphim, Cherubim, Thrones and Angels. Starting-at prices from $950, with Seraphim as the flagship. Every engagement is scoped and quoted in writing.`;
 
 export const metadata: Metadata = {
   title,
@@ -41,8 +41,8 @@ export default function PricingPage() {
         </p>
         <TrustBadges />
         <p className="fine">
-          No prices are published here. Every engagement is scoped in writing, and we quote after a short scoping
-          conversation. Tier positioning describes relative size and cadence only.
+          Prices below are starting points per scoped engagement. Your final price depends on the size of the scope
+          and is agreed in writing before any work starts.
         </p>
       </header>
 
@@ -67,7 +67,12 @@ export default function PricingPage() {
                   <h3>{t.name}</h3>
                 </div>
               </div>
-              <span className="tier-pos">{t.positioning}</span>
+              {t.id === "seraphim" && <span className="tier-pos">Flagship</span>}
+              <p className="tier-price">
+                <span className="fine">Starting at</span> <strong className="gold-text" style={{ fontSize: t.id === "seraphim" ? 34 : 26 }}>{t.price}</strong>{" "}
+                <span className="fine">{t.priceUnit}</span>
+              </p>
+              <p className="fine"><strong>Timeline:</strong> {t.timeline}</p>
               <p className="tier-tag">{t.tagline}</p>
               <p>{t.summary}</p>
               <div className={t.id === "seraphim" ? "tier-cols" : undefined}>
@@ -80,9 +85,15 @@ export default function PricingPage() {
                   </ul>
                 </div>
                 <div>
+                  <h4>Deliverables</h4>
+                  <ul>
+                    {t.deliverables.map((i) => (
+                      <li key={i}>{i}</li>
+                    ))}
+                  </ul>
                   <h4>Who it is for</h4>
                   <p>{t.forWho}</p>
-                  <h4>Not part of this tier</h4>
+                  <h4>Not included</h4>
                   <ul className="tier-not">
                     {t.notIncluded.map((i) => (
                       <li key={i}>{i}</li>
@@ -181,12 +192,12 @@ export default function PricingPage() {
       <section className="section" id="contact">
         <div className="cta-band">
           <div>
-            <h2>Start with a scoping conversation.</h2>
-            <p className="lead">Tell us what you run and what worries you. We reply with scope questions and a suggested tier.</p>
+            <h2>Custom scope? Talk to us.</h2>
+            <p className="lead">Several apps, an unusual stack, or a deadline? Tell us what you run and what worries you. We reply with scope questions, a suggested tier and a written quote.</p>
           </div>
           <div className="row">
-            <a className="btn btn-gold" href={`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}%20scope%20request`}>
-              <Icon name="mail" /> {BRAND_EMAIL}
+            <a className="btn btn-gold" href={`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}%20custom%20scope`}>
+              <Icon name="mail" /> Custom scope? Talk to us
             </a>
           </div>
         </div>

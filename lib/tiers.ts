@@ -13,6 +13,10 @@ export type Tier = {
   included: string[];
   notIncluded: string[];
   forWho: string;
+  price: string; // "Starting at" figure per scoped engagement, final quote set in writing
+  priceUnit: string;
+  timeline: string;
+  deliverables: string[];
   fitWhen: string;
 };
 
@@ -20,11 +24,22 @@ export type Tier = {
  * The four service tiers. Every line describes work that is actually delivered by people
  * (plus private local models for scenario design). There is no monitoring platform, no
  * sensors or agents, no self-serve scanner, no SLA and no certification behind any tier.
- * No prices are published: positioning words only.
+ * Prices are "Starting at" figures; every engagement is quoted in writing after scoping.
+ * Rationale and market sources: brand/seraphim-scan/pricing-rationale.md (workspace).
  */
 export const tiers: Tier[] = [
   {
     id: "seraphim",
+    price: "$9,500",
+    priceUnit: "per scoped engagement",
+    timeline: "About 3 to 5 weeks from signed scope to final report, then advisory for 90 days",
+    deliverables: [
+      "Passive recon summary",
+      "Scoped Assessment report with ranked findings and evidence",
+      "Remediation plan with owners and verification steps",
+      "Retest report confirming each fix",
+      "90 days of advisory and scope reviews",
+    ],
     rank: 1,
     name: "Seraphim",
     tagline: "The full engagement, from first look to verified fix and beyond.",
@@ -41,6 +56,9 @@ export const tiers: Tier[] = [
       "Ongoing advisory: scope reviews when your architecture or agents change",
     ],
     notIncluded: [
+      "Active exploitation or any testing without written client authorization",
+      "Compliance certification or an audit opinion (we give you evidence for your auditor, not a certificate)",
+      "Writing or deploying fixes in your systems for you",
       "Anything outside the written scope",
       "A managed security operations center or round-the-clock response",
     ],
@@ -50,6 +68,14 @@ export const tiers: Tier[] = [
   },
   {
     id: "cherubim",
+    price: "$1,500",
+    priceUnit: "per quarterly cycle, minimum two cycles",
+    timeline: "One cycle each quarter, written summary within 5 business days of each check",
+    deliverables: [
+      "Quarterly passive-recon change report",
+      "Retest notes on earlier findings",
+      "Email alerts for notable changes found in a scheduled check",
+    ],
     rank: 2,
     name: "Cherubim",
     tagline: "A recurring watch on what the outside world can see, with periodic retests.",
@@ -65,6 +91,7 @@ export const tiers: Tier[] = [
       "Short advisory calls to interpret changes and prioritize fixes",
     ],
     notIncluded: [
+      "Compliance certification",
       "24/7 monitoring, a security operations center, or real-time blocking",
       "Software agents or sensors installed in your environment",
       "Any active testing outside a signed scope",
@@ -75,6 +102,15 @@ export const tiers: Tier[] = [
   },
   {
     id: "thrones",
+    price: "$4,500",
+    priceUnit: "per scoped engagement",
+    timeline: "About 2 to 3 weeks, with one retest round within 60 days",
+    deliverables: [
+      "Scoped Assessment report for one target",
+      "Remediation guidance per finding",
+      "Retest report",
+      "Final written report",
+    ],
     rank: 3,
     name: "Thrones",
     tagline: "One deep assessment, then the hardening work to close what it finds.",
@@ -90,6 +126,8 @@ export const tiers: Tier[] = [
       "A final written report",
     ],
     notIncluded: [
+      "Active exploitation beyond the written scope and window",
+      "Compliance certification or an audit opinion",
       "Recurring re-checks after the retest",
       "Coverage of systems beyond the single agreed target",
     ],
@@ -99,6 +137,14 @@ export const tiers: Tier[] = [
   },
   {
     id: "angels",
+    price: "$950",
+    priceUnit: "one-time report",
+    timeline: "Report within 5 business days of kickoff",
+    deliverables: [
+      "Passive recon report on your public footprint",
+      "Prioritized top fixes list",
+      "One 30-minute walkthrough call",
+    ],
     rank: 4,
     name: "Angels",
     tagline: "A light first look at your public exposure. The easy on-ramp.",
@@ -112,6 +158,7 @@ export const tiers: Tier[] = [
       "One follow-up conversation to walk through it",
     ],
     notIncluded: [
+      "Compliance certification or an audit opinion",
       "Any Scoped Assessment or active testing",
       "Retest of fixes (available by moving to Thrones)",
       "A self-serve scanner. Self-serve is not available today.",
@@ -134,6 +181,7 @@ export const matrix: { row: string; values: Record<TierId, boolean | string> }[]
   { row: "Retest", values: { seraphim: true, cherubim: "Periodic", thrones: "One round", angels: false } },
   { row: "Change review and email alerts from scheduled checks", values: { seraphim: "On request", cherubim: true, thrones: false, angels: false } },
   { row: "Ongoing advisory", values: { seraphim: true, cherubim: "Short calls", thrones: false, angels: false } },
+  { row: "Starting at", values: { seraphim: "$9,500", cherubim: "$1,500 / quarter", thrones: "$4,500", angels: "$950" } },
   { row: "Delivery", values: { seraphim: "Custom", cherubim: "Recurring", thrones: "One-time", angels: "One-time" } },
 ];
 
