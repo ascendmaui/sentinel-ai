@@ -5,11 +5,11 @@
  *
  * Working name locked by the caller on 2026-09-29. Not yet cleared for trademark or domains.
  */
-export const BRAND_NAME = "Seraphim AI";
+export const BRAND_NAME = "Seraphim Scan";
 
-/** Split form for the two-tone wordmark: "Seraphim" + "AI". Derived, do not edit separately. */
-export const BRAND_WORD = BRAND_NAME.replace(/\s+AI$/i, "");
-export const BRAND_SUFFIX = /\sAI$/i.test(BRAND_NAME) ? "AI" : "";
+/** Split form for the two-tone wordmark: "Seraphim" + "Scan". Derived, do not edit separately. */
+export const BRAND_WORD = BRAND_NAME.replace(/\s+(AI|Scan)$/i, "");
+export const BRAND_SUFFIX = (BRAND_NAME.match(/\s(AI|Scan)$/i)?.[1] ?? "");
 
 export const BRAND_PARENT = "Ascend Maui";
 export const BRAND_EMAIL = "ascendmaui@gmail.com";
