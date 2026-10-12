@@ -268,8 +268,8 @@ export default function IncidentCaseStudiesPage() {
             <Link className="btn btn-gold" href="/pricing#compare">
               Compare the four tiers
             </Link>
-            <a className="btn btn-glass" href={`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}%20scope%20request`}>
-              <Icon name="mail" /> {BRAND_EMAIL}
+            <a className="btn btn-glass" href="/start?path=call">
+              Get started
             </a>
           </div>
         </div>

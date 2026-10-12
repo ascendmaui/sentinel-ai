@@ -242,10 +242,10 @@ export default function CaseStudiesPage() {
             </p>
           </div>
           <div className="row">
-            <a className="btn btn-gold" href={`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}%20inquiry`}>
-              <Icon name="mail" /> {BRAND_EMAIL}
+            <a className="btn btn-gold" href="/start">
+              Get started
             </a>
-            <a className="btn btn-glass" href={`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}%20scope%20request`}>
+            <a className="btn btn-glass" href="/start?path=call">
               Request a scoped assessment
             </a>
           </div>

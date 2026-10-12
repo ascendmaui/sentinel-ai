@@ -107,7 +107,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
               <Link className="btn btn-gold" href="/incident-case-studies">
                 Incident Case Studies
               </Link>
-              <a className="btn btn-glass" href={`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}%20inquiry`}>
+              <a className="btn btn-glass" href="/start">
                 <Icon name="mail" /> Email us
               </a>
             </div>
