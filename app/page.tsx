@@ -1,6 +1,7 @@
 import { HeroStage } from "../components/HeroStage";
 import Link from "next/link";
 import { Icon, type IconName } from "../components/Icons";
+import { HaloIncluded } from "../components/HaloIncluded";
 import { TrustBadges } from "../components/TrustBadges";
 import { TierStrip } from "../components/TierStrip";
 import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME } from "../lib/brand";
@@ -151,6 +152,13 @@ export default function HomePage() {
           </p>
         </div>
         <TierStrip />
+        <article className="card" id="halo" style={{ marginTop: 24, borderColor: "var(--ao-line-gold)" }}>
+          <p className="eyebrow">Instant, automated</p>
+          <h3>Halo Scan, $99</h3>
+          <p>A full passive perimeter sweep with dual-verified findings and a branded PDF report, usually in your inbox within minutes.</p>
+          <HaloIncluded />
+          <Link className="btn btn-gold" href="/start?path=basic">Get the $99 Halo Scan</Link>
+        </article>
       </section>
 
       <section className="section" id="incidents">

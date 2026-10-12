@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Icon } from "../../components/Icons";
 import { TierEmblem } from "../../components/TierEmblem";
+import { HaloIncluded } from "../../components/HaloIncluded";
 import { TrustBadges } from "../../components/TrustBadges";
 import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME } from "../../lib/brand";
 import { ENGAGEMENT_TERMS, helper, matrix, tierHref, tiers, type TierId } from "../../lib/tiers";
@@ -66,6 +67,7 @@ export default function PricingPage() {
             <strong>Not included:</strong> active testing or exploitation, application or AI agent review, retest, compliance
             certification. Checks are passive and limited to the one domain you authorize, and every finding is re-verified by a second check before it goes in the report.
           </p>
+          <HaloIncluded />
           <div className="tier-cta">
             <Link className="btn btn-gold" href="/start?path=basic">Get the $99 Halo Scan</Link>
           </div>

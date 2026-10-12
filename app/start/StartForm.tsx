@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { tiers } from "../../lib/tiers";
 import { BASIC, SCAN_DAYS } from "../../lib/lead";
+import { HaloIncluded } from "../../components/HaloIncluded";
 
 type Path = "scan" | "call" | "basic";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
@@ -145,6 +146,7 @@ export function StartForm() {
                 : "After payment, automated passive checks run on this one domain only, every finding is re-verified, and the report is emailed to you."}
             </p>
           )}
+          {path === "basic" && <HaloIncluded />}
           {path === "basic" && BASIC.stripeMode === "test" && <p className="fine lead-test">Checkout is in Stripe test mode while we finish setup. No real charge is made.</p>}
           {errors.form && <p className="lead-err">{errors.form}</p>}
           <button className="btn btn-gold" type="submit" disabled={busy}>

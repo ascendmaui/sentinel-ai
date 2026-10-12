@@ -18,7 +18,7 @@ export type Recon = {
   dmarc: string | null;
   dkimSelectors: string[];
   cert: { issuer?: string; subject?: string; validTo?: string; daysLeft?: number; error?: string };
-  http: { status?: number; finalUrl?: string; headers: Record<string, string>; error?: string };
+  http: { status?: number; finalUrl?: string; headers: Record<string, string>; cookies?: string[]; error?: string };
   securityTxt: { status?: number; hasContact?: boolean };
   robots: { status?: number; disallows?: string[] };
   sitemap: { status?: number };
@@ -66,8 +66,9 @@ export async function homepage(domain: string): Promise<Recon["http"]> {
     const r = await fetchT(`https://${domain}/`);
     const headers: Record<string, string> = {};
     r.headers.forEach((v, k) => (headers[k] = v));
+    const cookies = typeof r.headers.getSetCookie === "function" ? r.headers.getSetCookie() : [];
     await r.body?.cancel();
-    return { status: r.status, finalUrl: r.url, headers };
+    return { status: r.status, finalUrl: r.url, headers, cookies };
   } catch (e) {
     return { headers: {}, error: (e as Error).message };
   }
@@ -131,11 +132,12 @@ export async function spfDmarc(domain: string) {
 }
 
 export async function recon(domain: string): Promise<Recon> {
-  const [a, aaaa, mx, ns, sd, c, http, st, rb, sm, cth] = await Promise.all([
+  const [a, aaaa, mx, ns, caaRecs, sd, c, http, st, rb, sm, cth] = await Promise.all([
     tryDns(() => dns.resolve4(domain), [] as string[]),
     tryDns(() => dns.resolve6(domain), [] as string[]),
     tryDns(async () => (await dns.resolveMx(domain)).map((m) => `${m.priority} ${m.exchange}`), [] as string[]),
     tryDns(() => dns.resolveNs(domain), [] as string[]),
+    caa(domain),
     spfDmarc(domain),
     cert(domain),
     homepage(domain),
@@ -149,10 +151,19 @@ export async function recon(domain: string): Promise<Recon> {
     const t = await txt(`${s}._domainkey.${domain}`);
     if (t.some((x) => /v=dkim1|p=/i.test(x))) dkimSelectors.push(s);
   }));
-  return { domain, at: new Date().toISOString(), dns: { A: a, AAAA: aaaa, MX: mx, NS: ns, TXT: sd.root }, spf: sd.spf, dmarc: sd.dmarc, dkimSelectors, cert: c, http, securityTxt: st, robots: rb, sitemap: sm, ctHosts: cth.hosts, ctError: cth.error };
+  return { domain, at: new Date().toISOString(), dns: { A: a, AAAA: aaaa, MX: mx, NS: ns, CAA: caaRecs, TXT: sd.root }, spf: sd.spf, dmarc: sd.dmarc, dkimSelectors, cert: c, http, securityTxt: st, robots: rb, sitemap: sm, ctHosts: cth.hosts, ctError: cth.error };
 }
 
 const H = (r: Recon, k: string) => r.http.headers[k];
+
+/** Names of cookies set on the homepage without Secure or HttpOnly. */
+export function weakCookies(cookies: string[] = []): string[] {
+  return cookies.filter((c) => !/;\s*secure/i.test(c) || !/;\s*httponly/i.test(c)).map((c) => c.split("=")[0].trim()).slice(0, 10);
+}
+
+export async function caa(domain: string): Promise<string[]> {
+  return tryDns(async () => (await dns.resolveCaa(domain)).map((c) => `${c.critical} ${c.issue ? "issue " + c.issue : c.issuewild ? "issuewild " + c.issuewild : c.iodef ? "iodef " + c.iodef : ""}`), [] as string[]);
+}
 
 /** Turns recon into candidate findings. Each id has a matching re-verification in verify(). */
 export function findings(r: Recon): Finding[] {
@@ -166,6 +177,9 @@ export function findings(r: Recon): Finding[] {
     if (!H(r, "x-frame-options") && !/frame-ancestors/i.test(H(r, "content-security-policy") ?? "")) f.push({ id: "hdr-frame", title: "No clickjacking protection header", severity: "low", evidence: "Neither X-Frame-Options nor a CSP frame-ancestors directive was returned on the homepage.", fix: "Add Content-Security-Policy: frame-ancestors 'self' (or X-Frame-Options: DENY)." });
     if (!H(r, "x-content-type-options")) f.push({ id: "hdr-nosniff", title: "Missing X-Content-Type-Options header", severity: "low", evidence: "The homepage response has no X-Content-Type-Options header.", fix: "Add X-Content-Type-Options: nosniff." });
     if (!H(r, "referrer-policy")) f.push({ id: "hdr-referrer", title: "No Referrer-Policy header", severity: "info", evidence: "The homepage response has no Referrer-Policy header.", fix: "Add Referrer-Policy: strict-origin-when-cross-origin." });
+    if (!H(r, "permissions-policy")) f.push({ id: "hdr-permissions", title: "No Permissions-Policy header", severity: "info", evidence: "The homepage response has no Permissions-Policy header.", fix: "Add a Permissions-Policy that disables browser features you do not use, e.g. camera=(), microphone=(), geolocation=()." });
+    const wc = weakCookies(r.http.cookies);
+    if (wc.length) f.push({ id: "hdr-cookie", title: "Cookies set without Secure or HttpOnly", severity: "low", evidence: `Homepage cookies missing Secure and/or HttpOnly: ${wc.join(", ")}`, fix: "Set Secure, HttpOnly and SameSite on session and tracking cookies." });
     const tech = ["server", "x-powered-by", "x-aspnet-version", "x-generator"].filter((k) => H(r, k) && /\d/.test(H(r, k)!));
     if (tech.length) f.push({ id: "hdr-version", title: "Software version disclosed in response headers", severity: "low", evidence: tech.map((k) => `${k}: ${H(r, k)}`).join("; "), fix: "Remove version numbers from public response headers." });
   }
@@ -173,6 +187,7 @@ export function findings(r: Recon): Finding[] {
   if (r.spf && /\+all\b/i.test(r.spf)) f.push({ id: "mail-spf-all", title: "SPF record allows any sender (+all)", severity: "high", evidence: `SPF: ${r.spf}`, fix: "Replace +all with ~all or -all." });
   if (hasMail && !r.dmarc) f.push({ id: "mail-dmarc", title: "No DMARC record", severity: "medium", evidence: `No v=DMARC1 TXT record at _dmarc.${r.domain}.`, fix: "Publish a DMARC record, starting with p=none and a rua report address, then move to quarantine or reject." });
   if (r.dmarc && /p=none/i.test(r.dmarc)) f.push({ id: "mail-dmarc-none", title: "DMARC policy is monitor-only (p=none)", severity: "low", evidence: `_dmarc.${r.domain}: ${r.dmarc}`, fix: "After reviewing reports, move to p=quarantine and then p=reject." });
+  if (r.dns.CAA && !r.dns.CAA.length) f.push({ id: "dns-caa", title: "No CAA record", severity: "info", evidence: `No CAA record at ${r.domain}, so any certificate authority may issue certificates for it.`, fix: "Publish CAA records naming only the certificate authorities you use." });
   if (r.http.status && !(r.securityTxt.status === 200 && r.securityTxt.hasContact)) f.push({ id: "sectxt", title: "No security.txt with a contact", severity: "info", evidence: `GET https://${r.domain}/.well-known/security.txt returned ${r.securityTxt.status ?? "no response"}${r.securityTxt.status === 200 ? " without a Contact: line" : ""}.`, fix: "Publish /.well-known/security.txt (RFC 9116) with Contact and Expires fields so researchers can reach you." });
   return f;
 }
@@ -193,6 +208,8 @@ export async function verify(domain: string, f: Finding): Promise<boolean> {
       case "hdr-frame": return !g("x-frame-options") && !/frame-ancestors/i.test(g("content-security-policy") ?? "");
       case "hdr-nosniff": return !g("x-content-type-options");
       case "hdr-referrer": return !g("referrer-policy");
+      case "hdr-permissions": return !g("permissions-policy");
+      case "hdr-cookie": return weakCookies(h.cookies).length > 0;
       case "hdr-version": return ["server", "x-powered-by", "x-aspnet-version", "x-generator"].some((k) => g(k) && /\d/.test(g(k)!));
     }
   }
@@ -205,6 +222,7 @@ export async function verify(domain: string, f: Finding): Promise<boolean> {
       case "mail-dmarc-none": return !!s.dmarc && /p=none/i.test(s.dmarc);
     }
   }
+  if (f.id === "dns-caa") return (await caa(domain)).length === 0;
   if (f.id === "sectxt") {
     const s = await securityTxt(domain);
     return !(s.status === 200 && s.hasContact);
