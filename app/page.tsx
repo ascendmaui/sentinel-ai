@@ -84,8 +84,8 @@ export default function HomePage() {
             retest, so you learn where the real risk is and how to close it.
           </p>
           <div className="row">
-            <a className="btn btn-gold" href="/start">
-              Get a free preliminary scan
+            <a className="btn btn-gold" href="/start?path=basic">
+              Run your Halo Scan — $99
             </a>
             <a className="btn btn-glass" href="#phases">
               See the phases
@@ -142,9 +142,9 @@ export default function HomePage() {
       <section className="section" id="tiers">
         <div className="section-head">
           <p className="eyebrow">Ways to work together</p>
-          <h2>Four tiers, from a light first look to a full engagement.</h2>
+          <h2>Start with a $99 Halo Scan. We quote the fixes.</h2>
           <p className="lead">
-            Same method at every size. Starting at $950, and each engagement is scoped and quoted in writing.{" "}
+            {"After your Halo Scan, we'll send a custom quote to fix every issue we found. No obligation."}{" "}
             <Link href="/pricing#compare" style={{ color: "var(--ao-primary)" }}>
               Compare the tiers
             </Link>

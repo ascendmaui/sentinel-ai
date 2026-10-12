@@ -8,7 +8,7 @@ import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME } from "../../lib/brand";
 import { ENGAGEMENT_TERMS, helper, matrix, tierHref, tiers, type TierId } from "../../lib/tiers";
 
 const title = "Services and tiers";
-const description = `${BRAND_NAME} offers four ways to work together: Seraphim, Cherubim, Thrones and Angels. Starting-at prices from $950, with Seraphim as the flagship. Every engagement is scoped and quoted in writing.`;
+const description = `${BRAND_NAME} offers four ways to work together: Seraphim, Cherubim, Thrones and Angels. Start with the $99 Halo Scan; after it we send a custom quote to fix every issue found. No obligation.`;
 
 export const metadata: Metadata = {
   title,
@@ -42,18 +42,17 @@ export default function PricingPage() {
         </p>
         <TrustBadges />
         <p className="fine">
-          Prices below are starting points per scoped engagement. Your final price depends on the size of the scope
-          and is agreed in writing before any work starts.
+          After your Halo Scan, we&apos;ll send a custom quote to fix every issue we found. No obligation.
         </p>
       </header>
 
       <section className="section" aria-labelledby="tiers-h">
         <div className="section-head">
           <p className="eyebrow">The line-up</p>
-          <h2 id="tiers-h">From full engagement to a light first look</h2>
+          <h2 id="tiers-h">Start with a Halo Scan, then fix what it finds</h2>
         </div>
         <article id="basic" className="card tier-card" style={{ marginBottom: 24, borderColor: "var(--ao-line-gold)" }}>
-          <span className="tier-pos">Instant, automated</span>
+          <span className="tier-pos">Start here · Featured</span>
           <h3>Halo Scan</h3>
           <p className="tier-price">
             <strong className="gold-text" style={{ fontSize: 30 }}>$99</strong> <span className="fine">flat, one-time</span>
@@ -91,8 +90,8 @@ export default function PricingPage() {
               </div>
               {t.id === "seraphim" && <span className="tier-pos">Flagship</span>}
               <p className="tier-price">
-                <span className="fine">Starting at</span> <strong className="gold-text" style={{ fontSize: t.id === "seraphim" ? 34 : 26 }}>{t.price}</strong>{" "}
-                <span className="fine">{t.priceUnit}</span>
+                <strong className="gold-text" style={{ fontSize: t.id === "seraphim" ? 30 : 24 }}>Custom quote</strong>{" "}
+                <span className="fine">after your Halo Scan</span>
               </p>
               <p className="fine"><strong>Timeline:</strong> {t.timeline}</p>
               <p className="tier-tag">{t.tagline}</p>
@@ -126,9 +125,9 @@ export default function PricingPage() {
               <div className="tier-cta">
                 <a
                   className={t.id === "seraphim" ? "btn btn-gold" : "btn btn-glass"}
-                  href={`/start?path=call&tier=${t.id}`}
+                  href="/start?path=basic"
                 >
-                  Start with {t.name}
+                  Get a fix quote after your scan
                 </a>
               </div>
             </article>
