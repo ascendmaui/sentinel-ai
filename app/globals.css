@@ -747,3 +747,26 @@ ul, ol { color: var(--ao-muted); }
 .halo-value td:last-child { text-align: right; }
 .halo-value-total td { font-weight: 600; }
 .halo-value-price td { font-weight: 700; font-size: 16px; border-bottom: 0; }
+
+/* ---- Live-scan motion (understated, transform/opacity only; off for reduced motion) ---- */
+@media (prefers-reduced-motion: no-preference) {
+  .site-header .ss-orbit, header .ss-orbit, .hero-mark .ss-orbit { opacity: 0.55; transform-box: fill-box; transform-origin: center; animation: ss-spin 36s linear infinite; }
+  .site-header .ss-core, header .ss-core, .hero-mark .ss-core { transform-box: fill-box; transform-origin: center; animation: ss-pulse 3s ease-in-out infinite; }
+  .hero-sweep { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .hero-sweep::before { content: ""; position: absolute; left: 50%; top: 50%; width: 160%; aspect-ratio: 1; translate: -50% -50%;
+    background: conic-gradient(from 0deg, transparent 0 80%, rgba(242,181,68,0.07) 94%, rgba(242,181,68,0.13) 100%); border-radius: 50%; animation: ss-spin 14s linear infinite; }
+  .hero-grid { position: absolute; inset: -40px; pointer-events: none; opacity: 0.18;
+    background-image: radial-gradient(rgba(255,227,163,0.55) 1px, transparent 1.4px); background-size: 34px 34px; animation: ss-drift 60s linear infinite;
+    mask-image: radial-gradient(closest-side, #000 40%, transparent); -webkit-mask-image: radial-gradient(closest-side, #000 40%, transparent); }
+  .home h1, .hero h1 { animation: ss-up 0.9s cubic-bezier(.2,.7,.2,1) both; }
+  .card svg, .halo-included li { transition: transform .25s ease; }
+  .card:hover svg:not(.ao-mark) { transform: translateY(-2px); }
+  .rv { opacity: 0; transform: translateY(8px); transition: opacity .6s ease var(--rv-d, 0ms), transform .6s ease var(--rv-d, 0ms); }
+  .rv.rv-in { opacity: 1; transform: none; }
+  .rv.rv-in svg:not(.ao-mark) [stroke], .rv.rv-in svg:not(.ao-mark) path { stroke-dasharray: 120; stroke-dashoffset: 120; animation: ss-draw 1.2s ease var(--rv-d, 0ms) forwards; }
+}
+@keyframes ss-spin { to { transform: rotate(360deg); } }
+@keyframes ss-pulse { 0%, 100% { opacity: 1; transform: scale(1); filter: none; } 50% { opacity: .85; transform: scale(1.08); filter: drop-shadow(0 0 18px rgba(255,227,163,.7)); } }
+@keyframes ss-drift { to { transform: translate(34px, 34px); } }
+@keyframes ss-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes ss-draw { to { stroke-dashoffset: 0; } }

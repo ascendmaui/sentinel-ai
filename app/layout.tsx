@@ -3,6 +3,7 @@ import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Inter, JetBrains_Mono } from "next/font/google";
 import { Nav } from "../components/Nav";
+import { Reveal } from "../components/Reveal";
 import { Footer } from "../components/Footer";
 import { THEME_BOOT_SCRIPT, THEME_META } from "../lib/theme";
 import { BRAND_NAME, BRAND_TAGLINE, SHOW_CODE_RAIN, SITE_URL } from "../lib/brand";
@@ -76,6 +77,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Nav />
         <div id="main">{children}</div>
         <Footer />
+        <Reveal />
       </body>
     </html>
   );
