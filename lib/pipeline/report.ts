@@ -50,7 +50,7 @@ const clean = (s: string) => s.replace(/[^\x20-\x7E\n]/g, "?");
 
 export async function buildPdf(r: Recon, verified: Finding[], dropped: number, orderRef: string): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
-  doc.setTitle(`Seraphim Scan Basic report: ${r.domain}`);
+  doc.setTitle(`Seraphim Halo Scan report: ${r.domain}`);
   doc.setAuthor("Seraphim Scan");
   const font = await doc.embedFont(StandardFonts.Helvetica);
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
@@ -70,7 +70,7 @@ export async function buildPdf(r: Recon, verified: Finding[], dropped: number, o
   const lw = 190, lh = (logo.height / logo.width) * lw;
   page.drawImage(logo, { x: M, y: y - lh, width: lw, height: lh });
   y -= lh + 18;
-  text("Seraphim Scan Basic: passive external overview", { size: 18, f: bold });
+  text("Halo Scan: passive perimeter sweep, dual-verified", { size: 18, f: bold });
   text(`Domain: ${r.domain}    Checked: ${r.at.slice(0, 16).replace("T", " ")} UTC    Reference: ${orderRef}`, { size: 9, color: MUTED, gap: 10 });
 
   h2("Executive summary");

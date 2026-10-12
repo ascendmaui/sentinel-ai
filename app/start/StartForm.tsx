@@ -4,13 +4,14 @@ import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { tiers } from "../../lib/tiers";
 import { BASIC, SCAN_DAYS } from "../../lib/lead";
+import { HaloIncluded } from "../../components/HaloIncluded";
 
 type Path = "scan" | "call" | "basic";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 
 const PATHS: { id: Path; title: string; price: string; body: string }[] = [
   { id: "scan", title: "Free preliminary scan", price: "Free", body: `A passive check of your public footprint, reviewed by a person and delivered within ${SCAN_DAYS} business days.` },
-  { id: "basic", title: "Buy the $99 Basic Scan now", price: BASIC.price, body: `An automated passive overview of your external footprint as a PDF report with top fixes. Usually emailed within minutes of payment, always within ${SCAN_DAYS} business days.` },
+  { id: "basic", title: "Get the $99 Halo Scan now", price: BASIC.price, body: `A full passive perimeter sweep with dual-verified findings in a branded PDF report. Usually emailed within minutes of payment, always within ${SCAN_DAYS} business days.` },
   { id: "call", title: "Book a call", price: "30 min", body: "Talk through your stack and pick the right tier. We confirm a time by email." },
 ];
 
@@ -145,6 +146,7 @@ export function StartForm() {
                 : "After payment, automated passive checks run on this one domain only, every finding is re-verified, and the report is emailed to you."}
             </p>
           )}
+          {path === "basic" && <HaloIncluded />}
           {path === "basic" && BASIC.stripeMode === "test" && <p className="fine lead-test">Checkout is in Stripe test mode while we finish setup. No real charge is made.</p>}
           {errors.form && <p className="lead-err">{errors.form}</p>}
           <button className="btn btn-gold" type="submit" disabled={busy}>
