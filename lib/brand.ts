@@ -13,6 +13,8 @@ export const BRAND_SUFFIX = (BRAND_NAME.match(/\s(AI|Scan)$/i)?.[1] ?? "");
 
 export const BRAND_PARENT = "Ascend Maui";
 export const BRAND_EMAIL = "ascendmaui@gmail.com";
+/** Secondary slogan: closing CTA band, footer, meta description. */
+export const BRAND_SLOGAN = "In the age of AI, fight rogue agents with Seraphim Scan.";
 export const BRAND_TAGLINE = "Scoped security assessments for the age of AI agents";
 
 /** URL-encoded name for mailto subjects. */

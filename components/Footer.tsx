@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Wordmark } from "./Logo";
 import { ThemeSwitcher } from "./ThemeSwitcher";
-import { BRAND_NAME, BRAND_PARENT, BRAND_EMAIL } from "../lib/brand";
+import { BRAND_NAME, BRAND_SLOGAN, BRAND_PARENT, BRAND_EMAIL } from "../lib/brand";
 
 export function Footer() {
   return (
@@ -27,6 +27,7 @@ export function Footer() {
           </span>
           <ThemeSwitcher showLabels />
         </div>
+        <p className="footer-fine">{BRAND_SLOGAN}</p>
         <p className="footer-fine">© 2026 {BRAND_NAME} · {BRAND_PARENT}</p>
       </div>
     </footer>

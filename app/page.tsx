@@ -71,10 +71,12 @@ export default function HomePage() {
             <span className="pulse" aria-hidden="true" /> Scoped security assessments
           </p>
           <h1>
-            Know your exposure.
-            <br />
-            <span className="gold-text">Close it on purpose.</span>
+            Rogue AI agents are already probing your sites and systems.
           </h1>
+          <p className="lead">
+            <strong className="gold-text">{BRAND_NAME} finds the gaps before they do.</strong> Scoped Security
+            Assessments that show you what an attacker&apos;s AI agent sees, and how to close it.
+          </p>
           <p className="lead">
             {BRAND_NAME} helps teams that ship AI agents run scoped security work in three clear phases:
             passive recon, a Scoped Assessment with written client authorization, and remediation with
@@ -217,7 +219,8 @@ export default function HomePage() {
       <section className="section" id="contact">
         <div className="cta-band">
           <div>
-            <h2>Ready to see what an attacker would see first?</h2>
+            <h2>In the age of AI, fight rogue agents with {BRAND_NAME}.</h2>
+            <p className="lead">Ready to see what an attacker would see first?</p>
             <p className="lead">
               Tell us what you need assessed. We&apos;ll reply with scope questions and next steps, with no cold
               scanner spam.
