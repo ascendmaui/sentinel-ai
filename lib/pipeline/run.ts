@@ -1,4 +1,5 @@
 import { alert, sendMail } from "./mail";
+import { SITE } from "./config";
 import { buildPdf, gate, NOT_TEXT, SCOPE_TEXT, summaryText } from "./report";
 import { findings, recon, verify, type Finding } from "./scan";
 import { getJSON, log, orderPath, putBytes, putJSON, type Order } from "./store";
@@ -68,7 +69,7 @@ What we did: passive checks only, using public information about the domain you 
 Questions? Just reply to this email.
 
 Seraphim Scan
-https://seraphim-scan.vercel.app
+${SITE}
 
 Unsubscribe from follow-up emails: ${unsubLink(o.email)}`;
   const r = await sendMail({ to: o.email, subject: `Your Seraphim Scan Basic report for ${o.domain}`, text, attachments: pdf ? [{ filename: `seraphim-scan-${o.domain}.pdf`, content: Buffer.from(pdf).toString("base64") }] : undefined, headers: { "List-Unsubscribe": `<${unsubLink(o.email)}>` } });

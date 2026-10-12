@@ -6,6 +6,7 @@
  */
 import { promises as dns } from "node:dns";
 import tls from "node:tls";
+import { SITE } from "./config";
 
 export type Severity = "high" | "medium" | "low" | "info";
 export type Finding = { id: string; title: string; severity: Severity; evidence: string; fix: string };
@@ -25,7 +26,7 @@ export type Recon = {
   ctError?: string;
 };
 
-const UA = "SeraphimScan-PassiveCheck/1.0 (+https://seraphim-scan.vercel.app)";
+const UA = `SeraphimScan-PassiveCheck/1.0 (+${SITE})`;
 const SELECTORS = ["default", "google", "selector1", "selector2", "k1", "s1", "s2", "mail", "dkim", "resend", "mandrill", "smtp"];
 
 async function tryDns<T>(f: () => Promise<T>, d: T): Promise<T> {

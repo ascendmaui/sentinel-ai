@@ -1,6 +1,7 @@
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import type { Finding, Recon } from "./scan";
 import { LOGO_PNG_B64 } from "./logo";
+import { SITE } from "./config";
 
 const BANNED = [/—/, /–/, /\bpentest(ing)?\b/i, /penetration test/i, /\bguarantee/i, /\bcertif(y|ied|ication)\b/i, /\bcompliant\b/i, /\bhack(ed)?\b/i];
 
@@ -107,7 +108,7 @@ export async function buildPdf(r: Recon, verified: Finding[], dropped: number, o
   h2("What this is not");
   for (const n of NOT_TEXT) text(`- ${n}`, { size: 10 });
   h2("Next steps");
-  text("Want a person to go deeper? Angels (from $950) is a fuller human-written passive review with a walkthrough call. Thrones (from $4,500) is a Scoped Assessment of one system with written authorization, remediation guidance and a retest. Start at https://seraphim-scan.vercel.app/start");
+  text(`Want a person to go deeper? Angels (from $950) is a fuller human-written passive review with a walkthrough call. Thrones (from $4,500) is a Scoped Assessment of one system with written authorization, remediation guidance and a retest. Start at ${SITE}/start`);
 
   const pages = doc.getPages();
   pages.forEach((p, i) => p.drawText(`Seraphim Scan  |  Passive check, reviewed automatically  |  Page ${i + 1} of ${pages.length}`, { x: M, y: 28, size: 8, font, color: MUTED }));
