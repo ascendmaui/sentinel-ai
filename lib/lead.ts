@@ -4,7 +4,7 @@ export const SCAN_DAYS = 3;
 export const TIER_IDS = tiers.map((t) => t.id);
 export type LeadPath = "scan" | "call" | "basic";
 
-/** Seraphim Scan Basic display values. Payment settings are env-driven (lib/pipeline/config.ts). */
+/** Halo Scan ($99) display values; internal id stays "basic". Payment settings are env-driven (lib/pipeline/config.ts). */
 export const BASIC = {
   price: "$99",
   stripeMode: (process.env.NEXT_PUBLIC_STRIPE_MODE ?? "test") as "test" | "live",

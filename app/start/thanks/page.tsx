@@ -16,7 +16,7 @@ function Thanks() {
     path === "call"
       ? ["We read your notes and reply by email within one business day to confirm a time.", "On the call we walk through your stack and suggest a tier.", "If it is a fit, you get a written scope and quote. Nothing starts without written authorization."]
       : path === "basic"
-        ? ["Thank you for your order. Stripe confirms the payment to us directly.", `Automated passive checks run on the domain you authorized, each finding is re-verified, and the PDF report is emailed to you, usually within minutes and always within ${SCAN_DAYS} business days.`, "Reply to that email any time with questions. No active testing is done."]
+        ? ["Thank you for your Halo Scan order. Stripe confirms the payment to us directly.", `Automated passive checks run on the domain you authorized, each finding is re-verified, and the PDF report is emailed to you, usually within minutes and always within ${SCAN_DAYS} business days.`, "Reply to that email any time with questions. No active testing is done."]
         : ["Your request is queued for review. Nothing has been scanned yet.", `A person runs a passive check using public information only and emails you the results within ${SCAN_DAYS} business days.`, "If you want more, we suggest a tier and a written scope."];
   return (
     <main className="home cs">

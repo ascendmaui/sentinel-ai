@@ -31,8 +31,8 @@ export async function GET(req: Request) {
       else {
         const r = await sendMail({
           to: o.email,
-          subject: `Next steps after your Seraphim Scan Basic report for ${o.domain}`,
-          text: `Hello,\n\nA few days ago we sent your Seraphim Scan Basic report for ${o.domain}. If you would like a person to go further, two options:\n\n- Angels, from $950: a fuller human-written passive review with a walkthrough call.\n- Thrones, from $4,500: a Scoped Assessment of one system with written authorization, remediation guidance and a retest.\n\nStart here: ${SITE}/start\n\nNo pressure, and this is the only follow-up we will send.\n\nSeraphim Scan\n\nUnsubscribe: ${unsubLink(o.email)}`,
+          subject: `Next steps after your Seraphim Halo Scan report for ${o.domain}`,
+          text: `Hello,\n\nA few days ago we sent your Seraphim Halo Scan report for ${o.domain}. If you would like a person to go further, two options:\n\n- Angels, from $950: a fuller human-written passive review with a walkthrough call.\n- Thrones, from $4,500: a Scoped Assessment of one system with written authorization, remediation guidance and a retest.\n\nStart here: ${SITE}/start\n\nNo pressure, and this is the only follow-up we will send.\n\nSeraphim Scan\n\nUnsubscribe: ${unsubLink(o.email)}`,
           headers: { "List-Unsubscribe": `<${unsubLink(o.email)}>` },
         });
         if (r.sent) { o.followupSentAt = new Date().toISOString(); log(o, "followup_sent", r.id); }

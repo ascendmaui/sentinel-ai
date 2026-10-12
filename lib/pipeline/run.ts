@@ -49,7 +49,7 @@ export async function runOrder(sid: string): Promise<Order | null> {
   } catch (e) {
     o.lastError = (e as Error).message; o.status = o.attempts >= MAX_ATTEMPTS ? "failed" : "paid"; log(o, "error", o.lastError);
     await putJSON(orderPath(sid), o);
-    if (o.status === "failed") await alert(`Basic Scan failed: ${o.domain}`, `Order ${sid} failed ${o.attempts} times. Last error: ${o.lastError}. Nothing was sent to the customer.`);
+    if (o.status === "failed") await alert(`Halo Scan failed: ${o.domain}`, `Order ${sid} failed ${o.attempts} times. Last error: ${o.lastError}. Nothing was sent to the customer.`);
     return o;
   }
 }
@@ -59,7 +59,7 @@ async function emailReport(o: Order, pdf?: Uint8Array): Promise<Order> {
   const n = o.verifiedFindings ?? 0;
   const text = `Hello,
 
-Your Seraphim Scan Basic report for ${o.domain} is ready. ${n ? `It lists ${n} verified observation(s), each with evidence and a fix.` : "No finding reproduced on our second check, so this is a clean baseline report."}
+Your Seraphim Halo Scan report for ${o.domain} is ready. ${n ? `It lists ${n} verified observation(s), each with evidence and a fix.` : "No finding reproduced on our second check, so this is a clean baseline report."}
 
 The PDF is attached. You can also download it for the next 14 days here:
 ${link}
@@ -72,7 +72,7 @@ Seraphim Scan
 ${SITE}
 
 Unsubscribe from follow-up emails: ${unsubLink(o.email)}`;
-  const r = await sendMail({ to: o.email, subject: `Your Seraphim Scan Basic report for ${o.domain}`, text, attachments: pdf ? [{ filename: `seraphim-scan-${o.domain}.pdf`, content: Buffer.from(pdf).toString("base64") }] : undefined, headers: { "List-Unsubscribe": `<${unsubLink(o.email)}>` } });
+  const r = await sendMail({ to: o.email, subject: `Your Seraphim Halo Scan report for ${o.domain}`, text, attachments: pdf ? [{ filename: `seraphim-scan-${o.domain}.pdf`, content: Buffer.from(pdf).toString("base64") }] : undefined, headers: { "List-Unsubscribe": `<${unsubLink(o.email)}>` } });
   if (r.sent) { o.status = "emailed"; o.emailedAt = new Date().toISOString(); log(o, "emailed", r.id); }
   else { o.status = "email_pending"; log(o, "email_not_sent", r.error); }
   await putJSON(orderPath(o.sessionId), o);
