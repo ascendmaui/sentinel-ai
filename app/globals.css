@@ -686,3 +686,50 @@ ul, ol { color: var(--ao-muted); }
 .lead-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 .lead-test { color: var(--ao-primary); }
 .lead-next { display: grid; gap: 10px; margin: 18px 0 24px; padding-left: 20px; }
+/* ---------- Seraphim Scan visual kit (brand/seraphim-scan) ---------- */
+.wordmark { gap: 12px; }
+.wordmark .ao-mark { filter: drop-shadow(0 2px 10px rgba(242, 181, 68, 0.28)); }
+.wordmark-text { font-size: 20px; letter-spacing: -0.025em; }
+.wordmark-text .wordmark-suffix { font-size: 0.5em; letter-spacing: 0.34em; margin-left: 0.7em; font-weight: 700; vertical-align: 0.12em; }
+.hero-art {
+  position: absolute; inset: -18%; border-radius: 50%;
+  background: radial-gradient(closest-side, transparent 55%, var(--ao-bg) 100%), url("/brand/hero-seraph-aperture.jpg") center / cover no-repeat;
+  opacity: 0.85; mask-image: radial-gradient(closest-side, #000 60%, transparent 100%);
+  -webkit-mask-image: radial-gradient(closest-side, #000 60%, transparent 100%);
+  animation: ss-breathe 9s ease-in-out infinite;
+}
+.hero-mark { width: 58%; filter: drop-shadow(0 24px 60px rgba(242, 181, 68, 0.35)); }
+@keyframes ss-breathe { 0%, 100% { transform: scale(1); opacity: 0.78; } 50% { transform: scale(1.04); opacity: 0.95; } }
+@media (prefers-reduced-motion: reduce) { .hero-art { animation: none; } }
+[data-theme="light"] .hero-art { opacity: 0.35; }
+.section-art { position: relative; isolation: isolate; }
+.section-art::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; opacity: 0.22;
+  background: url("/brand/section-halo-horizon.jpg") center / cover no-repeat;
+  mask-image: linear-gradient(transparent, #000 25%, #000 75%, transparent);
+  -webkit-mask-image: linear-gradient(transparent, #000 25%, #000 75%, transparent);
+}
+
+/* ---------- Partner kit ---------- */
+.pk { max-width: 1180px; margin: 0 auto; padding: 48px 24px 96px; }
+.pk section { padding: 40px 0; border-top: 1px solid var(--ao-surface-raised, #1A1B26); }
+.pk h1 { font-family: var(--ao-font-heading); font-size: clamp(36px, 5vw, 60px); letter-spacing: -0.03em; margin: 24px 0 12px; }
+.pk h2 { font-family: var(--ao-font-heading); font-size: 28px; margin: 0 0 18px; }
+.pk-hero { padding: 24px 0 40px; }
+.pk-hero p { max-width: 680px; color: var(--ao-muted); }
+.pk-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 24px 0; }
+.pk-toc { display: flex; flex-wrap: wrap; gap: 8px; }
+.pk-toc a { text-transform: capitalize; padding: 6px 14px; border-radius: 999px; border: 1px solid #2a2a38; color: var(--ao-muted); text-decoration: none; }
+.pk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+.pk-tile, .pk-post { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 16px; background: var(--ao-surface, #0F1018); border: 1px solid #1f1f2c; text-decoration: none; color: var(--ao-muted); font-size: 12px; margin: 0; }
+.pk-tile img, .pk-post img { width: 100%; height: 180px; object-fit: contain; border-radius: 10px; background: #07070C; }
+.pk-tile-light img { background: #F3EEE3; }
+.pk-post figcaption { font-size: 13px; line-height: 1.5; color: var(--ao-text); }
+.pk-post b { color: var(--ao-primary); margin-right: 6px; }
+.pk-doc pre { white-space: pre-wrap; font-family: var(--ao-font-body); font-size: 15px; line-height: 1.6; background: var(--ao-surface, #0F1018); border: 1px solid #1f1f2c; border-radius: 16px; padding: 20px 24px; color: var(--ao-text); }
+.pk-dl { display: inline-block; margin-top: 8px; color: var(--ao-primary); font-size: 14px; }
+.pk-note, .pk-copy { color: var(--ao-muted); }
+.pk-login { min-height: 70vh; display: grid; place-items: center; padding: 48px 24px; }
+.pk-card { display: flex; flex-direction: column; align-items: center; gap: 14px; width: min(420px, 100%); padding: 40px 32px; border-radius: 24px; background: var(--ao-surface, #0F1018); border: 1px solid #262636; text-align: center; }
+.pk-card input { width: 100%; padding: 12px 16px; border-radius: 12px; border: 1px solid #2f2f40; background: #07070C; color: var(--ao-text); font-size: 16px; }
+.pk-err { color: var(--ao-palette-danger, #FF5D73); }
