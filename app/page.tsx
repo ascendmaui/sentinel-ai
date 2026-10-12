@@ -143,7 +143,7 @@ export default function HomePage() {
           <p className="eyebrow">Ways to work together</p>
           <h2>Four tiers, from a light first look to a full engagement.</h2>
           <p className="lead">
-            Same method at every size. No prices listed: each engagement is scoped in writing.{" "}
+            Same method at every size. Starting at $950, and each engagement is scoped and quoted in writing.{" "}
             <Link href="/pricing#compare" style={{ color: "var(--ao-primary)" }}>
               Compare the tiers
             </Link>
