@@ -63,3 +63,6 @@
   :root:not([data-theme="high-contrast"]) :is(.nav, .card, .panel, .glass, .glass-strong, .tier-card, .halo-included, .halo-value, .footer-works, .lead-form, .lead-path, .price-card, .cta-band, .btn-glass, .ghost, input, textarea, select) { background: var(--lg-solid); -webkit-backdrop-filter: none; backdrop-filter: none; }
 }
 @media (prefers-reduced-motion: reduce) { :root .card:hover { transform: none; } }
+
+/* Hero art bleeds past the viewport on phones; clip horizontally only (hero logo untouched) */
+.hero { overflow-x: clip; }
