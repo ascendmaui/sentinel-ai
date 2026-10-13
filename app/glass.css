@@ -1,0 +1,65 @@
+/* ===== Liquid Glass layer (Apple-style). Dark + light themes only; high-contrast stays solid. ===== */
+:root, [data-theme="dark"] {
+  --lg-tint: linear-gradient(155deg, rgba(255,240,200,0.11) 0%, rgba(243,238,227,0.05) 38%, rgba(242,181,68,0.045) 100%);
+  --lg-fill: rgba(16,16,26,0.52);
+  --lg-edge: rgba(255,244,214,0.20);
+  --lg-spec: rgba(255,255,255,0.28);
+  --lg-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 18px 50px -18px rgba(0,0,0,0.65), 0 2px 8px rgba(0,0,0,0.25);
+  --lg-blur: 22px;
+  --lg-solid: #12121C; /* fallback when backdrop-filter is unsupported or transparency reduced */
+}
+[data-theme="light"] {
+  --lg-tint: linear-gradient(155deg, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0.45) 45%, rgba(242,181,68,0.08) 100%);
+  --lg-fill: rgba(255,255,255,0.55);
+  --lg-edge: rgba(255,255,255,0.85);
+  --lg-spec: rgba(255,255,255,0.95);
+  --lg-shadow: 0 1px 0 rgba(255,255,255,0.9) inset, 0 18px 44px -20px rgba(60,40,10,0.28), 0 2px 6px rgba(60,40,10,0.08);
+  --lg-solid: #FFFFFF;
+}
+@media (prefers-color-scheme: light) { :root:not([data-theme]) { --lg-tint: linear-gradient(155deg, rgba(255,255,255,0.75), rgba(255,255,255,0.45) 45%, rgba(242,181,68,0.08)); --lg-fill: rgba(255,255,255,0.55); --lg-edge: rgba(255,255,255,0.85); --lg-spec: rgba(255,255,255,0.95); --lg-solid: #FFFFFF; } }
+
+:is(:root:not([data-theme="high-contrast"])) :is(.nav, .card, .panel, .glass, .glass-strong, .tier-card, .halo-included, .halo-value, .footer-works, .lead-form, .lead-path, .price-card, .cta-band) {
+  background: var(--lg-tint), var(--lg-fill);
+  border: 1px solid var(--lg-edge);
+  border-radius: 24px;
+  box-shadow: var(--lg-shadow);
+  -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(180%);
+  backdrop-filter: blur(var(--lg-blur)) saturate(180%);
+  position: relative;
+  isolation: isolate;
+}
+/* specular top highlight */
+:is(:root:not([data-theme="high-contrast"])) :is(.nav, .card, .panel, .tier-card, .halo-included, .halo-value, .footer-works, .lead-form, .cta-band)::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: -1;
+  background: linear-gradient(180deg, var(--lg-spec) 0, transparent 1.5px), radial-gradient(120% 60% at 50% -10%, rgba(255,255,255,0.10), transparent 60%);
+}
+:root:not([data-theme="high-contrast"]) .nav { border-radius: 999px; }
+:root:not([data-theme="high-contrast"]) .halo-included { padding: 14px 18px; }
+:root:not([data-theme="high-contrast"]) .halo-value { padding: 18px 20px; max-width: 560px; }
+:root:not([data-theme="high-contrast"]) .card:hover { border-color: var(--ao-line-gold); }
+:root:not([data-theme="high-contrast"]) .tier-card { border-color: var(--ao-line-gold); }
+
+/* glass buttons + gold pill */
+:root:not([data-theme="high-contrast"]) :is(.btn, .cta, .ghost) { border-radius: 999px; }
+:root:not([data-theme="high-contrast"]) :is(.btn-glass, .ghost) {
+  background: var(--lg-tint), var(--lg-fill); border: 1px solid var(--lg-edge);
+  -webkit-backdrop-filter: blur(16px) saturate(180%); backdrop-filter: blur(16px) saturate(180%);
+  box-shadow: 0 1px 0 var(--lg-spec) inset, 0 8px 24px -12px rgba(0,0,0,0.5);
+}
+:root:not([data-theme="high-contrast"]) :is(.btn-gold, .cta) { box-shadow: 0 1px 0 rgba(255,255,255,0.55) inset, 0 -1px 0 rgba(120,70,0,0.35) inset, 0 10px 28px -10px rgba(242,181,68,0.55); }
+
+/* form fields */
+:root:not([data-theme="high-contrast"]) :is(input, textarea, select) {
+  background: rgba(255,255,255,0.06); border: 1px solid var(--lg-edge); border-radius: 14px;
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+}
+[data-theme="light"] :is(input, textarea, select) { background: rgba(255,255,255,0.7); }
+
+/* fallback: no backdrop-filter support or user prefers reduced transparency -> opaque surfaces, same shape */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root:not([data-theme="high-contrast"]) :is(.nav, .card, .panel, .glass, .glass-strong, .tier-card, .halo-included, .halo-value, .footer-works, .lead-form, .lead-path, .price-card, .cta-band, .btn-glass, .ghost) { background: var(--lg-solid); }
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root:not([data-theme="high-contrast"]) :is(.nav, .card, .panel, .glass, .glass-strong, .tier-card, .halo-included, .halo-value, .footer-works, .lead-form, .lead-path, .price-card, .cta-band, .btn-glass, .ghost, input, textarea, select) { background: var(--lg-solid); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+@media (prefers-reduced-motion: reduce) { :root .card:hover { transform: none; } }
