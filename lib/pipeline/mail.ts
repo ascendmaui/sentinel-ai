@@ -9,7 +9,7 @@ export async function sendMail(m: Mail): Promise<{ sent: boolean; id?: string; e
   if (!cfg.resendKey) {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     await putJSON(`mail/outbox/${id}.json`, { ...m, attachments: m.attachments?.map((a) => a.filename), queuedAt: new Date().toISOString(), reason: "RESEND_API_KEY not set" });
-    console.log(`[mail] NOT SENT (no RESEND_API_KEY) to=${m.to} subject="${m.subject}" outbox=${id}`);
+    console.log(`[mail] NOT SENT (no RESEND_API_KEY) to=${String(m.to).replace(/^(.).*(@.*)$/, "$1***$2")} subject="${m.subject}" outbox=${id}`);
     return { sent: false, id, error: "no_provider" };
   }
   for (let i = 0; i < 3; i++) {

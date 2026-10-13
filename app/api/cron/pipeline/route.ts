@@ -16,6 +16,7 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const days = Math.max(0, Number(url.searchParams.get("followupAfterDays") ?? 3));
   const only = url.searchParams.get("session");
+  if (only !== null && !/^cs_[A-Za-z0-9_]{1,200}$/.test(only)) return NextResponse.json({ error: "invalid session" }, { status: 400 });
   const out: Record<string, string> = {};
   const paths = only ? [`orders/paid/${only}.json`] : await listPaths("orders/paid/");
   for (const p of paths) {

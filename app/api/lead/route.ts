@@ -66,7 +66,7 @@ export async function POST(req: Request) {
 
   // No mail provider is configured for this project, so notification is a structured log line.
   // Nothing is scanned here: preliminary scans are passive and queued for human review.
-  console.log(`[lead] NEW ${record.path} ${record.company} <${record.email}> tier=${record.tier} id=${id}`);
+  console.log(`[lead] NEW ${record.path} ${record.company} <${record.email.replace(/^(.).*(@.*)$/, "$1***$2")}> tier=${record.tier} id=${id}`);
   let checkoutUrl: string | undefined;
   if (record.path === "basic") {
     checkoutUrl = await createCheckout(id, record.email).catch((e) => {
@@ -75,7 +75,7 @@ export async function POST(req: Request) {
     });
     checkoutUrl ??= `${cfg.paymentLink}?client_reference_id=${encodeURIComponent(id)}&prefilled_email=${encodeURIComponent(record.email)}`;
   }
-  await alert(`New ${record.path} lead: ${record.company || record.website}`, `${record.name || "(no name)"} <${record.email}>\nCompany: ${record.company}\nRole: ${record.role}\nWebsite: ${record.website}\nTier: ${record.tier}\nPath: ${record.path}${record.days ? `\nDays: ${record.days.join(", ")} ${record.times} ${record.timezone}` : ""}\nNotes: ${record.notes}\nLead id: ${id}${record.test ? "\n(TEST submission)" : ""}`).catch(() => {});
+  await alert(`New ${record.path} lead: ${record.company || record.website}`, `${record.name || "(no name)"} <${record.email.replace(/^(.).*(@.*)$/, "$1***$2")}>\nCompany: ${record.company}\nRole: ${record.role}\nWebsite: ${record.website}\nTier: ${record.tier}\nPath: ${record.path}${record.days ? `\nDays: ${record.days.join(", ")} ${record.times} ${record.timezone}` : ""}\nNotes: ${record.notes}\nLead id: ${id}${record.test ? "\n(TEST submission)" : ""}`).catch(() => {});
   return NextResponse.json({ ok: true, id, checkoutUrl });
 }
 
