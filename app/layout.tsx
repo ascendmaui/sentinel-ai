@@ -1,5 +1,6 @@
 import "./tokens.css";
 import "./globals.css";
+import "./glass.css";
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Inter, JetBrains_Mono } from "next/font/google";
 import { Nav } from "../components/Nav";
