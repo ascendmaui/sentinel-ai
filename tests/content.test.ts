@@ -62,23 +62,45 @@ describe("theme and tokens", () => {
     expect(() => new Function(THEME_BOOT_SCRIPT)).not.toThrow();
   });
 
-  it("theme boot script evaluates cleanly in simulated DOM environments", () => {
-    const fakeDoc = {
-      documentElement: {
-        theme: "",
-        setAttribute(k: string, v: string) {
-          if (k === "data-theme") this.theme = v;
+  it("theme boot script evaluates cleanly in simulated DOM environments across all preference branches", () => {
+    const createEnv = (storageVal: string | null | (() => never), matches: (q: string) => boolean, hasMatchMedia = true) => {
+      const doc = {
+        documentElement: {
+          theme: "",
+          setAttribute(k: string, v: string) {
+            if (k === "data-theme") this.theme = v;
+          },
         },
-      },
+      };
+      const storage = {
+        getItem: typeof storageVal === "function" ? storageVal : () => storageVal,
+      };
+      const win = hasMatchMedia
+        ? { matchMedia: (q: string) => ({ matches: matches(q) }) }
+        : {};
+      const run = new Function("document", "localStorage", "window", THEME_BOOT_SCRIPT);
+      run(doc, storage, win);
+      return doc.documentElement.theme;
     };
-    const fakeStorage = { getItem: () => null };
-    const fakeMatchMedia = (query: string) => ({
-      matches: query.includes("light"),
-    });
 
-    const runScript = new Function("document", "localStorage", "window", THEME_BOOT_SCRIPT);
-    runScript(fakeDoc, fakeStorage, { matchMedia: fakeMatchMedia });
-    expect(fakeDoc.documentElement.theme).toBe("light");
+    // Stored valid values override media queries
+    expect(createEnv("high-contrast", () => false)).toBe("high-contrast");
+    expect(createEnv("light", () => false)).toBe("light");
+    expect(createEnv("dark", (q) => q.includes("light"))).toBe("dark");
+
+    // Invalid stored value falls through to media query
+    expect(createEnv("custom-invalid", (q) => q.includes("more"))).toBe("high-contrast");
+    expect(createEnv("custom-invalid", (q) => q.includes("light"))).toBe("light");
+    expect(createEnv(null, () => false)).toBe("dark");
+
+    // prefers-contrast takes priority over prefers-color-scheme light
+    expect(createEnv(null, (q) => q.includes("more") || q.includes("light"))).toBe("high-contrast");
+
+    // Exception in localStorage (e.g. private mode SecurityError) safely falls back to dark
+    expect(createEnv(() => { throw new Error("SecurityError"); }, () => true)).toBe("dark");
+
+    // Missing matchMedia falls back to dark
+    expect(createEnv(null, () => false, false)).toBe("dark");
   });
 });
 
