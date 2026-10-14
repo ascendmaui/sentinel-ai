@@ -18,20 +18,24 @@ export const BRAND_TAGLINE = "Scoped security assessments for the age of AI agen
 /** URL-encoded name for mailto subjects. */
 export const BRAND_MAIL = encodeURIComponent(BRAND_NAME);
 
+function cleanUrl(val?: string): string | undefined {
+  if (!val) return undefined;
+  const trimmed = val.trim().replace(/\/+$/, "");
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
 /** Resolves current site origin from environment variables with localhost fallback. */
 export function resolveSiteUrl(env: Record<string, string | undefined> = process.env): string {
-  if (env.NEXT_PUBLIC_SITE_URL) {
-    return env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
+  const nextPublic = cleanUrl(env.NEXT_PUBLIC_SITE_URL);
+  if (nextPublic) return nextPublic;
+  const siteUrl = cleanUrl(env.SITE_URL);
+  if (siteUrl) return siteUrl;
+  if (env.VERCEL_ENV === "production") {
+    const prodUrl = cleanUrl(env.VERCEL_PROJECT_PRODUCTION_URL);
+    if (prodUrl) return prodUrl.startsWith("http://") || prodUrl.startsWith("https://") ? prodUrl : `https://${prodUrl}`;
   }
-  if (env.SITE_URL) {
-    return env.SITE_URL.replace(/\/$/, "");
-  }
-  if (env.VERCEL_ENV === "production" && env.VERCEL_PROJECT_PRODUCTION_URL) {
-    return `https://${env.VERCEL_PROJECT_PRODUCTION_URL.replace(/\/$/, "")}`;
-  }
-  if (env.VERCEL_URL) {
-    return `https://${env.VERCEL_URL.replace(/\/$/, "")}`;
-  }
+  const vercelUrl = cleanUrl(env.VERCEL_URL);
+  if (vercelUrl) return vercelUrl.startsWith("http://") || vercelUrl.startsWith("https://") ? vercelUrl : `https://${vercelUrl}`;
   return "http://localhost:3000";
 }
 

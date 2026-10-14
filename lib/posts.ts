@@ -214,9 +214,12 @@ export const postBySlug = (slug: string): Post | undefined => {
   const target = slug.toLowerCase();
   return posts.find((p) => p.slug === slug || p.slug.toLowerCase() === target);
 };
-export const postWords = (p: Post): number =>
-  p.body.reduce((n, b) => {
-    const text = Array.isArray(b.x) ? b.x.join(" ") : b.x;
+export const postWords = (p: Post): number => {
+  if (!p || !Array.isArray(p.body)) return 0;
+  return p.body.reduce((n, b) => {
+    if (!b) return n;
+    const text = Array.isArray(b.x) ? b.x.join(" ") : (b.x ?? "");
     const words = text.trim().split(/\s+/).filter(Boolean);
     return n + words.length;
   }, 0);
+};
