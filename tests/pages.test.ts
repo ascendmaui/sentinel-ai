@@ -61,6 +61,12 @@ describe("Blog Page and Post Page", () => {
     expect(meta).toEqual({});
   });
 
+  it("invokes notFound() when rendering unknown post slug", async () => {
+    await expect(PostPage({ params: Promise.resolve({ slug: "unknown-slug" }) })).rejects.toThrow(
+      "NEXT_HTTP_ERROR_FALLBACK;404"
+    );
+  });
+
   it("renders PostPage for every post", async () => {
     for (const post of posts) {
       const el = await PostPage({ params: Promise.resolve({ slug: post.slug }) });
@@ -94,6 +100,12 @@ describe("Not Found Page", () => {
     const el = NotFound();
     expect(el.type).toBe("main");
     expect(el.props.className).toBe("home cs");
+    const section = el.props.children;
+    expect(section.props.style?.textAlign).toBe("center");
+    const linksRow = section.props.children[3];
+    const links = linksRow.props.children;
+    const hrefs = links.map((l: { props: { href: string } }) => l.props.href);
+    expect(hrefs).toEqual(["/", "/blog", "/incident-case-studies", "/pricing"]);
   });
 });
 
@@ -110,5 +122,19 @@ describe("Root Layout and Shell Metadata", () => {
     expect(el.type).toBe("html");
     expect(el.props.lang).toBe("en");
     expect(el.props.suppressHydrationWarning).toBe(true);
+
+    const [head, body] = el.props.children;
+    expect(head.type).toBe("head");
+    const script = head.props.children;
+    expect(script.props.dangerouslySetInnerHTML?.__html).toContain("data-theme");
+
+    expect(body.type).toBe("body");
+    const [skipLink, codeRain, nav, mainDiv, footer] = body.props.children;
+    expect(skipLink.props.href).toBe("#main");
+    expect(skipLink.props.className).toBe("skip");
+    expect(nav).toBeDefined();
+    expect(mainDiv.props.id).toBe("main");
+    expect(mainDiv.props.children).toBe("content");
+    expect(footer).toBeDefined();
   });
 });
