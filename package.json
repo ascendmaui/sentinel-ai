@@ -6,6 +6,7 @@
     "build": "next build",
     "start": "next start",
     "test": "vitest run",
+    "test:contract": "vitest run tests/routes.contract.test.ts",
     "test:integration": "vitest run tests/api.integration.test.ts",
     "test:content": "vitest run tests/content.test.ts",
     "test:components": "vitest run tests/components.test.ts",
