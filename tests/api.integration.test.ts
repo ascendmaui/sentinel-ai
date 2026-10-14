@@ -469,6 +469,13 @@ describe("HTTP helper utilities", () => {
     // Whitespace padding and leading zeros are tolerated; huge values clamp to max.
     expect(parseLimit(new URLSearchParams("limit=%207%20"))).toBe(7);
     expect(parseLimit(new URLSearchParams("limit=007"))).toBe(7);
+    expect(parseLimit(new URLSearchParams("limit=%2B15"))).toBe(15);
+    expect(parseLimit(new URLSearchParams("limit=%2B%2B15"))).toBeUndefined();
+    expect(parseLimit(new URLSearchParams("limit=%2B-15"))).toBeUndefined();
+    expect(parseLimit(new URLSearchParams("limit=NaN"))).toBeUndefined();
+    expect(parseLimit(new URLSearchParams("limit=Infinity"))).toBeUndefined();
+    expect(parseLimit(new URLSearchParams("limit=-Infinity"))).toBeUndefined();
+    expect(parseLimit(new URLSearchParams("limit=\t42\n"))).toBe(42);
     expect(parseLimit(new URLSearchParams(`limit=${"9".repeat(400)}`), 100)).toBe(100);
   });
 
