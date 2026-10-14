@@ -63,5 +63,7 @@ export function TierEmblem({ id, size = 44 }: { id: TierId; size?: number }) {
           <path d="M24 22C30 21 36 24 40 30c-6 0-11-1-16-4M24 27c4 .5 8 3 10 6-4 0-7-1-10-3" />
         </svg>
       );
+    default:
+      return null;
   }
 }

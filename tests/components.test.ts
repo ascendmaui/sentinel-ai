@@ -21,12 +21,16 @@ describe("Icon component", () => {
 
   it.each(iconNames)("renders %s icon with standard svg attributes", (name) => {
     const el = Icon({ name });
-    expect(el).toBeDefined();
-    expect(el.type).toBe("svg");
-    expect(el.props.viewBox).toBe("0 0 24 24");
-    expect(el.props.strokeWidth).toBe(1.7);
-    expect(el.props["aria-hidden"]).toBe(true);
-    expect(el.props.children).toBeDefined();
+    expect(el).not.toBeNull();
+    expect(el?.type).toBe("svg");
+    expect(el?.props.viewBox).toBe("0 0 24 24");
+    expect(el?.props.strokeWidth).toBe(1.7);
+    expect(el?.props["aria-hidden"]).toBe(true);
+    expect(el?.props.children).toBeDefined();
+  });
+
+  it("returns null for unknown icon name", () => {
+    expect(Icon({ name: "unknown" as unknown as IconName })).toBeNull();
   });
 });
 
@@ -111,12 +115,17 @@ describe("TierStrip and TierEmblem components", () => {
 
   it.each(tierIds)("TierEmblem renders for %s", (id) => {
     const el = TierEmblem({ id, size: 36 });
-    expect(el.type).toBe("svg");
-    expect(el.props.width).toBe(36);
-    expect(el.props.height).toBe(36);
-    expect(el.props.viewBox).toBe("0 0 48 48");
-    expect(el.props["aria-hidden"]).toBe(true);
-    expect(el.props.className).toBe("tier-emblem");
+    expect(el).not.toBeNull();
+    expect(el?.type).toBe("svg");
+    expect(el?.props.width).toBe(36);
+    expect(el?.props.height).toBe(36);
+    expect(el?.props.viewBox).toBe("0 0 48 48");
+    expect(el?.props["aria-hidden"]).toBe(true);
+    expect(el?.props.className).toBe("tier-emblem");
+  });
+
+  it("returns null for unknown tier id", () => {
+    expect(TierEmblem({ id: "unknown" as unknown as TierId })).toBeNull();
   });
 
   it("TierStrip renders links and emblems for all tiers", () => {

@@ -67,5 +67,7 @@ export function Icon({ name }: { name: IconName }) {
           <circle cx="12" cy="12" r="1.5" fill="currentColor" />
         </svg>
       );
+    default:
+      return null;
   }
 }
