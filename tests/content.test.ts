@@ -44,7 +44,9 @@ describe("brand", () => {
     }
     expect(badgeByKey("nonexistent")).toBeUndefined();
     expect(badgeByKey("")).toBeUndefined();
+    expect(badgeByKey("   ")).toBeUndefined();
     expect(badgeByKey(undefined as unknown as string)).toBeUndefined();
+    expect(badgeByKey("  passive  ")).toEqual(TRUE_BADGES.find((b) => b.key === "passive"));
   });
 });
 

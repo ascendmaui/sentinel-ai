@@ -63,7 +63,8 @@ export type TrustBadge = (typeof TRUE_BADGES)[number];
 
 export function badgeByKey(key: string): TrustBadge | undefined {
   if (!key || typeof key !== "string") return undefined;
-  const target = key.toLowerCase();
+  const target = key.trim().toLowerCase();
+  if (!target) return undefined;
   return TRUE_BADGES.find((b) => b.key.toLowerCase() === target);
 }
 
