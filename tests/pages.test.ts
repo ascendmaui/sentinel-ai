@@ -1,3 +1,4 @@
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("next/font/google", () => ({
@@ -17,11 +18,14 @@ import { BRAND_NAME, SITE_URL } from "../lib/brand";
 import { posts } from "../lib/posts";
 
 describe("Home Page", () => {
-  it("renders HomePage without error", () => {
+  it("renders HomePage without error and outputs valid markup", () => {
     const el = HomePage();
     expect(el).toBeDefined();
     expect(el.type).toBe("main");
     expect(el.props.className).toBe("home");
+    const html = renderToStaticMarkup(el);
+    expect(html).toContain(BRAND_NAME);
+    expect(html).toContain("Ready to see what an attacker would see first?");
   });
 });
 
@@ -31,20 +35,30 @@ describe("Pricing Page", () => {
     expect(pricingMeta.alternates?.canonical).toBe("/pricing");
   });
 
-  it("renders PricingPage with tier cards and comparison", () => {
+  it("renders PricingPage with tier cards, comparison, and markup", () => {
     const el = PricingPage();
     expect(el).toBeDefined();
     expect(el.type).toBe("main");
     expect(el.props.className).toBe("home cs");
+    const html = renderToStaticMarkup(el);
+    expect(html).toContain("Seraphim");
+    expect(html).toContain("Cherubim");
+    expect(html).toContain("Thrones");
+    expect(html).toContain("Angels");
   });
 });
 
 describe("Blog Page and Post Page", () => {
-  it("exports valid blog metadata and renders BlogIndex", () => {
+  it("exports valid blog metadata and renders BlogIndex markup", () => {
     expect(blogMeta.title).toBe("Blog");
     expect(blogMeta.alternates?.canonical).toBe("/blog");
     const el = BlogIndex();
     expect(el.type).toBe("main");
+    const html = renderToStaticMarkup(el);
+    for (const post of posts) {
+      expect(html).toContain(post.title);
+      expect(html).toContain(`/blog/${post.slug}`);
+    }
   });
 
   it("generateMetadata for every post returns article title and canonical url", async () => {
@@ -67,36 +81,44 @@ describe("Blog Page and Post Page", () => {
     );
   });
 
-  it("renders PostPage for every post", async () => {
+  it("renders PostPage markup for every post", async () => {
     for (const post of posts) {
       const el = await PostPage({ params: Promise.resolve({ slug: post.slug }) });
       expect(el).toBeDefined();
       expect(el.type).toBe("main");
       expect(el.props.className).toBe("home cs");
+      const html = renderToStaticMarkup(el);
+      expect(html).toContain(post.title);
     }
   });
 });
 
 describe("Case Studies Page", () => {
-  it("exports valid metadata and renders CaseStudiesPage", () => {
+  it("exports valid metadata and renders CaseStudiesPage markup", () => {
     expect(csMeta.title).toBe("Case studies");
     expect(csMeta.alternates?.canonical).toBe("/case-studies");
     const el = CaseStudiesPage();
     expect(el.type).toBe("main");
+    const html = renderToStaticMarkup(el);
+    expect(html).toContain("F-01");
+    expect(html).toContain("Scheduled-maintenance endpoint");
   });
 });
 
 describe("Incident Case Studies Page", () => {
-  it("exports valid metadata and renders IncidentCaseStudiesPage", () => {
+  it("exports valid metadata and renders IncidentCaseStudiesPage markup", () => {
     expect(incMeta.title).toBe("Incident Case Studies");
     expect(incMeta.alternates?.canonical).toBe("/incident-case-studies");
     const el = IncidentCaseStudiesPage();
     expect(el.type).toBe("main");
+    const html = renderToStaticMarkup(el);
+    expect(html).toContain("OpenAI and Hugging Face");
+    expect(html).toContain("Hypothetical Scenarios");
   });
 });
 
 describe("Not Found Page", () => {
-  it("renders NotFound page with recovery links", () => {
+  it("renders NotFound page with recovery links and markup", () => {
     const el = NotFound();
     expect(el.type).toBe("main");
     expect(el.props.className).toBe("home cs");
@@ -106,6 +128,10 @@ describe("Not Found Page", () => {
     const links = linksRow.props.children;
     const hrefs = links.map((l: { props: { href: string } }) => l.props.href);
     expect(hrefs).toEqual(["/", "/blog", "/incident-case-studies", "/pricing"]);
+    const html = renderToStaticMarkup(el);
+    expect(html).toContain("Page not found");
+    expect(html).toContain('href="/"');
+    expect(html).toContain('href="/pricing"');
   });
 });
 
@@ -136,5 +162,10 @@ describe("Root Layout and Shell Metadata", () => {
     expect(mainDiv.props.id).toBe("main");
     expect(mainDiv.props.children).toBe("content");
     expect(footer).toBeDefined();
+
+    const html = renderToStaticMarkup(el);
+    expect(html).toContain("<html lang=\"en\"");
+    expect(html).toContain("data-theme");
+    expect(html).toContain("content");
   });
 });
