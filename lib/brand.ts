@@ -21,7 +21,8 @@ export const BRAND_MAIL = encodeURIComponent(BRAND_NAME);
 function cleanUrl(val?: string): string | undefined {
   if (!val) return undefined;
   const trimmed = val.trim().replace(/\/+$/, "");
-  return trimmed.length > 0 ? trimmed : undefined;
+  if (!trimmed) return undefined;
+  return trimmed.startsWith("http://") || trimmed.startsWith("https://") ? trimmed : `https://${trimmed}`;
 }
 
 /** Resolves current site origin from environment variables with localhost fallback. */
@@ -32,10 +33,10 @@ export function resolveSiteUrl(env: Record<string, string | undefined> = process
   if (siteUrl) return siteUrl;
   if (env.VERCEL_ENV === "production") {
     const prodUrl = cleanUrl(env.VERCEL_PROJECT_PRODUCTION_URL);
-    if (prodUrl) return prodUrl.startsWith("http://") || prodUrl.startsWith("https://") ? prodUrl : `https://${prodUrl}`;
+    if (prodUrl) return prodUrl;
   }
   const vercelUrl = cleanUrl(env.VERCEL_URL);
-  if (vercelUrl) return vercelUrl.startsWith("http://") || vercelUrl.startsWith("https://") ? vercelUrl : `https://${vercelUrl}`;
+  if (vercelUrl) return vercelUrl;
   return "http://localhost:3000";
 }
 

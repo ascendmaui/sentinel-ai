@@ -578,13 +578,15 @@ export const INCIDENTS_DISCLAIMER = `This page is analysis based on public repor
 
 export const incidentById = (id: string): Incident | undefined => {
   if (!id || typeof id !== "string") return undefined;
-  const target = id.toLowerCase();
+  const target = id.trim().toLowerCase();
+  if (!target) return undefined;
   return incidents.find((i) => i.id === id || i.id.toLowerCase() === target);
 };
 
 export const scenarioById = (id: string): Scenario | undefined => {
   if (!id || typeof id !== "string") return undefined;
-  const target = id.toLowerCase();
+  const target = id.trim().toLowerCase();
+  if (!target) return undefined;
   return scenarios.find((s) => s.id === id || s.id.toLowerCase() === target);
 };
 

@@ -124,7 +124,8 @@ export const tiers: Tier[] = [
 
 export const tierById = (id: string): Tier | undefined => {
   if (!id || typeof id !== "string") return undefined;
-  const target = id.toLowerCase();
+  const target = id.trim().toLowerCase();
+  if (!target) return undefined;
   return tiers.find((t) => t.id.toLowerCase() === target);
 };
 export const tierHref = (id: TierId) => `/pricing#${id}`;

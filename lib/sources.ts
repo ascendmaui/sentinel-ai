@@ -26,7 +26,9 @@ export const sources: Source[] = Object.values(S);
 
 export function sourceById(id: string): Source | undefined {
   if (!id || typeof id !== "string") return undefined;
-  if (Object.prototype.hasOwnProperty.call(S, id)) return S[id];
-  const target = id.toLowerCase();
+  const trimmed = id.trim();
+  if (!trimmed) return undefined;
+  if (Object.prototype.hasOwnProperty.call(S, trimmed)) return S[trimmed];
+  const target = trimmed.toLowerCase();
   return sources.find((s) => s.id.toLowerCase() === target);
 }

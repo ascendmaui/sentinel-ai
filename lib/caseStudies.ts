@@ -216,13 +216,15 @@ export const remediation: Remediation[] = [
 
 export const findingById = (id: string): Finding | undefined => {
   if (!id || typeof id !== "string") return undefined;
-  const target = id.toLowerCase();
+  const target = id.trim().toLowerCase();
+  if (!target) return undefined;
   return findings.find((f) => f.id.toLowerCase() === target);
 };
 
 export const remediationById = (id: string): Remediation | undefined => {
   if (!id || typeof id !== "string") return undefined;
-  const target = id.toLowerCase();
+  const target = id.trim().toLowerCase();
+  if (!target) return undefined;
   return remediation.find((r) => r.id.toLowerCase() === target);
 };
 

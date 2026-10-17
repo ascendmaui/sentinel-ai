@@ -211,7 +211,8 @@ export const posts: Post[] = [
 
 export const postBySlug = (slug: string): Post | undefined => {
   if (!slug || typeof slug !== "string") return undefined;
-  const target = slug.toLowerCase();
+  const target = slug.trim().toLowerCase();
+  if (!target) return undefined;
   return posts.find((p) => p.slug === slug || p.slug.toLowerCase() === target);
 };
 export const postWords = (p: Post): number => {

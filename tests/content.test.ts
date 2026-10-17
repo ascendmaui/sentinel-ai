@@ -29,6 +29,8 @@ describe("brand", () => {
     expect(resolveSiteUrl({ VERCEL_ENV: "production", VERCEL_PROJECT_PRODUCTION_URL: "https://seraphim.ai///" })).toBe("https://seraphim.ai");
     expect(resolveSiteUrl({ VERCEL_URL: "preview-123.vercel.app/" })).toBe("https://preview-123.vercel.app");
     expect(resolveSiteUrl({ VERCEL_URL: "https://preview-123.vercel.app///" })).toBe("https://preview-123.vercel.app");
+    expect(resolveSiteUrl({ NEXT_PUBLIC_SITE_URL: "custom.seraphim.ai" })).toBe("https://custom.seraphim.ai");
+    expect(resolveSiteUrl({ SITE_URL: "fallback.seraphim.ai" })).toBe("https://fallback.seraphim.ai");
     expect(resolveSiteUrl({})).toBe("http://localhost:3000");
     expect(resolveSiteUrl({ NEXT_PUBLIC_SITE_URL: "", SITE_URL: "" })).toBe("http://localhost:3000");
   });
@@ -125,6 +127,10 @@ describe("sources registry", () => {
   it("sourceById handles exact, case-insensitive, and invalid lookups", () => {
     expect(sourceById("oaiAug")).toBe(S.oaiAug);
     expect(sourceById("OAIAUG")).toBe(S.oaiAug);
+    expect(sourceById("  oaiAug  ")).toBe(S.oaiAug);
+    expect(sourceById("")).toBeUndefined();
+    expect(sourceById("   ")).toBeUndefined();
+    expect(sourceById(undefined as unknown as string)).toBeUndefined();
     expect(sourceById("unknown")).toBeUndefined();
     expect(sourceById("toString")).toBeUndefined();
     expect(sourceById("__proto__")).toBeUndefined();
@@ -161,7 +167,9 @@ describe("posts", () => {
   it("postBySlug does not match inherited object properties", () => {
     expect(postBySlug("toString")).toBeUndefined();
     expect(postBySlug(posts[0].slug)).toBe(posts[0]);
+    expect(postBySlug(`  ${posts[0].slug}  `)).toBe(posts[0]);
     expect(postBySlug("")).toBeUndefined();
+    expect(postBySlug("   ")).toBeUndefined();
     expect(postBySlug(undefined as unknown as string)).toBeUndefined();
   });
 
@@ -213,9 +221,11 @@ describe("tiers", () => {
 
   it("tierById handles case-insensitivity and returns undefined for unknown", () => {
     expect(tierById("SERAPHIM")).toBeDefined();
+    expect(tierById("  seraphim  ")).toBeDefined();
     expect(tierById("unknown")).toBeUndefined();
     expect(tierById("toString")).toBeUndefined();
     expect(tierById("")).toBeUndefined();
+    expect(tierById("   ")).toBeUndefined();
     expect(tierById(undefined as unknown as string)).toBeUndefined();
   });
 
@@ -249,9 +259,11 @@ describe("incidents", () => {
   it("incidentById handles case-insensitivity and returns undefined for unknown", () => {
     const first = incidents[0];
     expect(incidentById(first.id.toUpperCase())).toBe(first);
+    expect(incidentById(`  ${first.id}  `)).toBe(first);
     expect(incidentById("unknown-incident")).toBeUndefined();
     expect(incidentById("constructor")).toBeUndefined();
     expect(incidentById("")).toBeUndefined();
+    expect(incidentById("   ")).toBeUndefined();
     expect(incidentById(undefined as unknown as string)).toBeUndefined();
   });
 
@@ -266,9 +278,11 @@ describe("incidents", () => {
     const first = scenarios[0];
     expect(scenarioById(first.id)).toBe(first);
     expect(scenarioById(first.id.toUpperCase())).toBe(first);
+    expect(scenarioById(`  ${first.id}  `)).toBe(first);
     expect(scenarioById("unknown-scenario")).toBeUndefined();
     expect(scenarioById("constructor")).toBeUndefined();
     expect(scenarioById("")).toBeUndefined();
+    expect(scenarioById("   ")).toBeUndefined();
     expect(scenarioById(undefined as unknown as string)).toBeUndefined();
   });
 });
@@ -287,18 +301,22 @@ describe("case studies / findings", () => {
   it("findingById handles case-insensitivity and returns undefined for unknown", () => {
     expect(findingById("F-01")).toBeDefined();
     expect(findingById("f-01")?.id).toBe("F-01");
+    expect(findingById("  f-01  ")?.id).toBe("F-01");
     expect(findingById("F-99")).toBeUndefined();
     expect(findingById("toString")).toBeUndefined();
     expect(findingById("")).toBeUndefined();
+    expect(findingById("   ")).toBeUndefined();
     expect(findingById(undefined as unknown as string)).toBeUndefined();
   });
 
   it("remediationById handles case-insensitivity and returns undefined for unknown", () => {
     expect(remediationById("F-01")).toBeDefined();
     expect(remediationById("f-01")?.id).toBe("F-01");
+    expect(remediationById("  f-01  ")?.id).toBe("F-01");
     expect(remediationById("F-99")).toBeUndefined();
     expect(remediationById("toString")).toBeUndefined();
     expect(remediationById("")).toBeUndefined();
+    expect(remediationById("   ")).toBeUndefined();
     expect(remediationById(undefined as unknown as string)).toBeUndefined();
   });
 
