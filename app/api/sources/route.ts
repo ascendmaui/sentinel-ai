@@ -23,6 +23,7 @@ export function GET(req?: Request): Response {
             s.id.toLowerCase().includes(q) ||
             s.label.toLowerCase().includes(q) ||
             s.url.toLowerCase().includes(q) ||
+            s.date.toLowerCase().includes(q) ||
             (s.note && s.note.toLowerCase().includes(q))
         );
       }

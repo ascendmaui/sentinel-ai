@@ -26,7 +26,10 @@ export function GET(req?: Request): Response {
             f.id.toLowerCase().includes(q) ||
             f.title.toLowerCase().includes(q) ||
             f.rationale.toLowerCase().includes(q) ||
-            f.fix.toLowerCase().includes(q)
+            f.fix.toLowerCase().includes(q) ||
+            f.what.toLowerCase().includes(q) ||
+            f.before.toLowerCase().includes(q) ||
+            f.after.toLowerCase().includes(q)
         );
       }
       if (limit) {

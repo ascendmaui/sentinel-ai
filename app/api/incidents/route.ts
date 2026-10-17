@@ -23,7 +23,13 @@ export function GET(req?: Request): Response {
             i.standing.toLowerCase().includes(q) ||
             i.timeline.some((t) => t.t.toLowerCase().includes(q)) ||
             i.did.some((d) => d.toLowerCase().includes(q)) ||
-            i.howIn.some((h) => h.toLowerCase().includes(q))
+            i.howIn.some((h) => h.toLowerCase().includes(q)) ||
+            i.vuln.some((v) => v.toLowerCase().includes(q)) ||
+            i.impact.some((im) => im.toLowerCase().includes(q)) ||
+            i.inferred.some((inf) => inf.toLowerCase().includes(q)) ||
+            i.seraphim.flag.some((sf) => sf.toLowerCase().includes(q)) ||
+            i.seraphim.prepare.some((sp) => sp.toLowerCase().includes(q)) ||
+            i.seraphim.limits.toLowerCase().includes(q)
         );
       }
 

@@ -19,7 +19,10 @@ export function GET(req?: Request): Response {
             s.id.toLowerCase().includes(q) ||
             s.title.toLowerCase().includes(q) ||
             s.target.toLowerCase().includes(q) ||
-            s.weaknessClass.some((w) => w.toLowerCase().includes(q))
+            s.weaknessClass.some((w) => w.toLowerCase().includes(q)) ||
+            s.approach.toLowerCase().includes(q) ||
+            s.controls.some((c) => c.toLowerCase().includes(q)) ||
+            s.seraphim.some((sp) => sp.toLowerCase().includes(q))
         );
       }
 

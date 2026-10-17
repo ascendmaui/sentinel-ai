@@ -272,6 +272,26 @@ describe("GET /api/incidents", () => {
     expect(didRes.status).toBe(200);
     expect((await didRes.json()).count).toBeGreaterThan(0);
 
+    // Search in vuln
+    const vulnRes = incidentsIndex(req("/api/incidents?q=token-refresh"));
+    expect(vulnRes.status).toBe(200);
+    expect((await vulnRes.json()).count).toBeGreaterThan(0);
+
+    // Search in impact
+    const impactRes = incidentsIndex(req("/api/incidents?q=kubernetes"));
+    expect(impactRes.status).toBe(200);
+    expect((await impactRes.json()).count).toBeGreaterThan(0);
+
+    // Search in inferred
+    const inferredRes = incidentsIndex(req("/api/incidents?q=research%20cluster"));
+    expect(inferredRes.status).toBe(200);
+    expect((await inferredRes.json()).count).toBeGreaterThan(0);
+
+    // Search in seraphim controls/limits
+    const seraphimRes = incidentsIndex(req("/api/incidents?q=tabletop"));
+    expect(seraphimRes.status).toBe(200);
+    expect((await seraphimRes.json()).count).toBeGreaterThan(0);
+
     // Search with no match
     const noneRes = incidentsIndex(req("/api/incidents?q=absolutely-no-match-xyz"));
     expect(noneRes.status).toBe(200);
@@ -359,6 +379,21 @@ describe("GET /api/case-studies", () => {
     const body = await res.json();
     expect(body.count).toBe(1);
     expect(body.findings[0].id).toBe("F-02");
+
+    // Search in what
+    const whatRes = caseStudiesIndex(req("/api/case-studies?q=airport-rush"));
+    expect(whatRes.status).toBe(200);
+    expect((await whatRes.json()).count).toBe(1);
+
+    // Search in before
+    const beforeRes = caseStudiesIndex(req("/api/case-studies?q=four%20hours%20early"));
+    expect(beforeRes.status).toBe(200);
+    expect((await beforeRes.json()).count).toBe(1);
+
+    // Search in after
+    const afterRes = caseStudiesIndex(req("/api/case-studies?q=database%20vault"));
+    expect(afterRes.status).toBe(200);
+    expect((await afterRes.json()).count).toBe(1);
   });
 
   it("limits findings result count and handles whitespace query", async () => {
@@ -667,7 +702,7 @@ describe("GET /api/scenarios", () => {
     expect((await spaceRes.json()).count).toBe(scenarios.length);
   });
 
-  it("searches across target and weaknessClass fields, and handles empty results", async () => {
+  it("searches across target, weaknessClass, approach, controls, and seraphim fields, and handles empty results", async () => {
     const weakRes = scenariosIndex(req("/api/scenarios?q=credential"));
     expect(weakRes.status).toBe(200);
     expect((await weakRes.json()).count).toBeGreaterThan(0);
@@ -675,6 +710,21 @@ describe("GET /api/scenarios", () => {
     const targetRes = scenariosIndex(req("/api/scenarios?q=internal"));
     expect(targetRes.status).toBe(200);
     expect((await targetRes.json()).count).toBeGreaterThan(0);
+
+    // Search in approach
+    const approachRes = scenariosIndex(req("/api/scenarios?q=repetitive"));
+    expect(approachRes.status).toBe(200);
+    expect((await approachRes.json()).count).toBeGreaterThan(0);
+
+    // Search in controls
+    const controlsRes = scenariosIndex(req("/api/scenarios?q=segment%20by%20role"));
+    expect(controlsRes.status).toBe(200);
+    expect((await controlsRes.json()).count).toBeGreaterThan(0);
+
+    // Search in seraphim
+    const seraphimRes = scenariosIndex(req("/api/scenarios?q=authorization"));
+    expect(seraphimRes.status).toBe(200);
+    expect((await seraphimRes.json()).count).toBeGreaterThan(0);
 
     const noneRes = scenariosIndex(req("/api/scenarios?q=no-match-scenario-xyz"));
     expect(noneRes.status).toBe(200);
@@ -774,7 +824,7 @@ describe("GET /api/sources", () => {
     expect((await spaceRes.json()).count).toBe(sources.length);
   });
 
-  it("searches across note and url fields, supports combined filters, and handles empty results", async () => {
+  it("searches across note, url, and date fields, supports combined filters, and handles empty results", async () => {
     const noteRes = sourcesIndex(req("/api/sources?q=threat-intel"));
     expect(noteRes.status).toBe(200);
     expect((await noteRes.json()).count).toBeGreaterThan(0);
@@ -782,6 +832,11 @@ describe("GET /api/sources", () => {
     const urlRes = sourcesIndex(req("/api/sources?q=bleepingcomputer"));
     expect(urlRes.status).toBe(200);
     expect((await urlRes.json()).count).toBeGreaterThan(0);
+
+    // Search in date
+    const dateRes = sourcesIndex(req("/api/sources?q=feb%202026"));
+    expect(dateRes.status).toBe(200);
+    expect((await dateRes.json()).count).toBeGreaterThan(0);
 
     const combinedRes = sourcesIndex(req("/api/sources?year=2025&q=anthropic"));
     expect(combinedRes.status).toBe(200);
