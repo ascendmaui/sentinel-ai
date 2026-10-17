@@ -68,6 +68,7 @@ const upperPost = await get(`/api/posts/${posts.posts[0].slug.toUpperCase()}`);
 check(upperPost.status === 200, `GET /api/posts/${posts.posts[0].slug.toUpperCase()} (case-insensitive)`);
 const missingPost = await get("/api/posts/does-not-exist");
 check(missingPost.status === 404 && (await missingPost.json()).error === "not_found", "unknown post -> JSON 404");
+check(missingPost.headers.get("cache-control") === "no-store", "404 unknown post cache-control is no-store");
 checkSecurityHeaders(missingPost, "404 unknown post");
 check((await get("/blog/does-not-exist")).status === 404, "unknown blog page -> 404");
 
@@ -100,6 +101,7 @@ const upperInc = await get(`/api/incidents/${incs.incidents[0].id.toUpperCase()}
 check(upperInc.status === 200, `GET /api/incidents/${incs.incidents[0].id.toUpperCase()} (case-insensitive)`);
 const missingInc = await get("/api/incidents/does-not-exist");
 check(missingInc.status === 404 && (await missingInc.json()).error === "not_found", "unknown incident -> JSON 404");
+check(missingInc.headers.get("cache-control") === "no-store", "404 unknown incident cache-control is no-store");
 checkSecurityHeaders(missingInc, "404 unknown incident");
 
 // 4. Case Studies API
@@ -131,6 +133,7 @@ checkSecurityHeaders(headCsOne, "HEAD /api/case-studies/f-01");
 
 const missingCs = await get("/api/case-studies/f-999");
 check(missingCs.status === 404 && (await missingCs.json()).error === "not_found", "unknown case study -> JSON 404");
+check(missingCs.headers.get("cache-control") === "no-store", "404 unknown case study cache-control is no-store");
 checkSecurityHeaders(missingCs, "404 unknown case study");
 
 // 5. Tiers API
@@ -159,6 +162,7 @@ checkSecurityHeaders(headTierOne, "HEAD /api/tiers/seraphim");
 
 const missingTier = await get("/api/tiers/does-not-exist");
 check(missingTier.status === 404 && (await missingTier.json()).error === "not_found", "unknown tier -> JSON 404");
+check(missingTier.headers.get("cache-control") === "no-store", "404 unknown tier cache-control is no-store");
 checkSecurityHeaders(missingTier, "404 unknown tier");
 
 // 6. Scenarios API
@@ -186,6 +190,7 @@ checkSecurityHeaders(headScOne, "HEAD /api/scenarios/legacy-internal-app");
 
 const missingSc = await get("/api/scenarios/does-not-exist");
 check(missingSc.status === 404 && (await missingSc.json()).error === "not_found", "unknown scenario -> JSON 404");
+check(missingSc.headers.get("cache-control") === "no-store", "404 unknown scenario cache-control is no-store");
 checkSecurityHeaders(missingSc, "404 unknown scenario");
 
 // 7. Sources API
@@ -216,6 +221,7 @@ checkSecurityHeaders(headSrcOne, "HEAD /api/sources/oaiAug");
 
 const missingSrc = await get("/api/sources/does-not-exist");
 check(missingSrc.status === 404 && (await missingSrc.json()).error === "not_found", "unknown source -> JSON 404");
+check(missingSrc.headers.get("cache-control") === "no-store", "404 unknown source cache-control is no-store");
 checkSecurityHeaders(missingSrc, "404 unknown source");
 
 // 8. Brand API
@@ -245,7 +251,15 @@ for (const endpoint of endpoints405) {
   check(delRes.status === 405, `DELETE ${endpoint} -> 405`);
 }
 
-// 10. Robots, Sitemap, and Static Assets
+// 10. Hostile query string resilience
+const hostileQuery = "?q=%00%ff&limit=-1&tier=__proto__&year=" + "x".repeat(2000);
+for (const ep of ["/api/posts", "/api/incidents", "/api/case-studies", "/api/scenarios", "/api/sources", "/api/tiers"]) {
+  const hostileRes = await get(`${ep}${hostileQuery}`);
+  check(hostileRes.status === 200, `hostile query on ${ep} -> 200`);
+  checkSecurityHeaders(hostileRes, `hostile query on ${ep}`);
+}
+
+// 11. Robots, Sitemap, and Static Assets
 const headRobots = await get("/robots.txt", { method: "HEAD" });
 check(headRobots.status === 200, "HEAD /robots.txt -> 200");
 const robotsRes = await get("/robots.txt");
@@ -259,7 +273,7 @@ check(sitemapRes.status === 200 && (await sitemapRes.text()).includes("urlset"),
 const iconRes = await get("/icon.svg");
 check(iconRes.status === 200 && (await iconRes.text()).includes("<svg"), "GET /icon.svg returns SVG");
 
-// 11. Crawl internal page links
+// 12. Crawl internal page links
 
 const links = new Set();
 for (const path of pages) {
