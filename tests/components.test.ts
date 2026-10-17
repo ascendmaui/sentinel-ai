@@ -193,6 +193,18 @@ describe("Nav component", () => {
     // Talk to us button
     const emailBtn = actionsDiv.props.children[1];
     expect(emailBtn.props.href).toBe(`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}`);
+
+    // Mobile menu details
+    const details = actionsDiv.props.children[2];
+    expect(details.type).toBe("details");
+    expect(details.props.className).toBe("nav-menu");
+
+    const html = renderToStaticMarkup(el);
+    expect(html).toContain('class="nav-wrap"');
+    expect(html).toContain('class="nav-menu"');
+    expect(html).toContain('href="/#phases"');
+    expect(html).toContain('href="/#contact"');
+    expect(html).toContain(`mailto:${BRAND_EMAIL}`);
   });
 });
 
@@ -218,6 +230,13 @@ describe("Footer component", () => {
 
     expect(copyright.props.children).toContain(BRAND_NAME);
     expect(copyright.props.children).toContain(BRAND_PARENT);
+
+    const html = renderToStaticMarkup(el);
+    expect(html).toContain('class="footer"');
+    expect(html).toContain('class="footer-theme"');
+    expect(html).toContain('href="/#phases"');
+    expect(html).toContain(BRAND_NAME);
+    expect(html).toContain(BRAND_PARENT);
   });
 });
 
