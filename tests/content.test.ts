@@ -48,6 +48,9 @@ describe("brand", () => {
     expect(badgeByKey("")).toBeUndefined();
     expect(badgeByKey("   ")).toBeUndefined();
     expect(badgeByKey(undefined as unknown as string)).toBeUndefined();
+    expect(badgeByKey(null as unknown as string)).toBeUndefined();
+    expect(badgeByKey(123 as unknown as string)).toBeUndefined();
+    expect(badgeByKey(true as unknown as string)).toBeUndefined();
     expect(badgeByKey("  passive  ")).toEqual(TRUE_BADGES.find((b) => b.key === "passive"));
   });
 });
@@ -131,6 +134,9 @@ describe("sources registry", () => {
     expect(sourceById("")).toBeUndefined();
     expect(sourceById("   ")).toBeUndefined();
     expect(sourceById(undefined as unknown as string)).toBeUndefined();
+    expect(sourceById(null as unknown as string)).toBeUndefined();
+    expect(sourceById(123 as unknown as string)).toBeUndefined();
+    expect(sourceById(true as unknown as string)).toBeUndefined();
     expect(sourceById("unknown")).toBeUndefined();
     expect(sourceById("toString")).toBeUndefined();
     expect(sourceById("__proto__")).toBeUndefined();
@@ -171,6 +177,9 @@ describe("posts", () => {
     expect(postBySlug("")).toBeUndefined();
     expect(postBySlug("   ")).toBeUndefined();
     expect(postBySlug(undefined as unknown as string)).toBeUndefined();
+    expect(postBySlug(null as unknown as string)).toBeUndefined();
+    expect(postBySlug(123 as unknown as string)).toBeUndefined();
+    expect(postBySlug(true as unknown as string)).toBeUndefined();
   });
 
   it("calculates positive word counts and validates block text", () => {
@@ -227,6 +236,9 @@ describe("tiers", () => {
     expect(tierById("")).toBeUndefined();
     expect(tierById("   ")).toBeUndefined();
     expect(tierById(undefined as unknown as string)).toBeUndefined();
+    expect(tierById(null as unknown as string)).toBeUndefined();
+    expect(tierById(123 as unknown as string)).toBeUndefined();
+    expect(tierById(true as unknown as string)).toBeUndefined();
   });
 
   it("matrix and helper cover all tiers correctly", () => {
@@ -265,6 +277,9 @@ describe("incidents", () => {
     expect(incidentById("")).toBeUndefined();
     expect(incidentById("   ")).toBeUndefined();
     expect(incidentById(undefined as unknown as string)).toBeUndefined();
+    expect(incidentById(null as unknown as string)).toBeUndefined();
+    expect(incidentById(123 as unknown as string)).toBeUndefined();
+    expect(incidentById(true as unknown as string)).toBeUndefined();
   });
 
   it("scenarios have unique ids and cite only registered sources", () => {
@@ -284,6 +299,9 @@ describe("incidents", () => {
     expect(scenarioById("")).toBeUndefined();
     expect(scenarioById("   ")).toBeUndefined();
     expect(scenarioById(undefined as unknown as string)).toBeUndefined();
+    expect(scenarioById(null as unknown as string)).toBeUndefined();
+    expect(scenarioById(123 as unknown as string)).toBeUndefined();
+    expect(scenarioById(true as unknown as string)).toBeUndefined();
   });
 });
 
@@ -307,6 +325,9 @@ describe("case studies / findings", () => {
     expect(findingById("")).toBeUndefined();
     expect(findingById("   ")).toBeUndefined();
     expect(findingById(undefined as unknown as string)).toBeUndefined();
+    expect(findingById(null as unknown as string)).toBeUndefined();
+    expect(findingById(123 as unknown as string)).toBeUndefined();
+    expect(findingById(true as unknown as string)).toBeUndefined();
   });
 
   it("remediationById handles case-insensitivity and returns undefined for unknown", () => {
@@ -318,6 +339,9 @@ describe("case studies / findings", () => {
     expect(remediationById("")).toBeUndefined();
     expect(remediationById("   ")).toBeUndefined();
     expect(remediationById(undefined as unknown as string)).toBeUndefined();
+    expect(remediationById(null as unknown as string)).toBeUndefined();
+    expect(remediationById(123 as unknown as string)).toBeUndefined();
+    expect(remediationById(true as unknown as string)).toBeUndefined();
   });
 
   it("severityCounts matches findings tally", () => {
