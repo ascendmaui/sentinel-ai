@@ -59,6 +59,14 @@ describe("GET /api/health", () => {
     vi.stubEnv("VERCEL_GIT_COMMIT_SHA", "");
     expect((await health().json()).commit).toBeNull();
   });
+
+  it("defaults to local environment and handles short commit hashes", async () => {
+    vi.stubEnv("VERCEL_ENV", "");
+    vi.stubEnv("VERCEL_GIT_COMMIT_SHA", "abcde");
+    const body = await health().json();
+    expect(body.environment).toBe("local");
+    expect(body.commit).toBe("abcde");
+  });
 });
 
 describe("GET /api/posts", () => {
@@ -135,6 +143,33 @@ describe("GET /api/posts", () => {
       expect((await res.json()).count, `limit=${bad}`).toBe(posts.length);
     }
   });
+
+  it("supports combined filters and handles whitespace or nonexistent tier query", async () => {
+    const spaceTierRes = postsIndex(req("/api/posts?tier=%20SERAPHIM%20"));
+    expect(spaceTierRes.status).toBe(200);
+    const spaceTierBody = await spaceTierRes.json();
+    expect(spaceTierBody.count).toBeGreaterThan(0);
+    expect(spaceTierBody.posts.every((p: { tier: string }) => p.tier === "seraphim")).toBe(true);
+
+    const noneTierRes = postsIndex(req("/api/posts?tier=nonexistent"));
+    expect(noneTierRes.status).toBe(200);
+    const noneTierBody = await noneTierRes.json();
+    expect(noneTierBody.count).toBe(0);
+    expect(noneTierBody.posts).toHaveLength(0);
+    expect(noneTierBody.totalCount).toBe(posts.length);
+
+    const combinedRes = postsIndex(req("/api/posts?tier=seraphim&q=openai&limit=1"));
+    expect(combinedRes.status).toBe(200);
+    const combinedBody = await combinedRes.json();
+    expect(combinedBody.count).toBe(1);
+    expect(combinedBody.posts[0].tier).toBe("seraphim");
+    expect(combinedBody.totalCount).toBe(posts.length);
+
+    const malformedReq = { url: "http://" } as unknown as Request;
+    const fallbackRes = postsIndex(malformedReq);
+    expect(fallbackRes.status).toBe(200);
+    expect((await fallbackRes.json()).count).toBe(posts.length);
+  });
 });
 
 describe("GET /api/posts/[slug]", () => {
@@ -150,15 +185,18 @@ describe("GET /api/posts/[slug]", () => {
     }
   });
 
-  it("supports case-insensitive post slug lookup", async () => {
+  it("supports case-insensitive post slug lookup and trims whitespace", async () => {
     const first = posts[0];
     const res = await postOne(req(`/api/posts/${first.slug.toUpperCase()}`), slugCtx(first.slug.toUpperCase()));
     expect(res.status).toBe(200);
     expect((await res.json()).slug).toBe(first.slug);
+
+    const trimRes = await postOne(req(`/api/posts/${first.slug}`), slugCtx(`  ${first.slug}  `));
+    expect(trimRes.status).toBe(200);
+    expect((await trimRes.json()).slug).toBe(first.slug);
   });
 
-
-  it.each(["nope", "", "../etc/passwd", "%2e%2e", "__proto__", "constructor", "toString"])(
+  it.each(["nope", "", "   ", "../etc/passwd", "%2e%2e", "__proto__", "constructor", "toString"])(
     "returns a JSON 404 for %j",
     async (slug) => {
       const res = await postOne(req(`/api/posts/${slug}`), slugCtx(slug));
@@ -212,6 +250,38 @@ describe("GET /api/incidents", () => {
     expect(spaceRes.status).toBe(200);
     expect((await spaceRes.json()).count).toBe(incidents.length);
   });
+
+  it("searches across kicker, standing, timeline, did, and howIn fields", async () => {
+    // Search in kicker
+    const kickerRes = incidentsIndex(req("/api/incidents?q=landmark"));
+    expect(kickerRes.status).toBe(200);
+    expect((await kickerRes.json()).count).toBeGreaterThan(0);
+
+    // Search in standing
+    const standingRes = incidentsIndex(req("/api/incidents?q=threat-intelligence"));
+    expect(standingRes.status).toBe(200);
+    expect((await standingRes.json()).count).toBeGreaterThan(0);
+
+    // Search in timeline
+    const timelineRes = incidentsIndex(req("/api/incidents?q=exploitgym"));
+    expect(timelineRes.status).toBe(200);
+    expect((await timelineRes.json()).count).toBeGreaterThan(0);
+
+    // Search in did
+    const didRes = incidentsIndex(req("/api/incidents?q=artifactory"));
+    expect(didRes.status).toBe(200);
+    expect((await didRes.json()).count).toBeGreaterThan(0);
+
+    // Search with no match
+    const noneRes = incidentsIndex(req("/api/incidents?q=absolutely-no-match-xyz"));
+    expect(noneRes.status).toBe(200);
+    expect((await noneRes.json()).count).toBe(0);
+
+    // Malformed request URL falls back gracefully
+    const fallbackRes = incidentsIndex({ url: "http://" } as unknown as Request);
+    expect(fallbackRes.status).toBe(200);
+    expect((await fallbackRes.json()).count).toBe(incidents.length);
+  });
 });
 
 describe("GET /api/incidents/[id]", () => {
@@ -227,14 +297,18 @@ describe("GET /api/incidents/[id]", () => {
     }
   });
 
-  it("supports case-insensitive incident lookup", async () => {
+  it("supports case-insensitive incident lookup and trims whitespace", async () => {
     const first = incidents[0];
     const res = await incidentOne(req(`/api/incidents/${first.id.toUpperCase()}`), idCtx(first.id.toUpperCase()));
     expect(res.status).toBe(200);
     expect((await res.json()).id).toBe(first.id);
+
+    const trimRes = await incidentOne(req(`/api/incidents/${first.id}`), idCtx(`  ${first.id}  `));
+    expect(trimRes.status).toBe(200);
+    expect((await trimRes.json()).id).toBe(first.id);
   });
 
-  it.each(["nonexistent-incident", "../etc/passwd", "__proto__", "constructor", "toString"])(
+  it.each(["nonexistent-incident", "", "   ", "../etc/passwd", "__proto__", "constructor", "toString"])(
     "returns a JSON 404 for %j",
     async (id) => {
       const res = await incidentOne(req(`/api/incidents/${id}`), idCtx(id));
@@ -299,6 +373,28 @@ describe("GET /api/case-studies", () => {
     expect(spaceRes.status).toBe(200);
     expect((await spaceRes.json()).count).toBe(findings.length);
   });
+
+  it("supports case-insensitive severity/status filtering, combined filters, and empty matches", async () => {
+    const highRes = caseStudiesIndex(req("/api/case-studies?severity=%20HIGH%20"));
+    expect(highRes.status).toBe(200);
+    const highBody = await highRes.json();
+    expect(highBody.count).toBeGreaterThan(0);
+    expect(highBody.findings.every((f: { severity: string }) => f.severity === "High")).toBe(true);
+
+    const combinedRes = caseStudiesIndex(req("/api/case-studies?severity=medium&status=fixed&limit=2"));
+    expect(combinedRes.status).toBe(200);
+    const combinedBody = await combinedRes.json();
+    expect(combinedBody.count).toBeLessThanOrEqual(2);
+    expect(combinedBody.findings.every((f: { severity: string }) => f.severity === "Medium")).toBe(true);
+
+    const noneRes = caseStudiesIndex(req("/api/case-studies?severity=nonexistent"));
+    expect(noneRes.status).toBe(200);
+    expect((await noneRes.json()).count).toBe(0);
+
+    const fallbackRes = caseStudiesIndex({ url: "http://" } as unknown as Request);
+    expect(fallbackRes.status).toBe(200);
+    expect((await fallbackRes.json()).count).toBe(findings.length);
+  });
 });
 
 describe("GET /api/case-studies/[id]", () => {
@@ -317,13 +413,17 @@ describe("GET /api/case-studies/[id]", () => {
     }
   });
 
-  it("supports case-insensitive finding lookup", async () => {
+  it("supports case-insensitive finding lookup and trims whitespace", async () => {
     const res = await caseStudyOne(req("/api/case-studies/f-01"), idCtx("f-01"));
     expect(res.status).toBe(200);
     expect((await res.json()).id).toBe("F-01");
+
+    const trimRes = await caseStudyOne(req("/api/case-studies/f-01"), idCtx("  f-01  "));
+    expect(trimRes.status).toBe(200);
+    expect((await trimRes.json()).id).toBe("F-01");
   });
 
-  it.each(["F-999", "unknown", "__proto__", "constructor", "toString"])(
+  it.each(["F-999", "unknown", "", "   ", "__proto__", "constructor", "toString"])(
     "returns a JSON 404 for %j",
     async (id) => {
       const res = await caseStudyOne(req(`/api/case-studies/${id}`), idCtx(id));
@@ -375,6 +475,24 @@ describe("GET /api/tiers", () => {
     expect(spaceRes.status).toBe(200);
     expect((await spaceRes.json()).count).toBe(tiers.length);
   });
+
+  it("searches across tier id, name, tagline, positioning, and summary", async () => {
+    const posRes = tiersIndex(req("/api/tiers?q=founders"));
+    expect(posRes.status).toBe(200);
+    expect((await posRes.json()).count).toBeGreaterThan(0);
+
+    const sumRes = tiersIndex(req("/api/tiers?q=comprehensive"));
+    expect(sumRes.status).toBe(200);
+    expect((await sumRes.json()).count).toBeGreaterThan(0);
+
+    const noneRes = tiersIndex(req("/api/tiers?q=no-such-tier-xyz"));
+    expect(noneRes.status).toBe(200);
+    expect((await noneRes.json()).count).toBe(0);
+
+    const fallbackRes = tiersIndex({ url: "http://" } as unknown as Request);
+    expect(fallbackRes.status).toBe(200);
+    expect((await fallbackRes.json()).count).toBe(tiers.length);
+  });
 });
 
 describe("GET /api/tiers/[id]", () => {
@@ -390,13 +508,17 @@ describe("GET /api/tiers/[id]", () => {
     }
   });
 
-  it("supports case-insensitive tier lookup", async () => {
+  it("supports case-insensitive tier lookup and trims whitespace", async () => {
     const res = await tierOne(req("/api/tiers/SERAPHIM"), idCtx("SERAPHIM"));
     expect(res.status).toBe(200);
     expect((await res.json()).id).toBe("seraphim");
+
+    const trimRes = await tierOne(req("/api/tiers/seraphim"), idCtx("  seraphim  "));
+    expect(trimRes.status).toBe(200);
+    expect((await trimRes.json()).id).toBe("seraphim");
   });
 
-  it.each(["free", "enterprise-plus", "__proto__", "constructor", "toString"])(
+  it.each(["free", "enterprise-plus", "", "   ", "__proto__", "constructor", "toString"])(
     "returns a JSON 404 for %j",
     async (id) => {
       const res = await tierOne(req(`/api/tiers/${id}`), idCtx(id));
@@ -420,6 +542,11 @@ describe("HTTP helper utilities", () => {
     expect(res.headers.get("cache-control")).toBe("no-store");
     expect(res.headers.get("x-frame-options")).toBe("DENY");
     expect(await res.json()).toMatchObject({ error: "method_not_allowed" });
+
+    // Default arguments
+    const defRes = methodNotAllowed();
+    expect(defRes.status).toBe(405);
+    expect(defRes.headers.get("allow")).toBe("GET, HEAD");
   });
 
   it("badRequest returns 400 with error and custom message", async () => {
@@ -438,7 +565,7 @@ describe("HTTP helper utilities", () => {
     expect(body).toEqual({ error: "not_found", message: "target document not found" });
   });
 
-  it("json helper merges custom headers, custom cacheControl, and security headers", () => {
+  it("json helper merges custom headers, custom cacheControl, and security headers", async () => {
     const res = json({ hello: "world" }, {
       status: 201,
       cacheControl: "private, max-age=60",
@@ -450,16 +577,27 @@ describe("HTTP helper utilities", () => {
     for (const [key, val] of Object.entries(SECURITY_HEADERS)) {
       expect(res.headers.get(key.toLowerCase())).toBe(val);
     }
+
+    // Default options
+    const defRes = json({ status: "ok" });
+    expect(defRes.status).toBe(200);
+    expect(defRes.headers.get("cache-control")).toBe("no-store");
+    expect(defRes.headers.get("content-type")).toBe("application/json; charset=utf-8");
+    expect(await defRes.json()).toEqual({ status: "ok" });
   });
 
   it("parseLimit handles valid, invalid, negative, and capped limits", () => {
     expect(parseLimit(new URLSearchParams("limit=5"))).toBe(5);
     expect(parseLimit(new URLSearchParams("limit=0"))).toBeUndefined();
+    expect(parseLimit(new URLSearchParams("limit=%2B0"))).toBeUndefined();
+    expect(parseLimit(new URLSearchParams("limit=%2B"))).toBeUndefined();
     expect(parseLimit(new URLSearchParams("limit=-10"))).toBeUndefined();
     expect(parseLimit(new URLSearchParams("limit=abc"))).toBeUndefined();
     expect(parseLimit(new URLSearchParams(""))).toBeUndefined();
     expect(parseLimit(new URLSearchParams("limit=250"), 100)).toBe(100);
     expect(parseLimit(new URLSearchParams("limit=50"), 100)).toBe(50);
+    expect(parseLimit(new URLSearchParams("limit=50"), 25)).toBe(25);
+    expect(parseLimit(new URLSearchParams("limit=10"), 25)).toBe(10);
     // Strict: partial numerics are rejected rather than truncated by parseInt.
     expect(parseLimit(new URLSearchParams("limit=1e3"))).toBeUndefined();
     expect(parseLimit(new URLSearchParams("limit=2.5"))).toBeUndefined();
@@ -528,6 +666,24 @@ describe("GET /api/scenarios", () => {
     expect(spaceRes.status).toBe(200);
     expect((await spaceRes.json()).count).toBe(scenarios.length);
   });
+
+  it("searches across target and weaknessClass fields, and handles empty results", async () => {
+    const weakRes = scenariosIndex(req("/api/scenarios?q=credential"));
+    expect(weakRes.status).toBe(200);
+    expect((await weakRes.json()).count).toBeGreaterThan(0);
+
+    const targetRes = scenariosIndex(req("/api/scenarios?q=internal"));
+    expect(targetRes.status).toBe(200);
+    expect((await targetRes.json()).count).toBeGreaterThan(0);
+
+    const noneRes = scenariosIndex(req("/api/scenarios?q=no-match-scenario-xyz"));
+    expect(noneRes.status).toBe(200);
+    expect((await noneRes.json()).count).toBe(0);
+
+    const fallbackRes = scenariosIndex({ url: "http://" } as unknown as Request);
+    expect(fallbackRes.status).toBe(200);
+    expect((await fallbackRes.json()).count).toBe(scenarios.length);
+  });
 });
 
 describe("GET /api/scenarios/[id]", () => {
@@ -545,14 +701,18 @@ describe("GET /api/scenarios/[id]", () => {
     }
   });
 
-  it("supports case-insensitive scenario lookup", async () => {
+  it("supports case-insensitive scenario lookup and trims whitespace", async () => {
     const first = scenarios[0];
     const res = await scenarioOne(req(`/api/scenarios/${first.id.toUpperCase()}`), idCtx(first.id.toUpperCase()));
     expect(res.status).toBe(200);
     expect((await res.json()).id).toBe(first.id);
+
+    const trimRes = await scenarioOne(req(`/api/scenarios/${first.id}`), idCtx(`  ${first.id}  `));
+    expect(trimRes.status).toBe(200);
+    expect((await trimRes.json()).id).toBe(first.id);
   });
 
-  it.each(["nonexistent-scenario", "../etc/passwd", "__proto__", "constructor", "toString"])(
+  it.each(["nonexistent-scenario", "", "   ", "../etc/passwd", "__proto__", "constructor", "toString"])(
     "returns a JSON 404 for %j",
     async (id) => {
       const res = await scenarioOne(req(`/api/scenarios/${id}`), idCtx(id));
@@ -613,6 +773,30 @@ describe("GET /api/sources", () => {
     expect(spaceRes.status).toBe(200);
     expect((await spaceRes.json()).count).toBe(sources.length);
   });
+
+  it("searches across note and url fields, supports combined filters, and handles empty results", async () => {
+    const noteRes = sourcesIndex(req("/api/sources?q=threat-intel"));
+    expect(noteRes.status).toBe(200);
+    expect((await noteRes.json()).count).toBeGreaterThan(0);
+
+    const urlRes = sourcesIndex(req("/api/sources?q=bleepingcomputer"));
+    expect(urlRes.status).toBe(200);
+    expect((await urlRes.json()).count).toBeGreaterThan(0);
+
+    const combinedRes = sourcesIndex(req("/api/sources?year=2025&q=anthropic"));
+    expect(combinedRes.status).toBe(200);
+    const combinedBody = await combinedRes.json();
+    expect(combinedBody.count).toBeGreaterThan(0);
+    expect(combinedBody.sources.every((s: { date: string }) => s.date.includes("2025"))).toBe(true);
+
+    const noneRes = sourcesIndex(req("/api/sources?year=1990"));
+    expect(noneRes.status).toBe(200);
+    expect((await noneRes.json()).count).toBe(0);
+
+    const fallbackRes = sourcesIndex({ url: "http://" } as unknown as Request);
+    expect(fallbackRes.status).toBe(200);
+    expect((await fallbackRes.json()).count).toBe(sources.length);
+  });
 });
 
 describe("GET /api/sources/[id]", () => {
@@ -627,14 +811,18 @@ describe("GET /api/sources/[id]", () => {
     }
   });
 
-  it("supports case-insensitive source lookup", async () => {
+  it("supports case-insensitive source lookup and trims whitespace", async () => {
     const first = sources[0];
     const res = await sourceOne(req(`/api/sources/${first.id.toUpperCase()}`), idCtx(first.id.toUpperCase()));
     expect(res.status).toBe(200);
     expect((await res.json()).id).toBe(first.id);
+
+    const trimRes = await sourceOne(req(`/api/sources/${first.id}`), idCtx(`  ${first.id}  `));
+    expect(trimRes.status).toBe(200);
+    expect((await trimRes.json()).id).toBe(first.id);
   });
 
-  it.each(["nonexistent-source", "../etc/passwd", "__proto__", "constructor", "toString"])(
+  it.each(["nonexistent-source", "", "   ", "../etc/passwd", "__proto__", "constructor", "toString"])(
     "returns a JSON 404 for %j",
     async (id) => {
       const res = await sourceOne(req(`/api/sources/${id}`), idCtx(id));

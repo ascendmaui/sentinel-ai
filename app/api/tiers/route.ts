@@ -20,7 +20,10 @@ export function GET(req?: Request): Response {
             t.name.toLowerCase().includes(q) ||
             t.tagline.toLowerCase().includes(q) ||
             t.positioning.toLowerCase().includes(q) ||
-            t.summary.toLowerCase().includes(q)
+            t.summary.toLowerCase().includes(q) ||
+            t.forWho.toLowerCase().includes(q) ||
+            t.fitWhen.toLowerCase().includes(q) ||
+            t.included.some((item) => item.toLowerCase().includes(q))
         );
       }
 
