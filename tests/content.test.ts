@@ -344,19 +344,30 @@ describe("case studies / findings", () => {
 describe("metadata routes", () => {
   it("robots generates permissive crawling rule and sitemap reference", () => {
     const r = robots();
-    expect(r.rules).toBeDefined();
+    expect(r.rules).toEqual([{ userAgent: "*", allow: "/" }]);
+    expect(r.sitemap).toBe(`${SITE_URL}/sitemap.xml`);
     expect(r.sitemap).toMatch(/^https?:\/\/.*\/sitemap\.xml$/);
   });
 
-  it("sitemap includes all main pages and every blog post", () => {
+  it("sitemap includes all main pages, home page, and every blog post with valid metadata", () => {
     const s = sitemap();
     const urls = s.map((entry) => entry.url);
-    expect(urls).toContainEqual(expect.stringMatching(/\/pricing$/));
-    expect(urls).toContainEqual(expect.stringMatching(/\/incident-case-studies$/));
-    expect(urls).toContainEqual(expect.stringMatching(/\/blog$/));
-    expect(urls).toContainEqual(expect.stringMatching(/\/case-studies$/));
+    expect(urls).toContain(SITE_URL);
+    expect(urls).toContain(`${SITE_URL}/pricing`);
+    expect(urls).toContain(`${SITE_URL}/incident-case-studies`);
+    expect(urls).toContain(`${SITE_URL}/blog`);
+    expect(urls).toContain(`${SITE_URL}/case-studies`);
     for (const post of posts) {
-      expect(urls).toContainEqual(expect.stringContaining(`/blog/${post.slug}`));
+      expect(urls).toContain(`${SITE_URL}/blog/${post.slug}`);
+    }
+    const validFreqs = new Set(["always", "hourly", "daily", "weekly", "monthly", "yearly", "never"]);
+    for (const entry of s) {
+      expect(entry.url).toMatch(/^https?:\/\//);
+      expect(entry.priority).toBeGreaterThanOrEqual(0);
+      expect(entry.priority).toBeLessThanOrEqual(1);
+      expect(validFreqs.has(entry.changeFrequency ?? "")).toBe(true);
+      expect(entry.lastModified).toBeInstanceOf(Date);
+      expect(isNaN((entry.lastModified as Date).getTime())).toBe(false);
     }
   });
 });
