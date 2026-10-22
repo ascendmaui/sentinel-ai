@@ -7,6 +7,7 @@
 import { promises as dns } from "node:dns";
 import tls from "node:tls";
 import { SITE } from "./config";
+import { addressesAreAllowed, isBlockedHostname } from "../scan/ssrf";
 
 export type Severity = "high" | "medium" | "low" | "info";
 export type Finding = { id: string; title: string; severity: Severity; evidence: string; fix: string };
@@ -37,17 +38,38 @@ async function txt(name: string) {
   return tryDns(async () => (await dns.resolveTxt(name)).map((r) => r.join("")), [] as string[]);
 }
 
+/** Resolve a host and refuse loopback/private/link-local/special-use targets (SSRF guard). */
+async function assertPublicHost(host: string) {
+  if (isBlockedHostname(host)) throw new Error("blocked host");
+  const addrs = await dns.lookup(host, { all: true, verbatim: true }).then((a) => a.map((x) => x.address));
+  if (!addrs.length || !addressesAreAllowed(addrs)) throw new Error("blocked address");
+}
+
 async function fetchT(url: string, ms = 10000, method = "GET") {
   const c = new AbortController();
   const t = setTimeout(() => c.abort(), ms);
   try {
-    return await fetch(url, { method, redirect: "follow", signal: c.signal, headers: { "user-agent": UA } });
+    let cur = url;
+    for (let hop = 0; hop < 5; hop++) {
+      const u = new URL(cur);
+      if (u.protocol !== "https:" && u.protocol !== "http:") throw new Error("blocked scheme");
+      await assertPublicHost(u.hostname);
+      const r = await fetch(cur, { method, redirect: "manual", signal: c.signal, headers: { "user-agent": UA } });
+      const loc = r.status >= 300 && r.status < 400 ? r.headers.get("location") : null;
+      if (!loc) {
+        Object.defineProperty(r, "url", { value: cur });
+        return r;
+      }
+      cur = new URL(loc, cur).toString();
+    }
+    throw new Error("too many redirects");
   } finally {
     clearTimeout(t);
   }
 }
 
-export function cert(domain: string): Promise<Recon["cert"]> {
+export async function cert(domain: string): Promise<Recon["cert"]> {
+  try { await assertPublicHost(domain); } catch (e) { return { error: (e as Error).message }; }
   return new Promise((resolve) => {
     const s = tls.connect({ host: domain, port: 443, servername: domain, timeout: 10000, rejectUnauthorized: false }, () => {
       const c = s.getPeerCertificate();
