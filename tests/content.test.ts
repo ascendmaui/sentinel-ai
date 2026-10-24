@@ -516,6 +516,8 @@ describe("case studies / findings", () => {
     expect(remediationById("F-01")).toBeDefined();
     expect(remediationById("f-01")?.id).toBe("F-01");
     expect(remediationById("  f-01  ")?.id).toBe("F-01");
+    expect(remediationById("fix-f-01")?.id).toBe("F-01");
+    expect(remediationById("FIX-F-01")?.id).toBe("F-01");
     expect(remediationById("F-99")).toBeUndefined();
     expect(remediationById("toString")).toBeUndefined();
     expect(remediationById("")).toBeUndefined();

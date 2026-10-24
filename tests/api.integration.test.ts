@@ -741,6 +741,10 @@ describe("HTTP helper utilities", () => {
     expect(res.headers.get("x-content-type-options")).toBe("nosniff");
     const body = await res.json();
     expect(body).toEqual({ error: "bad_request", message: "Invalid parameter format" });
+
+    // Handles default or empty message
+    expect(await badRequest().json()).toEqual({ error: "bad_request", message: "Bad request" });
+    expect(await badRequest("   ").json()).toEqual({ error: "bad_request", message: "Bad request" });
   });
 
   it("notFound returns 404 with error and message", async () => {
@@ -748,6 +752,10 @@ describe("HTTP helper utilities", () => {
     expect(res.status).toBe(404);
     const body = await res.json();
     expect(body).toEqual({ error: "not_found", message: "target document not found" });
+
+    // Handles default or empty what
+    expect(await notFound().json()).toEqual({ error: "not_found", message: "resource not found" });
+    expect(await notFound("   ").json()).toEqual({ error: "not_found", message: "resource not found" });
   });
 
   it("json helper merges custom headers, custom cacheControl, and security headers", async () => {

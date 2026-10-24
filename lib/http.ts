@@ -22,9 +22,17 @@ export function json(
   });
 }
 
-export const notFound = (what: string) => json({ error: "not_found", message: `${what} not found` }, { status: 404 });
+export const notFound = (what = "resource") =>
+  json(
+    { error: "not_found", message: `${(typeof what === "string" && what.trim()) || "resource"} not found` },
+    { status: 404 }
+  );
 
-export const badRequest = (message: string) => json({ error: "bad_request", message }, { status: 400 });
+export const badRequest = (message = "Bad request") =>
+  json(
+    { error: "bad_request", message: (typeof message === "string" && message.trim()) || "Bad request" },
+    { status: 400 }
+  );
 
 export function methodNotAllowed(allowed: string[] = ["GET", "HEAD"]): Response {
   return new Response(

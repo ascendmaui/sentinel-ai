@@ -223,8 +223,9 @@ export const findingById = (id: string): Finding | undefined => {
 
 export const remediationById = (id: string): Remediation | undefined => {
   if (!id || typeof id !== "string") return undefined;
-  const target = id.trim().toLowerCase();
+  let target = id.trim().toLowerCase();
   if (!target) return undefined;
+  if (target.startsWith("fix-")) target = target.slice(4);
   return remediation.find((r) => r.id.toLowerCase() === target);
 };
 
