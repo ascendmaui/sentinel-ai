@@ -413,7 +413,7 @@ describe("incidents", () => {
       expect(new Set(inc.sources).size, `${inc.id} unique sources`).toBe(inc.sources.length);
       for (const id of inc.sources) expect(S[id], `${inc.id} -> ${id}`).toBeDefined();
       expect(inc.timeline.length, `${inc.id} timeline`).toBeGreaterThan(0);
-      const tlKeys = inc.timeline.map((t) => t.d + t.t.slice(0, 12));
+      const tlKeys = inc.timeline.map((t) => `${t.d}-${t.t}`);
       expect(new Set(tlKeys).size, `${inc.id} timeline keys`).toBe(tlKeys.length);
       expect(inc.did.length, `${inc.id} did`).toBeGreaterThan(0);
       expect(new Set(inc.did).size, `${inc.id} unique did`).toBe(inc.did.length);

@@ -17,24 +17,22 @@ export const metadata: Metadata = {
   openGraph: { type: "article", siteName: BRAND_NAME, title: `${title}: rogue agent investigations`, description, url: "/incident-case-studies" },
 };
 
-function SrcList({ ids }: { ids: string[] }) {
+function SrcList({ ids, label = "Sources" }: { ids: string[]; label?: string }) {
+  const resolved = ids.map((id) => sourceById(id)).filter((s): s is NonNullable<typeof s> => Boolean(s));
+  if (!resolved.length) return null;
   return (
     <div className="inc-src">
-      <span className="tag tag-known">Sources</span>
+      <span className="tag tag-known">{label}</span>
       <ul>
-        {ids.map((id) => {
-          const s = sourceById(id);
-          if (!s) return null;
-          return (
-            <li key={id}>
-              <a href={s.url} target="_blank" rel="noopener noreferrer">
-                {s.label}
-              </a>{" "}
-              <span className="muted">({s.date})</span>
-              {s.note ? <span className="muted"> {s.note}</span> : null}
-            </li>
-          );
-        })}
+        {resolved.map((s) => (
+          <li key={s.id}>
+            <a href={s.url} target="_blank" rel="noopener noreferrer">
+              {s.label}
+            </a>{" "}
+            <span className="muted">({s.date})</span>
+            {s.note && label === "Sources" ? <span className="muted"> {s.note}</span> : null}
+          </li>
+        ))}
       </ul>
     </div>
   );
@@ -132,7 +130,7 @@ export default function IncidentCaseStudiesPage() {
               <Block label="Timeline" tag="known">
                 <ul className="tl">
                   {i.timeline.map((t) => (
-                    <li key={t.d + t.t.slice(0, 12)}>
+                    <li key={`${t.d}-${t.t}`}>
                       <b>{t.d}</b>
                       <span>{t.t}</span>
                     </li>
@@ -213,25 +211,7 @@ export default function IncidentCaseStudiesPage() {
                 <h4>How {BRAND_NAME} would find and close the gap first</h4>
                 <ul>{s.seraphim.map((x) => <li key={x}>{x}</li>)}</ul>
               </div>
-              {s.refs.length ? (
-                <div className="inc-src">
-                  <span className="tag tag-known">Related sources</span>
-                  <ul>
-                    {s.refs.map((id) => {
-                      const src = sourceById(id);
-                      if (!src) return null;
-                      return (
-                        <li key={id}>
-                          <a href={src.url} target="_blank" rel="noopener noreferrer">
-                            {src.label}
-                          </a>{" "}
-                          <span className="muted">({src.date})</span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              ) : null}
+              <SrcList ids={s.refs} label="Related sources" />
             </article>
           ))}
         </div>

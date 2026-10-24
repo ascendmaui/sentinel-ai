@@ -137,6 +137,15 @@ describe("Blog Page and Post Page", () => {
     const customHtml = renderToStaticMarkup(customEl);
     expect(customHtml).toContain("<blockquote>Verification is evidence, not assurance.</blockquote>");
     expect(customHtml).not.toContain("ignored");
+
+    // When all source IDs on a post are unresolvable, omits the Sources section rather than rendering an empty <ul>
+    spy.mockReturnValueOnce({
+      ...posts[0],
+      sources: ["nonexistent-source-id"],
+    });
+    const noSrcHtml = renderToStaticMarkup(await PostPage({ params: Promise.resolve({ slug: posts[0].slug }) }));
+    expect(noSrcHtml).not.toContain('class="post-src"');
+    expect(noSrcHtml).not.toMatch(/<(?:ul|ol)\b[^>]*>\s*<\/(?:ul|ol)>/);
     spy.mockRestore();
   });
 });
@@ -403,6 +412,8 @@ describe("Cross-page internal link, anchor (#id), and unique DOM id integrity", 
 
       // Copy honesty guardrails: no unverified certification claims anywhere on the site
       expect(html, `${sourceRoute} certification claim`).not.toMatch(/\b(?:SOC\s*2|ISO\s*27001|FedRAMP|PCI-DSS)\b/i);
+      // No empty <ul> or <ol> elements on any page
+      expect(html, `${sourceRoute} empty list`).not.toMatch(/<(?:ul|ol)\b[^>]*>\s*<\/(?:ul|ol)>/);
 
       for (const m of html.matchAll(/<a\b([^>]+)>/g)) {
         const attrs = m[1];

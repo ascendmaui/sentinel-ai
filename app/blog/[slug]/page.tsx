@@ -28,6 +28,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const p = postBySlug(slug);
   if (!p) notFound();
+  const resolvedSources = p.sources.map((id) => sourceById(id)).filter((s): s is NonNullable<typeof s> => Boolean(s));
   return (
     <main className="home cs">
       <article className="post">
@@ -80,25 +81,23 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
           for conceptual, non-technical walk-throughs.
         </p>
 
-        <section className="post-src" aria-labelledby="src-h" style={{ marginTop: 32 }}>
-          <h2 id="src-h" style={{ fontSize: 22 }}>
-            Sources
-          </h2>
-          <ul>
-            {p.sources.map((id) => {
-              const s = sourceById(id);
-              if (!s) return null;
-              return (
-                <li key={id}>
+        {resolvedSources.length ? (
+          <section className="post-src" aria-labelledby="src-h" style={{ marginTop: 32 }}>
+            <h2 id="src-h" style={{ fontSize: 22 }}>
+              Sources
+            </h2>
+            <ul>
+              {resolvedSources.map((s) => (
+                <li key={s.id}>
                   <a href={s.url} target="_blank" rel="noopener noreferrer">
                     {s.label}
                   </a>{" "}
                   <span className="muted">({s.date})</span>
                 </li>
-              );
-            })}
-          </ul>
-        </section>
+              ))}
+            </ul>
+          </section>
+        ) : null}
 
         <div className="post-cta">
           <TierCta tier={p.tier} lead={p.ctaLead} />
