@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { TierCta } from "../../components/TierCta";
 import { Icon } from "../../components/Icons";
-import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME } from "../../lib/brand";
+import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, BRAND_PARENT } from "../../lib/brand";
 import { findings, remediation, severityCounts } from "../../lib/caseStudies";
 
 const title = "Case studies";
@@ -43,7 +43,7 @@ const phases = [
 ];
 
 const summary: { k: string; v: string }[] = [
-  { k: "Assessor", v: `${BRAND_NAME}, an Ascend Maui initiative` },
+  { k: "Assessor", v: `${BRAND_NAME}, an ${BRAND_PARENT} initiative` },
   {
     k: "Target",
     v: "A regional airport ride-booking platform (rider and driver apps, web API, card payments), owned and operated by the same principal. This is a self-engagement.",

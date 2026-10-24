@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Icon, type IconName } from "../components/Icons";
 import { TrustBadges } from "../components/TrustBadges";
 import { TierStrip } from "../components/TierStrip";
-import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME } from "../lib/brand";
+import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, BRAND_PARENT } from "../lib/brand";
 
 const phases: { icon: IconName; n: string; title: string; body: string }[] = [
   {
@@ -89,7 +89,7 @@ export default function HomePage() {
             </a>
           </div>
           <TrustBadges compact />
-          <p className="fine">Always scoped · Built by Ascend Maui</p>
+          <p className="fine">Always scoped · Built by {BRAND_PARENT}</p>
         </div>
         <HeroStage />
       </section>

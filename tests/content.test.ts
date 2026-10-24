@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { badgeByKey, BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, BRAND_SUFFIX, BRAND_WORD, resolveSiteUrl, SITE_URL, TRUE_BADGES } from "../lib/brand";
+import { badgeByKey, BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, BRAND_PARENT, BRAND_SUFFIX, BRAND_WORD, resolveSiteUrl, SITE_URL, TRUE_BADGES } from "../lib/brand";
 import { findings, findingById, remediation, remediationById, severityCounts } from "../lib/caseStudies";
 import { incidents, incidentById, scenarios, scenarioById, unverified } from "../lib/incidents";
 import { posts, postBySlug, postWords } from "../lib/posts";
@@ -177,6 +177,32 @@ describe("theme and tokens", () => {
     expect(ogBuf.subarray(12, 16).toString("ascii")).toBe("IHDR");
     expect(ogBuf.readUInt32BE(16)).toBe(1200);
     expect(ogBuf.readUInt32BE(20)).toBe(630);
+  });
+
+  it("lib/brand.ts is the single source of truth for BRAND_NAME, BRAND_PARENT, and BRAND_EMAIL across all TS/TSX modules", () => {
+    const rootDir = join(__dirname, "..");
+    const brandFile = join(rootDir, "lib", "brand.ts");
+    const walkTs = (dir: string): string[] => {
+      const out: string[] = [];
+      for (const entry of readdirSync(dir)) {
+        const full = join(dir, entry);
+        if (statSync(full).isDirectory()) out.push(...walkTs(full));
+        else if (/\.(ts|tsx)$/.test(entry)) out.push(full);
+      }
+      return out;
+    };
+    const files = [
+      ...walkTs(join(rootDir, "app")),
+      ...walkTs(join(rootDir, "components")),
+      ...walkTs(join(rootDir, "lib")),
+    ].filter((f) => f !== brandFile);
+
+    for (const file of files) {
+      const src = readFileSync(file, "utf8");
+      expect(src, `${file} hardcodes BRAND_NAME`).not.toContain(BRAND_NAME);
+      expect(src, `${file} hardcodes BRAND_PARENT`).not.toContain(BRAND_PARENT);
+      expect(src, `${file} hardcodes BRAND_EMAIL`).not.toContain(BRAND_EMAIL);
+    }
   });
 });
 
