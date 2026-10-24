@@ -162,7 +162,7 @@ export default function HomePage() {
               have to.
             </p>
             <Link className="btn btn-gold" href="/incident-case-studies">
-              Read the Incident Case Studies →
+              Read the Incident Case Studies <span aria-hidden="true">→</span>
             </Link>
           </div>
           <ol className="mini-steps">
@@ -197,7 +197,7 @@ export default function HomePage() {
             <p className="eyebrow">How it works</p>
             <h2 id="how-h">From written scope to verified fixes.</h2>
             <a className="btn btn-glass" href="#contact">
-              Start a conversation →
+              Start a conversation <span aria-hidden="true">→</span>
             </a>
           </div>
           <ol className="mini-steps">

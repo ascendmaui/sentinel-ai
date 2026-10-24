@@ -3,7 +3,7 @@ import { Wordmark } from "./Logo";
 import { ThemeSwitcher } from "./ThemeSwitcher";
 import { BRAND_MAIL, BRAND_NAME, BRAND_EMAIL } from "../lib/brand";
 
-const links = [
+export const NAV_LINKS = [
   { href: "/#phases", label: "Phases" },
   { href: "/#who", label: "Who it's for" },
   { href: "/#how", label: "How it works" },
@@ -22,7 +22,7 @@ export function Nav() {
           <Wordmark id="nav" />
         </Link>
         <div className="nav-links">
-          {links.map((l) => (
+          {NAV_LINKS.map((l) => (
             <Link key={l.href} href={l.href}>
               {l.label}
             </Link>
@@ -39,7 +39,7 @@ export function Nav() {
               <span />
             </summary>
             <div className="nav-menu-panel">
-              {links.map((l) => (
+              {NAV_LINKS.map((l) => (
                 <Link key={l.href} href={l.href}>
                   {l.label}
                 </Link>

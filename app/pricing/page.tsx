@@ -153,7 +153,9 @@ export default function PricingPage() {
             {helper[0].a.map((o) => (
               <Link key={o.label} href={tierHref(o.tier)}>
                 <span>{o.label}</span>
-                <span>{tierById(o.tier)!.name} →</span>
+                <span>
+                  {tierById(o.tier)!.name} <span aria-hidden="true">→</span>
+                </span>
               </Link>
             ))}
           </div>

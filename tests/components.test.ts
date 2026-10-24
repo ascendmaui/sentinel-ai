@@ -7,7 +7,7 @@ import { TrustBadges } from "../components/TrustBadges";
 import { TierStrip } from "../components/TierStrip";
 import { TierEmblem } from "../components/TierEmblem";
 import { TierCta } from "../components/TierCta";
-import { Nav } from "../components/Nav";
+import { Nav, NAV_LINKS } from "../components/Nav";
 import { Footer } from "../components/Footer";
 import { HeroStage } from "../components/HeroStage";
 import { build as buildHeroGeometry, HeroFigure, mountHeroFigure } from "../components/HeroFigure";
@@ -295,6 +295,13 @@ describe("Footer component", () => {
     expect(hrefs).toContain("/blog");
     expect(hrefs).toContain("/case-studies");
     expect(hrefs).toContain(`mailto:${BRAND_EMAIL}`);
+    // Footer internal navigation links stay 1-to-1 with NAV_LINKS
+    expect(
+      links.slice(0, -1).map((l: { props: { href: string; children: string } }) => ({
+        href: l.props.href,
+        label: l.props.children,
+      }))
+    ).toEqual(NAV_LINKS);
 
     expect(copyright.props.children).toContain(BRAND_NAME);
     expect(copyright.props.children).toContain(BRAND_PARENT);
