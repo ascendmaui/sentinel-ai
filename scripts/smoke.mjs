@@ -288,8 +288,11 @@ checkSecurityHeaders(robotsRes, "GET /robots.txt");
 const headSitemap = await get("/sitemap.xml", { method: "HEAD" });
 check(headSitemap.status === 200, "HEAD /sitemap.xml -> 200");
 const sitemapRes = await get("/sitemap.xml");
-check(sitemapRes.status === 200 && (await sitemapRes.text()).includes("urlset"), "GET /sitemap.xml ok");
+const sitemapXml = await sitemapRes.text();
+check(sitemapRes.status === 200 && sitemapXml.includes("urlset"), "GET /sitemap.xml ok");
 checkSecurityHeaders(sitemapRes, "GET /sitemap.xml");
+const sitemapPaths = [...sitemapXml.matchAll(/<loc>https?:\/\/[^/<]+(\/[^<]*)?<\/loc>/g)].map(m => m[1] || "/");
+check(sitemapPaths.length === pages.length && pages.every(p => sitemapPaths.includes(p)), "GET /sitemap.xml paths match all site pages");
 
 const iconRes = await get("/icon.svg");
 check(iconRes.status === 200 && (await iconRes.text()).includes("<svg"), "GET /icon.svg returns SVG");
@@ -299,21 +302,33 @@ const ogRes = await get("/og.png");
 check(ogRes.status === 200 && (ogRes.headers.get("content-type") || "").includes("image/png"), "GET /og.png returns PNG");
 checkSecurityHeaders(ogRes, "GET /og.png");
 
-// 12. Crawl internal page links
-
+// 12. Crawl internal page links and #anchor fragments
 const links = new Set();
+const pageIds = new Map();
+const hashLinks = [];
 for (const path of pages) {
   const r = await get(path);
   check(r.status === 200, `GET ${path} -> 200`);
   checkSecurityHeaders(r, `GET ${path}`);
   const html = await r.text();
   check(html.includes('rel="canonical"'), `GET ${path} includes canonical link`);
-  for (const m of html.matchAll(/href="(\/[^"#?]*)(?:[#?][^"]*)?"/g)) links.add(m[1]);
+  pageIds.set(path, new Set([...html.matchAll(/\bid="([^"]+)"/g)].map(m => m[1])));
+  for (const m of html.matchAll(/href="(\/[^"#?]*)(?:#([^"?]+))?(?:\?[^"]*)?"/g)) {
+    links.add(m[1]);
+    if (m[2]) hashLinks.push({ from: path, targetPath: m[1], hash: m[2] });
+  }
+  for (const m of html.matchAll(/href="#([^"]+)"/g)) {
+    hashLinks.push({ from: path, targetPath: path, hash: m[1] });
+  }
 }
 for (const l of links) {
   if (seen.has(l) || l.startsWith("/_next/")) continue;
   const r = await get(l);
   check(r.status === 200, `internal link ${l} resolves (${r.status})`);
+}
+for (const { from, targetPath, hash } of hashLinks) {
+  const ids = pageIds.get(targetPath);
+  check(Boolean(ids && ids.has(hash)), `anchor ${targetPath}#${hash} (linked from ${from}) resolves to DOM id`);
 }
 
 if (failures.length) { console.error(`\n${failures.length} smoke check(s) failed`); process.exit(1); }
