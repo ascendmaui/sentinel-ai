@@ -221,8 +221,36 @@ describe("Root Layout and Shell Metadata", () => {
   it("exports site metadataBase and openGraph info", () => {
     expect(rootMeta.metadataBase).toEqual(new URL(SITE_URL));
     expect(rootMeta.applicationName).toBe(BRAND_NAME);
+    expect(rootMeta.alternates?.canonical).toBe("/");
     expect(rootMeta.openGraph?.siteName).toBe(BRAND_NAME);
+    expect(rootMeta.openGraph?.url).toBe("/");
     expect(rootViewport.colorScheme).toBe("dark light");
+  });
+
+  it("enforces canonical URL, OpenGraph siteName/url parity, and description bounds across all routes", async () => {
+    const entries = [
+      { route: "/", meta: rootMeta },
+      { route: "/pricing", meta: pricingMeta },
+      { route: "/blog", meta: blogMeta },
+      { route: "/case-studies", meta: csMeta },
+      { route: "/incident-case-studies", meta: incMeta },
+    ];
+    for (const post of posts) {
+      entries.push({
+        route: `/blog/${post.slug}`,
+        meta: await postMeta({ params: Promise.resolve({ slug: post.slug }) }),
+      });
+    }
+
+    for (const { route, meta } of entries) {
+      expect(meta.alternates?.canonical, `${route} canonical`).toBe(route);
+      expect(typeof meta.description, `${route} description`).toBe("string");
+      expect((meta.description as string).length, `${route} description length`).toBeGreaterThanOrEqual(50);
+      expect((meta.description as string).length, `${route} description length`).toBeLessThanOrEqual(320);
+      expect(meta.openGraph?.siteName, `${route} og:site_name`).toBe(BRAND_NAME);
+      expect(meta.openGraph?.url, `${route} og:url`).toBe(route);
+      expect(meta.openGraph?.description, `${route} og:description`).toBe(meta.description);
+    }
   });
 
   it("renders RootLayout with html and body structure", () => {
