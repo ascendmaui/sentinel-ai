@@ -28,17 +28,17 @@ Everything on the site describes the service as it is today: passive public reco
 All endpoints export HTTP/REST JSON contracts with security headers (`X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, `Permissions-Policy`, `X-DNS-Prefetch-Control: off`), ISO timestamps, and short-lived public caching. Index endpoints support query parameter filtering:
 
 - `GET /api/health`: Service liveness, current environment, timestamp, and commit SHA (zero secrets exposed).
-- `GET /api/posts`: Blog post index and metadata (newest first). Supports `?tier=`, `?q=`, and `?limit=`.
-- `GET /api/posts/[slug]`: Post detail with resolved primary sources.
-- `GET /api/incidents`: Documented incident list with source counts, unverified claims, and disclaimer. Supports `?q=` and `?limit=`.
-- `GET /api/incidents/[id]`: Incident breakdown with timeline and verified references.
-- `GET /api/scenarios`: Conceptual threat scenarios with speed and control comparisons. Supports `?q=` and `?limit=`.
-- `GET /api/scenarios/[id]`: Scenario details with defender controls and related sources.
-- `GET /api/case-studies`: Remediation findings and severity distributions. Supports `?severity=`, `?status=`, `?q=`, and `?limit=`.
-- `GET /api/case-studies/[id]`: Finding details with before/after fixes and remediation verification notes.
-- `GET /api/tiers`: Service tier matrix, comparison details, and engagement terms. Supports `?q=` and `?limit=`.
-- `GET /api/tiers/[id]`: Single tier deliverables, target audience, and exclusions.
-- `GET /api/sources`: Authoritative primary and secondary sources registry. Supports `?q=`, `?year=`, and `?limit=`.
+- `GET /api/posts`: Blog post index and metadata (newest first). Supports `?tier=`, `?source=`, `?year=`, `?q=`, `?offset=`, and `?limit=`.
+- `GET /api/posts/[slug]`: Post detail with resolved primary sources. Supports flexible slashes and case-insensitivity.
+- `GET /api/incidents`: Documented incident list with source counts, unverified claims, and disclaimer. Supports `?source=`, `?year=`, `?standing=`, `?kicker=`, `?q=`, `?offset=`, and `?limit=`.
+- `GET /api/incidents/[id]`: Incident breakdown with timeline and verified references. Supports lookup by ID or incident number (`01`, `1`).
+- `GET /api/scenarios`: Conceptual threat scenarios with speed and control comparisons. Supports `?ref=`, `?weakness=`, `?target=`, `?q=`, `?offset=`, and `?limit=`.
+- `GET /api/scenarios/[id]`: Scenario details with defender controls and related sources. Supports lookup by ID or scenario number (`H1`, `1`).
+- `GET /api/case-studies`: Remediation findings and severity distributions. Supports `?id=`, `?severity=`, `?status=`, `?q=`, `?offset=`, and `?limit=`.
+- `GET /api/case-studies/[id]`: Finding details with before/after fixes and remediation verification notes. Supports lookup by ID, hyphenless ID (`f01`), or `fix-` prefix (`fix-f-01`).
+- `GET /api/tiers`: Service tier matrix, comparison details, and engagement terms. Supports `?cadence=`, `?positioning=`, `?rank=`, `?q=`, `?offset=`, and `?limit=`.
+- `GET /api/tiers/[id]`: Single tier deliverables, target audience, and exclusions. Supports lookup by ID or rank number (`1`).
+- `GET /api/sources`: Authoritative primary and secondary sources registry. Supports `?q=`, `?year=`, `?note=`, `?type=`, `?offset=`, and `?limit=`.
 - `GET /api/sources/[id]`: Single source record with URL and credibility note.
 - `GET /api/brand`: Brand identity metadata, contact mailto, trust badges, and theme configuration.
 
@@ -50,7 +50,7 @@ All endpoints export HTTP/REST JSON contracts with security headers (`X-Content-
 
 ## Verification & Testing
 
-- `npm test`: Run 319 unit, component, page, content integrity, route contract, and API integration tests via Vitest across 5 test suites.
+- `npm test`: Run 330 unit, component, page, content integrity, route contract, and API integration tests via Vitest across 5 test suites.
 - `npm run test:contract`: Run API route contract discovery and security header verification tests.
 - `npm run test:integration`: Run API endpoint integration tests.
 - `npm run test:components`: Run UI component tests (icons, emblems, logo mark, trust badges, nav, footer).
