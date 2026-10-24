@@ -8,7 +8,7 @@ export function GET(req?: Request): Response {
   let list = findings;
   if (req?.url) {
     try {
-      const url = new URL(req.url);
+      const url = new URL(req.url, "http://localhost");
       const severity = parseSearchQuery(url.searchParams, "severity");
       const status = parseSearchQuery(url.searchParams, "status");
       const q = parseSearchQuery(url.searchParams);

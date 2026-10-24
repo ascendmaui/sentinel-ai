@@ -113,12 +113,21 @@ describe.each(routes.map((r) => [r.path] as const))("route contract %s", (path) 
       }
     });
 
-    it("tolerates hostile query strings without throwing", async () => {
+    it("tolerates hostile query strings and supports relative request URLs without throwing", async () => {
       const mod = modules[path];
       const hostile = "?q=%00%ff&limit=1e9&limit=-1&tier=__proto__&year=" + "x".repeat(5000);
       const res = await mod.GET(new Request(`http://localhost${path}${hostile}`));
       expect(res.status).toBe(200);
       expectHardenedJson(res, path);
+
+      const relRes = await mod.GET({ url: `${path}?limit=1` } as unknown as Request);
+      expect(relRes.status).toBe(200);
+      expectHardenedJson(relRes, `${path} relative url`);
+      const relBody = await relRes.json();
+      if ("count" in relBody && "totalCount" in relBody) {
+        expect(relBody.count).toBe(1);
+        expect(relBody.totalCount).toBeGreaterThanOrEqual(1);
+      }
     });
   } else {
     it("is a dynamic route with generateStaticParams and dynamicParams enabled", () => {

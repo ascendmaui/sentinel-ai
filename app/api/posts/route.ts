@@ -9,7 +9,7 @@ export function GET(req?: Request): Response {
 
   if (req?.url) {
     try {
-      const url = new URL(req.url);
+      const url = new URL(req.url, "http://localhost");
       const tier = parseSearchQuery(url.searchParams, "tier");
       const q = parseSearchQuery(url.searchParams);
       const limit = parseLimit(url.searchParams);
