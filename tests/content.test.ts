@@ -165,6 +165,13 @@ describe("theme and tokens", () => {
         expect(definedVars.has(m[1]), `${file} references undefined CSS custom property ${m[1]}`).toBe(true);
       }
     }
+
+    for (const sev of ["critical", "high", "medium", "low", "info"]) {
+      expect(globalsCss).toContain(`.cs-sev-${sev}`);
+    }
+    for (const tag of ["known", "inferred", "ours"]) {
+      expect(globalsCss).toContain(`.tag-${tag}`);
+    }
   });
 
   it("app/icon.svg is a valid text-free SVG icon so brand renames never require editing it", () => {

@@ -519,6 +519,7 @@ ul, ol { color: var(--ao-muted); }
 .cs-sev-high::before { background: var(--ao-warn); }
 .cs-sev-medium::before { background: var(--ao-primary); }
 .cs-sev-low::before { background: var(--ao-accent); }
+.cs-sev-info::before { background: var(--ao-secondary); }
 .cs-sev-note { color: var(--ao-muted); text-transform: none; letter-spacing: 0; }
 .cs-rationale { font-style: italic; }
 .cs-finding h4 { font-family: var(--font-code); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ao-primary); margin: 18px 0 6px; }
