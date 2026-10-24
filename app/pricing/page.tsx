@@ -4,7 +4,7 @@ import { Icon } from "../../components/Icons";
 import { TierEmblem } from "../../components/TierEmblem";
 import { TrustBadges } from "../../components/TrustBadges";
 import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME } from "../../lib/brand";
-import { ENGAGEMENT_TERMS, helper, matrix, tierHref, tiers, type TierId } from "../../lib/tiers";
+import { ENGAGEMENT_TERMS, helper, matrix, tierById, tierHref, tiers, type TierId } from "../../lib/tiers";
 
 const title = "Services and tiers";
 const description = `${BRAND_NAME} offers four ways to work together: Seraphim, Cherubim, Thrones and Angels. Compare scope, cadence and who each tier is for. No prices are published; every engagement is scoped in writing.`;
@@ -25,8 +25,8 @@ function Cell({ v }: { v: boolean | string }) {
 }
 
 export default function PricingPage() {
-  const flagship = tiers.find((t) => t.id === "seraphim")!;
-  const rest = tiers.filter((t) => t.id !== "seraphim");
+  const flagship = tierById("seraphim") ?? tiers[0];
+  const rest = tiers.filter((t) => t.id !== flagship.id);
   return (
     <main className="home cs">
       <header className="cs-head">
@@ -110,13 +110,13 @@ export default function PricingPage() {
           <p className="lead">What each tier includes today. If a cell says not included, it is not part of that tier.</p>
         </div>
         <div className="table-wrap">
-          <table className="cmp">
+          <table className="cmp" aria-labelledby="cmp-h">
             <thead>
               <tr>
                 <th scope="col">What you get</th>
                 {order.map((id) => (
                   <th scope="col" key={id} className={id === "seraphim" ? "cmp-hi" : undefined}>
-                    {tiers.find((t) => t.id === id)!.name}
+                    {tierById(id)!.name}
                   </th>
                 ))}
               </tr>
@@ -124,7 +124,7 @@ export default function PricingPage() {
                 <th scope="col">Positioning</th>
                 {order.map((id) => (
                   <th scope="col" key={id} className={id === "seraphim" ? "cmp-hi" : undefined} style={{ fontSize: 12.5, fontWeight: 500 }}>
-                    {tiers.find((t) => t.id === id)!.positioning}
+                    {tierById(id)!.positioning}
                   </th>
                 ))}
               </tr>
@@ -153,7 +153,7 @@ export default function PricingPage() {
             {helper[0].a.map((o) => (
               <Link key={o.label} href={tierHref(o.tier)}>
                 <span>{o.label}</span>
-                <span>{tiers.find((t) => t.id === o.tier)!.name} →</span>
+                <span>{tierById(o.tier)!.name} →</span>
               </Link>
             ))}
           </div>

@@ -6,6 +6,7 @@ import type { TierId } from "../lib/tiers";
  * Thrones: a wheel within a wheel on a seat. Angels: a single small wing under a halo.
  */
 export function TierEmblem({ id, size = 44 }: { id: TierId; size?: number }) {
+  const key = typeof id === "string" ? id.trim().toLowerCase() : "";
   const common = {
     width: size,
     height: size,
@@ -18,7 +19,7 @@ export function TierEmblem({ id, size = 44 }: { id: TierId; size?: number }) {
     "aria-hidden": true as const,
     className: "tier-emblem",
   };
-  switch (id) {
+  switch (key) {
     case "seraphim":
       return (
         <svg {...common}>

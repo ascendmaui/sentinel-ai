@@ -13,7 +13,8 @@ const base = {
 export type IconName = "scan" | "shield" | "fix" | "users" | "list" | "mail" | "check" | "target";
 
 export function Icon({ name }: { name: IconName }) {
-  switch (name) {
+  const key = typeof name === "string" ? name.trim().toLowerCase() : "";
+  switch (key) {
     case "scan":
       return (
         <svg {...base}>

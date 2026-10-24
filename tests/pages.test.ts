@@ -66,6 +66,8 @@ describe("Pricing Page", () => {
     expect(html).toContain('id="fit"');
     expect(html).toContain('id="terms"');
     expect(html).toContain('id="contact"');
+    // No published dollar prices on /pricing
+    expect(html).not.toMatch(/\$\s*\d/);
   });
 });
 
@@ -357,6 +359,21 @@ describe("Cross-page internal link, anchor (#id), and unique DOM id integrity", 
           expect(attrs, `${sourceRoute} decorative svg missing aria-hidden="true"`).toContain('aria-hidden="true"');
         }
       }
+
+      // Every <table> must have an accessible label/labelledby and every <th> must declare scope="col"|"row"
+      for (const m of html.matchAll(/<table\b([^>]*)>/g)) {
+        const attrs = m[1];
+        expect(
+          /\baria-label="[^"]+"|\baria-labelledby="[^"]+"/.test(attrs),
+          `${sourceRoute} <table> missing aria-label or aria-labelledby`
+        ).toBe(true);
+      }
+      for (const m of html.matchAll(/<th\b([^>]*)>/g)) {
+        expect(m[1], `${sourceRoute} <th> missing scope="col" or scope="row"`).toMatch(/\bscope="(?:col|row)"/);
+      }
+
+      // Copy honesty guardrails: no unverified certification claims anywhere on the site
+      expect(html, `${sourceRoute} certification claim`).not.toMatch(/\b(?:SOC\s*2|ISO\s*27001|FedRAMP|PCI-DSS)\b/i);
 
       for (const m of html.matchAll(/<a\b([^>]+)>/g)) {
         const attrs = m[1];

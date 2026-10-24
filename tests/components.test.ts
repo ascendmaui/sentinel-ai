@@ -35,8 +35,10 @@ describe("Icon component", () => {
     expect(el?.props.children).toBeDefined();
   });
 
-  it("returns null for unknown icon name", () => {
+  it("normalizes case/whitespace and returns null for unknown or non-string icon name", () => {
+    expect(Icon({ name: "  MAIL  " as unknown as IconName })?.type).toBe("svg");
     expect(Icon({ name: "unknown" as unknown as IconName })).toBeNull();
+    expect(Icon({ name: null as unknown as IconName })).toBeNull();
   });
 });
 
@@ -172,8 +174,10 @@ describe("TierStrip and TierEmblem components", () => {
     expect(el?.props.className).toBe("tier-emblem");
   });
 
-  it("returns null for unknown tier id", () => {
+  it("normalizes case/whitespace and returns null for unknown or non-string tier id", () => {
+    expect(TierEmblem({ id: "  SERAPHIM  " as unknown as TierId })?.type).toBe("svg");
     expect(TierEmblem({ id: "unknown" as unknown as TierId })).toBeNull();
+    expect(TierEmblem({ id: null as unknown as TierId })).toBeNull();
   });
 
   it("TierStrip renders links and emblems for all tiers", () => {
