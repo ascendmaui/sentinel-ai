@@ -9,13 +9,17 @@ vi.mock("next/font/google", () => ({
 import HomePage from "../app/page";
 import PricingPage, { metadata as pricingMeta } from "../app/pricing/page";
 import BlogIndex, { metadata as blogMeta } from "../app/blog/page";
-import PostPage, { generateMetadata as postMeta } from "../app/blog/[slug]/page";
+import PostPage, { generateMetadata as postMeta, generateStaticParams as blogStaticParams } from "../app/blog/[slug]/page";
 import CaseStudiesPage, { metadata as csMeta } from "../app/case-studies/page";
 import IncidentCaseStudiesPage, { metadata as incMeta } from "../app/incident-case-studies/page";
 import NotFound from "../app/not-found";
 import RootLayout, { metadata as rootMeta, viewport as rootViewport } from "../app/layout";
 import { BRAND_NAME, SITE_URL } from "../lib/brand";
+import { findings, remediation, severityCounts } from "../lib/caseStudies";
+import { INCIDENTS_DISCLAIMER, incidents, scenarios, unverified } from "../lib/incidents";
+import * as postsModule from "../lib/posts";
 import { posts } from "../lib/posts";
+import { tiers } from "../lib/tiers";
 
 describe("Home Page", () => {
   it("renders HomePage without error and outputs valid markup", () => {
@@ -41,10 +45,17 @@ describe("Pricing Page", () => {
     expect(el.type).toBe("main");
     expect(el.props.className).toBe("home cs");
     const html = renderToStaticMarkup(el);
-    expect(html).toContain("Seraphim");
-    expect(html).toContain("Cherubim");
-    expect(html).toContain("Thrones");
-    expect(html).toContain("Angels");
+    for (const t of tiers) {
+      expect(html).toContain(`id="${t.id}"`);
+      expect(html).toContain(t.name);
+      expect(html).toContain(t.positioning);
+    }
+    expect(html).toContain('<span class="yes">Included</span>');
+    expect(html).toContain('<span class="no">Not included</span>');
+    expect(html).toContain('id="compare"');
+    expect(html).toContain('id="fit"');
+    expect(html).toContain('id="terms"');
+    expect(html).toContain('id="contact"');
   });
 });
 
@@ -61,13 +72,20 @@ describe("Blog Page and Post Page", () => {
     }
   });
 
-  it("generateMetadata for every post returns article title and canonical url", async () => {
+  it("generateStaticParams covers every blog post slug", () => {
+    expect(blogStaticParams()).toEqual(posts.map((p) => ({ slug: p.slug })));
+  });
+
+  it("generateMetadata for every post returns article title and canonical url (including case-insensitive lookup)", async () => {
     for (const post of posts) {
       const meta = await postMeta({ params: Promise.resolve({ slug: post.slug }) });
       expect(meta.title).toBe(post.title);
       expect(meta.description).toBe(post.description);
       expect(meta.alternates?.canonical).toBe(`/blog/${post.slug}`);
     }
+    const upperMeta = await postMeta({ params: Promise.resolve({ slug: `  ${posts[0].slug.toUpperCase()}  ` }) });
+    expect(upperMeta.title).toBe(posts[0].title);
+    expect(upperMeta.alternates?.canonical).toBe(`/blog/${posts[0].slug}`);
   });
 
   it("generateMetadata returns empty object for unknown post", async () => {
@@ -81,7 +99,7 @@ describe("Blog Page and Post Page", () => {
     );
   });
 
-  it("renders PostPage markup for every post", async () => {
+  it("renders PostPage markup for every post, plus quote blocks, unknown block types, and missing sources", async () => {
     for (const post of posts) {
       const el = await PostPage({ params: Promise.resolve({ slug: post.slug }) });
       expect(el).toBeDefined();
@@ -89,31 +107,67 @@ describe("Blog Page and Post Page", () => {
       expect(el.props.className).toBe("home cs");
       const html = renderToStaticMarkup(el);
       expect(html).toContain(post.title);
+      expect(html).toContain('rel="noopener noreferrer"');
     }
+
+    // Exercise quote block, unknown block fallback, and missing source guard
+    const spy = vi.spyOn(postsModule, "postBySlug").mockReturnValueOnce({
+      ...posts[0],
+      sources: ["oaiAug", "nonexistent-source-id"],
+      body: [
+        { t: "quote", x: "Verification is evidence, not assurance." },
+        { t: "unknown" as unknown as "p", x: "ignored" },
+      ],
+    });
+    const customEl = await PostPage({ params: Promise.resolve({ slug: posts[0].slug }) });
+    const customHtml = renderToStaticMarkup(customEl);
+    expect(customHtml).toContain("<blockquote>Verification is evidence, not assurance.</blockquote>");
+    expect(customHtml).not.toContain("ignored");
+    spy.mockRestore();
   });
 });
 
 describe("Case Studies Page", () => {
-  it("exports valid metadata and renders CaseStudiesPage markup", () => {
+  it("exports valid metadata and renders CaseStudiesPage markup with all findings and remediations", () => {
     expect(csMeta.title).toBe("Case studies");
     expect(csMeta.alternates?.canonical).toBe("/case-studies");
     const el = CaseStudiesPage();
     expect(el.type).toBe("main");
     const html = renderToStaticMarkup(el);
-    expect(html).toContain("F-01");
-    expect(html).toContain("Scheduled-maintenance endpoint");
+    for (const f of findings) {
+      expect(html).toContain(`id="${f.id.toLowerCase()}"`);
+      expect(html).toContain(f.title.replace(/'/g, "&#x27;"));
+    }
+    for (const r of remediation) {
+      expect(html).toContain(`id="fix-${r.id.toLowerCase()}"`);
+      expect(html).toContain(r.checked.replace(/'/g, "&#x27;"));
+    }
+    for (const [sev, count] of Object.entries(severityCounts)) {
+      expect(html).toContain(`${sev}</span> ${count}`);
+    }
   });
 });
 
 describe("Incident Case Studies Page", () => {
-  it("exports valid metadata and renders IncidentCaseStudiesPage markup", () => {
+  it("exports valid metadata and renders IncidentCaseStudiesPage markup with all incidents, scenarios, and unverified notes", () => {
     expect(incMeta.title).toBe("Incident Case Studies");
     expect(incMeta.alternates?.canonical).toBe("/incident-case-studies");
     const el = IncidentCaseStudiesPage();
     expect(el.type).toBe("main");
     const html = renderToStaticMarkup(el);
-    expect(html).toContain("OpenAI and Hugging Face");
-    expect(html).toContain("Hypothetical Scenarios");
+    expect(html).toContain(INCIDENTS_DISCLAIMER);
+    for (const inc of incidents) {
+      expect(html).toContain(`id="${inc.id}"`);
+      expect(html).toContain(`href="#${inc.id}"`);
+      expect(html).toContain(inc.title.replace(/'/g, "&#x27;"));
+    }
+    for (const sc of scenarios) {
+      expect(html).toContain(`id="${sc.id}"`);
+      expect(html).toContain(sc.title.replace(/'/g, "&#x27;"));
+    }
+    for (const u of unverified) {
+      expect(html).toContain(u.slice(0, 40).replace(/'/g, "&#x27;"));
+    }
   });
 });
 
