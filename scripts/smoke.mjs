@@ -290,6 +290,9 @@ check(sitemapRes.status === 200 && (await sitemapRes.text()).includes("urlset"),
 const iconRes = await get("/icon.svg");
 check(iconRes.status === 200 && (await iconRes.text()).includes("<svg"), "GET /icon.svg returns SVG");
 
+const ogRes = await get("/og.png");
+check(ogRes.status === 200 && (ogRes.headers.get("content-type") || "").includes("image/png"), "GET /og.png returns PNG");
+
 // 12. Crawl internal page links
 
 const links = new Set();

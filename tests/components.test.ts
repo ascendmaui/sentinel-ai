@@ -1,6 +1,6 @@
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { Icon, type IconName } from "../components/Icons";
 import { Mark, Wordmark } from "../components/Logo";
 import { TrustBadges } from "../components/TrustBadges";
@@ -88,6 +88,32 @@ describe("Logo components (Mark & Wordmark)", () => {
     expect(html).toContain('class="wordmark"');
     expect(html).toContain("sa-gold-test-wordmark");
     expect(html).toContain(BRAND_WORD);
+
+    const defaultEl = Wordmark({ id: "default-wordmark" });
+    expect(defaultEl.props.children[0].props.size).toBe(28);
+  });
+
+  it("omits suffix span in Wordmark when BRAND_SUFFIX is empty", async () => {
+    vi.resetModules();
+    vi.doMock("../lib/brand", async (importOriginal) => {
+      const actual = await importOriginal<typeof import("../lib/brand")>();
+      return {
+        ...actual,
+        BRAND_NAME: "Seraphim",
+        BRAND_WORD: "Seraphim",
+        BRAND_SUFFIX: "",
+      };
+    });
+    try {
+      const { Wordmark: IsolatedWordmark } = await import("../components/Logo");
+      const el = IsolatedWordmark({ id: "single-word" });
+      const textSpan = el.props.children[1];
+      expect(textSpan.props.children[0]).toBe("Seraphim");
+      expect(textSpan.props.children[1]).toBeNull();
+    } finally {
+      vi.doUnmock("../lib/brand");
+      vi.resetModules();
+    }
   });
 });
 

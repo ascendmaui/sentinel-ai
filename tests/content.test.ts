@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { badgeByKey, BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, BRAND_SUFFIX, BRAND_WORD, resolveSiteUrl, SITE_URL, TRUE_BADGES } from "../lib/brand";
 import { findings, findingById, remediation, remediationById, severityCounts } from "../lib/caseStudies";
-import { incidents, incidentById, scenarios, scenarioById } from "../lib/incidents";
+import { incidents, incidentById, scenarios, scenarioById, unverified } from "../lib/incidents";
 import { posts, postBySlug, postWords } from "../lib/posts";
 import { S, sources, sourceById } from "../lib/sources";
 import { helper, matrix, tierById, tierHref, tiers } from "../lib/tiers";
@@ -135,6 +135,14 @@ describe("theme and tokens", () => {
     expect(svg).not.toMatch(/<tspan\b/i);
     expect(svg.toLowerCase()).not.toContain("seraphim");
   });
+
+  it("public/og.png is a valid 1200x630 PNG matching OpenGraph metadata", () => {
+    const ogBuf = readFileSync(join(__dirname, "..", "public", "og.png"));
+    expect(ogBuf.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a");
+    expect(ogBuf.subarray(12, 16).toString("ascii")).toBe("IHDR");
+    expect(ogBuf.readUInt32BE(16)).toBe(1200);
+    expect(ogBuf.readUInt32BE(20)).toBe(630);
+  });
 });
 
 
@@ -148,9 +156,18 @@ describe("sources registry", () => {
     }
   });
 
-  it("sources array matches S values", () => {
+  it("sources array matches S values and has no unreferenced orphan entries", () => {
     expect(sources).toHaveLength(Object.keys(S).length);
     expect(new Set(sources.map((s) => s.id)).size).toBe(sources.length);
+
+    const referencedIds = new Set<string>([
+      ...posts.flatMap((p) => p.sources),
+      ...incidents.flatMap((i) => i.sources),
+      ...scenarios.flatMap((s) => s.refs),
+    ]);
+    for (const src of sources) {
+      expect(referencedIds.has(src.id), `source "${src.id}" is never referenced`).toBe(true);
+    }
   });
 
   it("sourceById handles exact, case-insensitive, and invalid lookups", () => {
@@ -286,11 +303,27 @@ describe("tiers", () => {
 
 
 describe("incidents", () => {
-  it("have unique ids and cite only registered sources", () => {
+  it("have unique ids, contiguous numbering, non-empty sections, and cite only registered sources", () => {
     expect(new Set(incidents.map((i) => i.id)).size).toBe(incidents.length);
+    expect(incidents.map((i) => i.n)).toEqual(
+      incidents.map((_, idx) => String(idx + 1).padStart(2, "0"))
+    );
     for (const inc of incidents) {
       expect(inc.sources.length, inc.id).toBeGreaterThan(0);
       for (const id of inc.sources) expect(S[id], `${inc.id} -> ${id}`).toBeDefined();
+      expect(inc.timeline.length, `${inc.id} timeline`).toBeGreaterThan(0);
+      expect(inc.did.length, `${inc.id} did`).toBeGreaterThan(0);
+      expect(inc.howIn.length, `${inc.id} howIn`).toBeGreaterThan(0);
+      expect(inc.vuln.length, `${inc.id} vuln`).toBeGreaterThan(0);
+      expect(inc.impact.length, `${inc.id} impact`).toBeGreaterThan(0);
+      expect(inc.inferred.length, `${inc.id} inferred`).toBeGreaterThan(0);
+      expect(inc.seraphim.flag.length, `${inc.id} seraphim.flag`).toBeGreaterThan(0);
+      expect(inc.seraphim.prepare.length, `${inc.id} seraphim.prepare`).toBeGreaterThan(0);
+      expect(inc.seraphim.limits.length, `${inc.id} seraphim.limits`).toBeGreaterThan(0);
+    }
+    expect(unverified.length).toBeGreaterThan(0);
+    for (const note of unverified) {
+      expect(note.trim().length).toBeGreaterThan(0);
     }
   });
 
@@ -308,10 +341,18 @@ describe("incidents", () => {
     expect(incidentById(true as unknown as string)).toBeUndefined();
   });
 
-  it("scenarios have unique ids and cite only registered sources", () => {
+  it("scenarios have unique ids, contiguous H-numbering, non-empty sections, and cite only registered sources", () => {
     expect(new Set(scenarios.map((s) => s.id)).size).toBe(scenarios.length);
+    expect(scenarios.map((s) => s.n)).toEqual(scenarios.map((_, idx) => `H${idx + 1}`));
     for (const sc of scenarios) {
+      expect(sc.refs.length, `${sc.id} refs`).toBeGreaterThan(0);
       for (const id of sc.refs) expect(S[id], `${sc.id} -> ${id}`).toBeDefined();
+      expect(sc.weaknessClass.length, `${sc.id} weaknessClass`).toBeGreaterThan(0);
+      expect(sc.controls.length, `${sc.id} controls`).toBeGreaterThan(0);
+      expect(sc.seraphim.length, `${sc.id} seraphim`).toBeGreaterThan(0);
+      expect(sc.target.trim().length, `${sc.id} target`).toBeGreaterThan(0);
+      expect(sc.approach.trim().length, `${sc.id} approach`).toBeGreaterThan(0);
+      expect(sc.speed.trim().length, `${sc.id} speed`).toBeGreaterThan(0);
     }
   });
 

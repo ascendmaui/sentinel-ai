@@ -245,6 +245,75 @@ describe("Root Layout and Shell Metadata", () => {
     expect(html).toContain("data-theme");
     expect(html).toContain("content");
   });
+
+  it("omits CodeRain when SHOW_CODE_RAIN is false", async () => {
+    vi.resetModules();
+    vi.doMock("../lib/brand", async (importOriginal) => {
+      const actual = await importOriginal<typeof import("../lib/brand")>();
+      return {
+        ...actual,
+        SHOW_CODE_RAIN: false,
+      };
+    });
+    try {
+      const { default: IsolatedRootLayout } = await import("../app/layout");
+      const el = IsolatedRootLayout({ children: "no-rain" });
+      const [, body] = el.props.children;
+      const [, codeRain] = body.props.children;
+      expect(codeRain).toBeNull();
+    } finally {
+      vi.doUnmock("../lib/brand");
+      vi.resetModules();
+    }
+  });
+});
+
+describe("Cross-page internal link, anchor (#id), and unique DOM id integrity", () => {
+  it("resolves every internal href and #anchor fragment across all pages and ensures no duplicate DOM ids on any page", async () => {
+    const routeHtml = new Map<string, string>();
+    routeHtml.set("/", renderToStaticMarkup(RootLayout({ children: HomePage() })));
+    routeHtml.set("/pricing", renderToStaticMarkup(RootLayout({ children: PricingPage() })));
+    routeHtml.set("/blog", renderToStaticMarkup(RootLayout({ children: BlogIndex() })));
+    routeHtml.set("/case-studies", renderToStaticMarkup(RootLayout({ children: CaseStudiesPage() })));
+    routeHtml.set("/incident-case-studies", renderToStaticMarkup(RootLayout({ children: IncidentCaseStudiesPage() })));
+    routeHtml.set("/_not-found", renderToStaticMarkup(RootLayout({ children: NotFound() })));
+
+    for (const post of posts) {
+      const postEl = await PostPage({ params: Promise.resolve({ slug: post.slug }) });
+      routeHtml.set(`/blog/${post.slug}`, renderToStaticMarkup(RootLayout({ children: postEl })));
+    }
+
+    const routeIds = new Map<string, Set<string>>();
+    for (const [route, html] of routeHtml.entries()) {
+      const ids = new Set<string>();
+      for (const m of html.matchAll(/\bid="([^"]+)"/g)) {
+        const id = m[1];
+        expect(ids.has(id), `${route} has duplicate DOM id="${id}"`).toBe(false);
+        ids.add(id);
+      }
+      routeIds.set(route, ids);
+    }
+
+    for (const [sourceRoute, html] of routeHtml.entries()) {
+      for (const m of html.matchAll(/\bhref="([^"]+)"/g)) {
+        const href = m[1];
+        if (href.startsWith("mailto:") || href.startsWith("https://") || href.startsWith("http://")) {
+          continue;
+        }
+        expect(href.startsWith("/") || href.startsWith("#"), `${sourceRoute} invalid href "${href}"`).toBe(true);
+
+        const [rawPath, hash] = href.split("#");
+        expect(rawPath).not.toBe("/_not-found");
+        const targetRoute = rawPath === "" ? sourceRoute : rawPath;
+        expect(routeHtml.has(targetRoute), `${sourceRoute} links to unknown route "${targetRoute}" (from "${href}")`).toBe(true);
+
+        if (hash) {
+          const targetSet = routeIds.get(targetRoute);
+          expect(targetSet?.has(hash), `${sourceRoute} links to missing #${hash} on "${targetRoute}" (from "${href}")`).toBe(true);
+        }
+      }
+    }
+  });
 });
 
 describe("App Router page and layout export contracts", () => {
