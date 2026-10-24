@@ -221,6 +221,9 @@ describe("TierCta component", () => {
     expect(html).toContain('aria-label="Seraphim tier"');
     expect(html).toContain('href="/pricing#seraphim"');
     expect(html).toContain('href="/pricing#compare"');
+
+    const upperEl = TierCta({ tier: "  SERAPHIM  " as unknown as TierId, lead: "Normalized." });
+    expect(renderToStaticMarkup(upperEl!)).toContain('href="/pricing#seraphim"');
   });
 
   it("returns null for an invalid tier", () => {

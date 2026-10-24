@@ -333,6 +333,8 @@ describe("tiers", () => {
         expect(tierHref(a.tier)).toBe(`/pricing#${a.tier}`);
       }
     }
+    expect(tierHref("  SERAPHIM  " as unknown as (typeof tiers)[0]["id"])).toBe("/pricing#seraphim");
+    expect(tierHref(null as unknown as (typeof tiers)[0]["id"])).toBe("/pricing#");
   });
 });
 

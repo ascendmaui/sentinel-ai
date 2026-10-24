@@ -13,7 +13,7 @@ export function TierCta({ tier, lead }: { tier: TierId; lead: string }) {
         {lead}
       </p>
       <div className="row">
-        <Link className="btn btn-gold btn-sm" href={tierHref(tier)}>
+        <Link className="btn btn-gold btn-sm" href={tierHref(t.id)}>
           See {t.name}
         </Link>
         <Link className="btn btn-glass btn-sm" href="/pricing#compare">
