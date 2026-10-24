@@ -76,6 +76,7 @@ describe("Logo components (Mark & Wordmark)", () => {
     // Wordmark text
     const textSpan = children[1];
     expect(textSpan.props.className).toBe("wordmark-text");
+    expect(textSpan.props["aria-hidden"]).toBe("true");
     expect(textSpan.props.children[0]).toBe(BRAND_WORD);
     if (BRAND_SUFFIX) {
       expect(textSpan.props.children[1].props.children).toBe(BRAND_SUFFIX);

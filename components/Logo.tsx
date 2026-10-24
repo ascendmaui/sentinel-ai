@@ -62,7 +62,7 @@ export function Wordmark({ id, size = 28 }: { id: string; size?: number }) {
   return (
     <span className="wordmark">
       <Mark id={id} size={size} />
-      <span className="wordmark-text">
+      <span className="wordmark-text" aria-hidden="true">
         {BRAND_WORD}
         {BRAND_SUFFIX ? <span>{BRAND_SUFFIX}</span> : null}
       </span>

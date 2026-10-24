@@ -45,7 +45,9 @@ export function Nav() {
                 </Link>
               ))}
               <div className="nav-menu-theme">
-                <span className="nav-menu-label">Theme</span>
+                <span className="nav-menu-label" aria-hidden="true">
+                  Theme
+                </span>
                 <ThemeSwitcher showLabels />
               </div>
             </div>
