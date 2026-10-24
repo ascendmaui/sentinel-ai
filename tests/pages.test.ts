@@ -1,3 +1,6 @@
+import { readdirSync, statSync } from "node:fs";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
@@ -19,6 +22,7 @@ import { findings, remediation, severityCounts } from "../lib/caseStudies";
 import { INCIDENTS_DISCLAIMER, incidents, scenarios, unverified } from "../lib/incidents";
 import * as postsModule from "../lib/posts";
 import { posts } from "../lib/posts";
+import * as sourcesModule from "../lib/sources";
 import { tiers } from "../lib/tiers";
 
 describe("Home Page", () => {
@@ -169,6 +173,25 @@ describe("Incident Case Studies Page", () => {
       expect(html).toContain(u.slice(0, 40).replace(/'/g, "&#x27;"));
     }
   });
+
+  it("handles sources without notes, unresolvable source/ref IDs, and scenarios with empty refs", () => {
+    const origRefs = scenarios[0].refs;
+    const origLookup = sourcesModule.sourceById;
+    const spy = vi.spyOn(sourcesModule, "sourceById").mockImplementation((id: string) => {
+      if (id === "oaiAug") return { id: "oaiAug", label: "No-note source", url: "https://openai.com", date: "2026" };
+      if (id === "hfDisc" || id === "cs26") return undefined;
+      return origLookup(id);
+    });
+    scenarios[0].refs = [];
+    try {
+      const html = renderToStaticMarkup(IncidentCaseStudiesPage());
+      expect(html).toContain("No-note source");
+      expect(html).toContain(scenarios[0].title);
+    } finally {
+      scenarios[0].refs = origRefs;
+      spy.mockRestore();
+    }
+  });
 });
 
 describe("Not Found Page", () => {
@@ -221,5 +244,46 @@ describe("Root Layout and Shell Metadata", () => {
     expect(html).toContain("<html lang=\"en\"");
     expect(html).toContain("data-theme");
     expect(html).toContain("content");
+  });
+});
+
+describe("App Router page and layout export contracts", () => {
+  const APP_DIR = join(__dirname, "..", "app");
+  const ALLOWED_SEGMENT_EXPORTS = new Set([
+    "default",
+    "metadata",
+    "generateMetadata",
+    "generateStaticParams",
+    "viewport",
+    "generateViewport",
+    "dynamic",
+    "dynamicParams",
+    "revalidate",
+    "fetchCache",
+    "runtime",
+    "preferredRegion",
+    "maxDuration",
+  ]);
+
+  function findSegmentFiles(dir: string): string[] {
+    const out: string[] = [];
+    for (const name of readdirSync(dir)) {
+      const full = join(dir, name);
+      if (statSync(full).isDirectory()) out.push(...findSegmentFiles(full));
+      else if (name === "page.tsx" || name === "layout.tsx" || name === "not-found.tsx") out.push(full);
+    }
+    return out;
+  }
+
+  it("every page, layout, and not-found module exports a default component and only Next.js allowed segment fields", async () => {
+    const files = findSegmentFiles(APP_DIR);
+    expect(files.length).toBeGreaterThanOrEqual(8);
+    for (const file of files) {
+      const mod = (await import(pathToFileURL(file).href)) as Record<string, unknown>;
+      expect(typeof mod.default, `${file} default export`).toBe("function");
+      for (const key of Object.keys(mod)) {
+        expect(ALLOWED_SEGMENT_EXPORTS.has(key), `${file} unexpected export "${key}"`).toBe(true);
+      }
+    }
   });
 });
