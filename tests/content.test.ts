@@ -178,13 +178,20 @@ describe("theme and tokens", () => {
     }
   });
 
-  it("app/icon.svg is a valid text-free SVG icon so brand renames never require editing it", () => {
+  it("app/icon.svg is a valid text-free SVG icon matching Logo.tsx Mark geometry and dark theme background", () => {
     const svg = readFileSync(join(__dirname, "..", "app", "icon.svg"), "utf8");
+    const logoSrc = readFileSync(join(__dirname, "..", "components", "Logo.tsx"), "utf8");
     expect(svg).toMatch(/^<svg[^>]+viewBox="0 0 32 32"/);
     expect(svg.trim()).toMatch(/<\/svg>$/);
     expect(svg).not.toMatch(/<text\b/i);
     expect(svg).not.toMatch(/<tspan\b/i);
     expect(svg.toLowerCase()).not.toContain("seraphim");
+    expect(svg).toContain(`fill="${THEME_META.dark}"`);
+
+    const iconPaths = [...svg.matchAll(/<path[^>]*\bd="([^"]+)"/g)].map((m) => m[1]);
+    const markPaths = [...logoSrc.matchAll(/\bd="([^"]+)"/g)].map((m) => m[1]);
+    expect(iconPaths.length).toBe(5);
+    expect(iconPaths).toEqual(markPaths);
   });
 
   it("public/og.png is a valid 1200x630 PNG matching OpenGraph metadata", () => {
