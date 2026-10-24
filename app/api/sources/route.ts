@@ -15,7 +15,7 @@ export function GET(req?: Request): Response {
       const limit = parseLimit(url.searchParams);
 
       if (year) {
-        list = list.filter((s) => s.date.includes(year));
+        list = list.filter((s) => s.date.toLowerCase().includes(year));
       }
       if (q) {
         list = list.filter(

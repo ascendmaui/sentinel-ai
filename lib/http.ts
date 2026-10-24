@@ -52,12 +52,13 @@ export const PUBLIC_CACHE = "public, max-age=0, s-maxage=300, stale-while-revali
  */
 export function parseLimit(params: URLSearchParams, max = 100): number | undefined {
   if (!params || typeof params.get !== "function") return undefined;
-  if (!Number.isFinite(max) || max <= 0) return undefined;
+  const cap = Math.floor(max);
+  if (!Number.isFinite(max) || cap <= 0) return undefined;
   const raw = params.get("limit")?.trim();
   if (!raw || !/^\+?\d+$/.test(raw)) return undefined;
   const num = Number(raw);
   if (!(num > 0)) return undefined;
-  return Math.min(num, Math.floor(max));
+  return Math.min(num, cap);
 }
 
 /**

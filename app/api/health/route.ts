@@ -8,8 +8,8 @@ export function GET() {
   return json({
     status: "ok",
     service: BRAND_NAME,
-    environment: process.env.VERCEL_ENV || "local",
-    commit: (process.env.VERCEL_GIT_COMMIT_SHA || "").slice(0, 7) || null,
+    environment: process.env.VERCEL_ENV?.trim() || "local",
+    commit: process.env.VERCEL_GIT_COMMIT_SHA?.trim().slice(0, 7) || null,
     timestamp: new Date().toISOString(),
   });
 }

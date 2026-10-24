@@ -63,12 +63,24 @@ describe("GET /api/health", () => {
     expect((await health().json()).commit).toBeNull();
   });
 
-  it("defaults to local environment and handles short commit hashes", async () => {
+  it("defaults to local environment and handles short or whitespace-padded commit hashes", async () => {
     vi.stubEnv("VERCEL_ENV", "");
     vi.stubEnv("VERCEL_GIT_COMMIT_SHA", "abcde");
     const body = await health().json();
     expect(body.environment).toBe("local");
     expect(body.commit).toBe("abcde");
+
+    vi.stubEnv("VERCEL_ENV", "   ");
+    vi.stubEnv("VERCEL_GIT_COMMIT_SHA", "   ");
+    const wsBody = await health().json();
+    expect(wsBody.environment).toBe("local");
+    expect(wsBody.commit).toBeNull();
+
+    vi.stubEnv("VERCEL_ENV", "  production  ");
+    vi.stubEnv("VERCEL_GIT_COMMIT_SHA", "  9876543210abcdef  ");
+    const paddedBody = await health().json();
+    expect(paddedBody.environment).toBe("production");
+    expect(paddedBody.commit).toBe("9876543");
   });
 });
 
@@ -960,6 +972,13 @@ describe("GET /api/sources", () => {
     const combinedBody = await combinedRes.json();
     expect(combinedBody.count).toBeGreaterThan(0);
     expect(combinedBody.sources.every((s: { date: string }) => s.date.includes("2025"))).toBe(true);
+
+    // Case-insensitive month/date substring via ?year=
+    const monthRes = sourcesIndex(req("/api/sources?year=Aug"));
+    expect(monthRes.status).toBe(200);
+    expect((await monthRes.json()).count).toBeGreaterThan(0);
+
+    expect(parseLimit(new URLSearchParams("limit=5"), 0.5)).toBeUndefined();
 
     const noneRes = sourcesIndex(req("/api/sources?year=1990"));
     expect(noneRes.status).toBe(200);
