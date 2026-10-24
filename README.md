@@ -30,15 +30,15 @@ All endpoints export HTTP/REST JSON contracts with security headers (`X-Content-
 - `GET /api/health`: Service liveness, current environment, timestamp, and commit SHA (zero secrets exposed).
 - `GET /api/posts`: Blog post index and metadata (newest first). Supports `?tier=`, `?q=`, and `?limit=`.
 - `GET /api/posts/[slug]`: Post detail with resolved primary sources.
-- `GET /api/incidents`: Documented incident list with source counts, unverified claims, and disclaimer. Supports `?q=`.
+- `GET /api/incidents`: Documented incident list with source counts, unverified claims, and disclaimer. Supports `?q=` and `?limit=`.
 - `GET /api/incidents/[id]`: Incident breakdown with timeline and verified references.
-- `GET /api/scenarios`: Conceptual threat scenarios with speed and control comparisons. Supports `?q=`.
+- `GET /api/scenarios`: Conceptual threat scenarios with speed and control comparisons. Supports `?q=` and `?limit=`.
 - `GET /api/scenarios/[id]`: Scenario details with defender controls and related sources.
-- `GET /api/case-studies`: Remediation findings and severity distributions. Supports `?severity=`, `?status=`, and `?q=`.
+- `GET /api/case-studies`: Remediation findings and severity distributions. Supports `?severity=`, `?status=`, `?q=`, and `?limit=`.
 - `GET /api/case-studies/[id]`: Finding details with before/after fixes and remediation verification notes.
-- `GET /api/tiers`: Service tier matrix, comparison details, and engagement terms. Supports `?q=`.
+- `GET /api/tiers`: Service tier matrix, comparison details, and engagement terms. Supports `?q=` and `?limit=`.
 - `GET /api/tiers/[id]`: Single tier deliverables, target audience, and exclusions.
-- `GET /api/sources`: Authoritative primary and secondary sources registry. Supports `?q=` and `?year=`.
+- `GET /api/sources`: Authoritative primary and secondary sources registry. Supports `?q=`, `?year=`, and `?limit=`.
 - `GET /api/sources/[id]`: Single source record with URL and credibility note.
 - `GET /api/brand`: Brand identity metadata, contact mailto, trust badges, and theme configuration.
 
@@ -50,7 +50,7 @@ All endpoints export HTTP/REST JSON contracts with security headers (`X-Content-
 
 ## Verification & Testing
 
-- `npm test`: Run 293 unit, component, page, content integrity, route contract, and API integration tests via Vitest across 5 test suites.
+- `npm test`: Run 302 unit, component, page, content integrity, route contract, and API integration tests via Vitest across 5 test suites.
 - `npm run test:contract`: Run API route contract discovery and security header verification tests.
 - `npm run test:integration`: Run API endpoint integration tests.
 - `npm run test:components`: Run UI component tests (icons, emblems, logo mark, trust badges, nav, footer).

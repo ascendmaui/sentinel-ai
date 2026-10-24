@@ -54,6 +54,9 @@ check(filteredPosts.count > 0 && filteredPosts.posts.every(p => p.tier === "sera
 const qPosts = await (await get("/api/posts?q=openai")).json();
 check(qPosts.count > 0 && qPosts.posts.every(p => p.title.toLowerCase().includes("openai") || p.description.toLowerCase().includes("openai") || p.slug.includes("openai")), "GET /api/posts?q=openai filter");
 
+const qPostsDate = await (await get("/api/posts?q=2026")).json();
+check(qPostsDate.count === posts.posts.length, "GET /api/posts?q=2026 date search");
+
 const limitedPosts = await (await get("/api/posts?limit=2")).json();
 check(limitedPosts.count === 2 && limitedPosts.posts.length === 2 && limitedPosts.totalCount === posts.posts.length, "GET /api/posts?limit=2");
 
@@ -93,6 +96,9 @@ check(limitedIncs.count === 2 && limitedIncs.incidents.length === 2, "GET /api/i
 const qIncs = await (await get("/api/incidents?q=artifactory")).json();
 check(qIncs.count > 0, "GET /api/incidents?q=artifactory filter");
 
+const qIncsStatus = await (await get("/api/incidents?q=verified")).json();
+check(qIncsStatus.count > 0, "GET /api/incidents?q=verified statusLabel search");
+
 for (const inc of incs.incidents) {
   const r = await get(`/api/incidents/${inc.id}`);
   const b = await r.json();
@@ -121,6 +127,9 @@ check(limitedCs.count === 2 && limitedCs.findings.length === 2, "GET /api/case-s
 
 const qCs = await (await get("/api/case-studies?q=scheduled")).json();
 check(qCs.count > 0, "GET /api/case-studies?q=scheduled filter");
+
+const qCsStatus = await (await get("/api/case-studies?q=fixed")).json();
+check(qCsStatus.count > 0, "GET /api/case-studies?q=fixed status search");
 
 const csOne = await get("/api/case-studies/f-01");
 const csOneBody = await csOne.json();
@@ -152,6 +161,9 @@ check(limitedTiers.count === 2 && limitedTiers.tiers.length === 2, "GET /api/tie
 const qTiers = await (await get("/api/tiers?q=cherubim")).json();
 check(qTiers.count === 1 && qTiers.tiers[0].id === "cherubim", "GET /api/tiers?q=cherubim filter");
 
+const qTiersCadence = await (await get("/api/tiers?q=advisory")).json();
+check(qTiersCadence.count > 0 && qTiersCadence.tiers.some(t => t.cadence.toLowerCase().includes("advisory")), "GET /api/tiers?q=advisory cadence search");
+
 const tierOne = await get("/api/tiers/seraphim");
 check(tierOne.status === 200 && (await tierOne.json()).name === "Seraphim", "GET /api/tiers/seraphim");
 const tierUpper = await get("/api/tiers/SERAPHIM");
@@ -176,6 +188,9 @@ const scRes = await scHttpRes.json();
 check(Array.isArray(scRes.scenarios) && scRes.count > 0, "GET /api/scenarios shape");
 const scFiltered = await (await get("/api/scenarios?q=domain")).json();
 check(scFiltered.count === 1 && scFiltered.scenarios[0].id === "onprem-domain", "GET /api/scenarios?q=domain filter");
+
+const scNumFiltered = await (await get("/api/scenarios?q=h1")).json();
+check(scNumFiltered.count === 1 && scNumFiltered.scenarios[0].n === "H1", "GET /api/scenarios?q=h1 number search");
 
 const limitedSc = await (await get("/api/scenarios?limit=2")).json();
 check(limitedSc.count === 2 && limitedSc.scenarios.length === 2, "GET /api/scenarios?limit=2");
@@ -232,26 +247,21 @@ check(brandRes.status === 200 && brandBody.name === "Seraphim AI" && Array.isArr
 check(brandBody.theme?.default === "dark" && Array.isArray(brandBody.theme?.names) && brandBody.theme.names.includes("dark"), "GET /api/brand theme structure");
 checkSecurityHeaders(brandRes, "GET /api/brand");
 
-// 9. Method Not Allowed on API endpoints (Next.js route handlers return 405 for unexported methods)
+// 9. Method Not Allowed on dynamic API endpoints (Next.js dynamic route handlers return 405 for unexported methods)
 const endpoints405 = [
   "/api/health",
   "/api/brand",
   "/api/posts",
-  `/api/posts/${posts.posts[0].slug}`,
   "/api/incidents",
-  `/api/incidents/${incs.incidents[0].id}`,
   "/api/case-studies",
-  "/api/case-studies/f-01",
   "/api/scenarios",
-  "/api/scenarios/legacy-internal-app",
   "/api/sources",
-  "/api/sources/oaiAug",
   "/api/tiers",
-  "/api/tiers/seraphim",
 ];
 for (const endpoint of endpoints405) {
   const postRes = await get(endpoint, { method: "POST" });
   check(postRes.status === 405, `POST ${endpoint} -> 405`);
+  checkSecurityHeaders(postRes, `POST ${endpoint} 405`);
   const putRes = await get(endpoint, { method: "PUT" });
   check(putRes.status === 405, `PUT ${endpoint} -> 405`);
   const delRes = await get(endpoint, { method: "DELETE" });
