@@ -180,6 +180,10 @@ describe.each(routes.map((r) => [r.path] as const))("route contract %s", (path) 
       const noCtxRes = await modules[path].GET(new Request(`http://localhost${path}`));
       expect(noCtxRes.status).toBe(404);
       expectHardenedJson(noCtxRes, `${path} no ctx`);
+
+      const noArgRes = await modules[path].GET();
+      expect(noArgRes.status).toBe(404);
+      expectHardenedJson(noArgRes, `${path} no args`);
     });
   }
 

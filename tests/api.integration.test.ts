@@ -210,6 +210,17 @@ describe("GET /api/posts", () => {
     expect(noneRes.status).toBe(200);
     expect((await noneRes.json()).count).toBe(0);
   });
+
+  it("filters posts by source reference ID", async () => {
+    const srcRes = postsIndex(req("/api/posts?source=oaiAug"));
+    expect(srcRes.status).toBe(200);
+    const srcBody = await srcRes.json();
+    expect(srcBody.count).toBeGreaterThan(0);
+
+    const noneRes = postsIndex(req("/api/posts?source=nonexistent-src"));
+    expect(noneRes.status).toBe(200);
+    expect((await noneRes.json()).count).toBe(0);
+  });
 });
 
 describe("GET /api/posts/[slug]", () => {
@@ -385,6 +396,18 @@ describe("GET /api/incidents", () => {
     expect(y2024Body.incidents.every((i: { date: string }) => i.date.includes("2024"))).toBe(true);
 
     const noneRes = incidentsIndex(req("/api/incidents?year=1999"));
+    expect(noneRes.status).toBe(200);
+    expect((await noneRes.json()).count).toBe(0);
+  });
+
+  it("filters incidents by cited source ID", async () => {
+    const srcRes = incidentsIndex(req("/api/incidents?source=oaiAug"));
+    expect(srcRes.status).toBe(200);
+    const srcBody = await srcRes.json();
+    expect(srcBody.count).toBeGreaterThan(0);
+    expect(srcBody.incidents.length).toBe(srcBody.count);
+
+    const noneRes = incidentsIndex(req("/api/incidents?source=nonexistent-src"));
     expect(noneRes.status).toBe(200);
     expect((await noneRes.json()).count).toBe(0);
   });
@@ -894,6 +917,17 @@ describe("GET /api/scenarios", () => {
     const fallbackRes = scenariosIndex({ url: "http://" } as unknown as Request);
     expect(fallbackRes.status).toBe(200);
     expect((await fallbackRes.json()).count).toBe(scenarios.length);
+  });
+
+  it("filters scenarios by cited reference ID", async () => {
+    const refRes = scenariosIndex(req("/api/scenarios?ref=cs26"));
+    expect(refRes.status).toBe(200);
+    const refBody = await refRes.json();
+    expect(refBody.count).toBeGreaterThan(0);
+
+    const noneRes = scenariosIndex(req("/api/scenarios?ref=nonexistent-ref"));
+    expect(noneRes.status).toBe(200);
+    expect((await noneRes.json()).count).toBe(0);
   });
 });
 

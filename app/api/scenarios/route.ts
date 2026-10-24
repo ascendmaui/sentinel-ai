@@ -1,7 +1,7 @@
 import { json, parseLimit, parseSearchQuery, PUBLIC_CACHE } from "../../../lib/http";
 import { scenarios } from "../../../lib/incidents";
 
-/** Hypothetical scenarios index as JSON. Lists conceptual threat models and controls. Supports ?q=. */
+/** Hypothetical scenarios index as JSON. Lists conceptual threat models and controls. Supports ?ref=, ?q=, and ?limit=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -10,8 +10,13 @@ export function GET(req?: Request): Response {
   if (req?.url) {
     try {
       const url = new URL(req.url, "http://localhost");
+      const ref = parseSearchQuery(url.searchParams, "ref");
       const q = parseSearchQuery(url.searchParams);
       const limit = parseLimit(url.searchParams);
+
+      if (ref) {
+        list = list.filter((s) => s.refs.some((r) => r.toLowerCase() === ref));
+      }
 
       if (q) {
         list = list.filter(

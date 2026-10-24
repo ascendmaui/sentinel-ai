@@ -1,7 +1,7 @@
 import { json, parseLimit, parseSearchQuery, PUBLIC_CACHE } from "../../../lib/http";
 import { incidents, scenarios, unverified, INCIDENTS_DISCLAIMER } from "../../../lib/incidents";
 
-/** Incident case studies index as JSON. Lists incidents, summaries, counts, and disclaimer. Supports ?q=, ?year=, and ?limit=. */
+/** Incident case studies index as JSON. Lists incidents, summaries, counts, and disclaimer. Supports ?source=, ?year=, ?q=, and ?limit=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -11,8 +11,13 @@ export function GET(req?: Request): Response {
     try {
       const url = new URL(req.url, "http://localhost");
       const q = parseSearchQuery(url.searchParams);
+      const source = parseSearchQuery(url.searchParams, "source");
       const year = parseSearchQuery(url.searchParams, "year");
       const limit = parseLimit(url.searchParams);
+
+      if (source) {
+        list = list.filter((i) => i.sources.some((s) => s.toLowerCase() === source));
+      }
 
       if (year) {
         list = list.filter((i) => i.date.toLowerCase().includes(year));

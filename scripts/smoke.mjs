@@ -60,6 +60,9 @@ check(qPostsDate.count === posts.posts.length, "GET /api/posts?q=2026 date searc
 const yearPosts = await (await get("/api/posts?year=2026")).json();
 check(yearPosts.count === posts.posts.length && yearPosts.posts.every(p => p.date.startsWith("2026")), "GET /api/posts?year=2026 filter");
 
+const sourcePosts = await (await get("/api/posts?source=oaiAug")).json();
+check(sourcePosts.count > 0, "GET /api/posts?source=oaiAug filter");
+
 const limitedPosts = await (await get("/api/posts?limit=2")).json();
 check(limitedPosts.count === 2 && limitedPosts.posts.length === 2 && limitedPosts.totalCount === posts.posts.length, "GET /api/posts?limit=2");
 
@@ -106,6 +109,9 @@ check(yearIncs.count > 0 && yearIncs.incidents.every(i => i.date.includes("2026"
 
 const yearIncs2024 = await (await get("/api/incidents?year=2024")).json();
 check(yearIncs2024.count > 0 && yearIncs2024.incidents.every(i => i.date.includes("2024")), "GET /api/incidents?year=2024 filter");
+
+const sourceIncs = await (await get("/api/incidents?source=oaiAug")).json();
+check(sourceIncs.count > 0, "GET /api/incidents?source=oaiAug filter");
 
 const qIncsStatus = await (await get("/api/incidents?q=verified")).json();
 check(qIncsStatus.count > 0, "GET /api/incidents?q=verified statusLabel search");
@@ -202,6 +208,9 @@ check(scFiltered.count === 1 && scFiltered.scenarios[0].id === "onprem-domain", 
 
 const scNumFiltered = await (await get("/api/scenarios?q=h1")).json();
 check(scNumFiltered.count === 1 && scNumFiltered.scenarios[0].n === "H1", "GET /api/scenarios?q=h1 number search");
+
+const refSc = await (await get("/api/scenarios?ref=cs26")).json();
+check(refSc.count > 0, "GET /api/scenarios?ref=cs26 filter");
 
 const limitedSc = await (await get("/api/scenarios?limit=2")).json();
 check(limitedSc.count === 2 && limitedSc.scenarios.length === 2, "GET /api/scenarios?limit=2");

@@ -1,7 +1,7 @@
 import { json, parseLimit, parseSearchQuery, PUBLIC_CACHE } from "../../../lib/http";
 import { posts, postWords } from "../../../lib/posts";
 
-/** Blog index as JSON: post metadata only (no body). Newest first. Supports ?tier=, ?year=, ?q=, and ?limit=. */
+/** Blog index as JSON: post metadata only (no body). Newest first. Supports ?tier=, ?source=, ?year=, ?q=, and ?limit=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -11,12 +11,16 @@ export function GET(req?: Request): Response {
     try {
       const url = new URL(req.url, "http://localhost");
       const tier = parseSearchQuery(url.searchParams, "tier");
+      const source = parseSearchQuery(url.searchParams, "source");
       const year = parseSearchQuery(url.searchParams, "year");
       const q = parseSearchQuery(url.searchParams);
       const limit = parseLimit(url.searchParams);
 
       if (tier) {
         list = list.filter((p) => p.tier.toLowerCase() === tier);
+      }
+      if (source) {
+        list = list.filter((p) => p.sources.some((s) => s.toLowerCase() === source));
       }
       if (year) {
         list = list.filter((p) => p.date.toLowerCase().includes(year));
