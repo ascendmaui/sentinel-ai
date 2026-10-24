@@ -294,8 +294,9 @@ describe("posts", () => {
     }
   });
 
-  it("have unique list items (list items are used as React keys)", () => {
+  it("have unique list items and source refs (used as React keys)", () => {
     for (const p of posts) {
+      expect(new Set(p.sources).size, `${p.slug} sources`).toBe(p.sources.length);
       for (const b of p.body) {
         if (b.t === "ul" || b.t === "ol") expect(new Set(b.x).size, p.slug).toBe(b.x.length);
       }
@@ -355,9 +356,17 @@ describe("posts", () => {
 });
 
 describe("tiers", () => {
-  it("have unique ids and contiguous ranks", () => {
+  it("have unique ids, contiguous ranks, and unique included/notIncluded items", () => {
     expect(new Set(tiers.map((t) => t.id)).size).toBe(tiers.length);
     expect(tiers.map((t) => t.rank).sort()).toEqual(tiers.map((_, i) => i + 1));
+    for (const t of tiers) {
+      expect(new Set(t.included).size, `${t.id} included`).toBe(t.included.length);
+      expect(new Set(t.notIncluded).size, `${t.id} notIncluded`).toBe(t.notIncluded.length);
+    }
+    expect(new Set(matrix.map((r) => r.row)).size).toBe(matrix.length);
+    for (const h of helper) {
+      expect(new Set(h.a.map((o) => o.label)).size).toBe(h.a.length);
+    }
   });
 
   it("tierById handles case-insensitivity and returns undefined for unknown", () => {
@@ -401,18 +410,29 @@ describe("incidents", () => {
     );
     for (const inc of incidents) {
       expect(inc.sources.length, inc.id).toBeGreaterThan(0);
+      expect(new Set(inc.sources).size, `${inc.id} unique sources`).toBe(inc.sources.length);
       for (const id of inc.sources) expect(S[id], `${inc.id} -> ${id}`).toBeDefined();
       expect(inc.timeline.length, `${inc.id} timeline`).toBeGreaterThan(0);
+      const tlKeys = inc.timeline.map((t) => t.d + t.t.slice(0, 12));
+      expect(new Set(tlKeys).size, `${inc.id} timeline keys`).toBe(tlKeys.length);
       expect(inc.did.length, `${inc.id} did`).toBeGreaterThan(0);
+      expect(new Set(inc.did).size, `${inc.id} unique did`).toBe(inc.did.length);
       expect(inc.howIn.length, `${inc.id} howIn`).toBeGreaterThan(0);
+      expect(new Set(inc.howIn).size, `${inc.id} unique howIn`).toBe(inc.howIn.length);
       expect(inc.vuln.length, `${inc.id} vuln`).toBeGreaterThan(0);
+      expect(new Set(inc.vuln).size, `${inc.id} unique vuln`).toBe(inc.vuln.length);
       expect(inc.impact.length, `${inc.id} impact`).toBeGreaterThan(0);
+      expect(new Set(inc.impact).size, `${inc.id} unique impact`).toBe(inc.impact.length);
       expect(inc.inferred.length, `${inc.id} inferred`).toBeGreaterThan(0);
+      expect(new Set(inc.inferred).size, `${inc.id} unique inferred`).toBe(inc.inferred.length);
       expect(inc.seraphim.flag.length, `${inc.id} seraphim.flag`).toBeGreaterThan(0);
+      expect(new Set(inc.seraphim.flag).size, `${inc.id} unique seraphim.flag`).toBe(inc.seraphim.flag.length);
       expect(inc.seraphim.prepare.length, `${inc.id} seraphim.prepare`).toBeGreaterThan(0);
+      expect(new Set(inc.seraphim.prepare).size, `${inc.id} unique seraphim.prepare`).toBe(inc.seraphim.prepare.length);
       expect(inc.seraphim.limits.length, `${inc.id} seraphim.limits`).toBeGreaterThan(0);
     }
     expect(unverified.length).toBeGreaterThan(0);
+    expect(new Set(unverified).size).toBe(unverified.length);
     for (const note of unverified) {
       expect(note.trim().length).toBeGreaterThan(0);
     }
@@ -437,10 +457,14 @@ describe("incidents", () => {
     expect(scenarios.map((s) => s.n)).toEqual(scenarios.map((_, idx) => `H${idx + 1}`));
     for (const sc of scenarios) {
       expect(sc.refs.length, `${sc.id} refs`).toBeGreaterThan(0);
+      expect(new Set(sc.refs).size, `${sc.id} unique refs`).toBe(sc.refs.length);
       for (const id of sc.refs) expect(S[id], `${sc.id} -> ${id}`).toBeDefined();
       expect(sc.weaknessClass.length, `${sc.id} weaknessClass`).toBeGreaterThan(0);
+      expect(new Set(sc.weaknessClass).size, `${sc.id} unique weaknessClass`).toBe(sc.weaknessClass.length);
       expect(sc.controls.length, `${sc.id} controls`).toBeGreaterThan(0);
+      expect(new Set(sc.controls).size, `${sc.id} unique controls`).toBe(sc.controls.length);
       expect(sc.seraphim.length, `${sc.id} seraphim`).toBeGreaterThan(0);
+      expect(new Set(sc.seraphim).size, `${sc.id} unique seraphim`).toBe(sc.seraphim.length);
       expect(sc.target.trim().length, `${sc.id} target`).toBeGreaterThan(0);
       expect(sc.approach.trim().length, `${sc.id} approach`).toBeGreaterThan(0);
       expect(sc.speed.trim().length, `${sc.id} speed`).toBeGreaterThan(0);
