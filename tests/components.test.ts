@@ -77,12 +77,17 @@ describe("Logo components (Mark & Wordmark)", () => {
     const srSpan = children[2];
     expect(srSpan.props.className).toBe("sr-only");
     expect(srSpan.props.children).toContain(BRAND_NAME);
+
+    const html = renderToStaticMarkup(el);
+    expect(html).toContain('class="wordmark"');
+    expect(html).toContain("sa-gold-test-wordmark");
+    expect(html).toContain(BRAND_WORD);
   });
 });
 
 describe("TrustBadges component", () => {
-  it("renders all true badges in standard mode", () => {
-    const el = TrustBadges({ compact: false });
+  it("renders all true badges in standard mode (default and explicit)", () => {
+    const el = TrustBadges({});
     expect(el.type).toBe("ul");
     expect(el.props.className).toBe("badges");
     expect(el.props["aria-label"]).toBe("How we work");
@@ -97,6 +102,12 @@ describe("TrustBadges component", () => {
       expect(textSpan.props.children[0].props.children).toBe(badge.label);
       expect(textSpan.props.children[1].props.children).toBe(badge.note);
     }
+
+    const html = renderToStaticMarkup(el);
+    for (const badge of TRUE_BADGES) {
+      expect(html).toContain(badge.label);
+      expect(html).toContain(badge.note);
+    }
   });
 
   it("renders compact mode without note text", () => {
@@ -106,6 +117,11 @@ describe("TrustBadges component", () => {
     for (const item of items) {
       const textSpan = item.props.children[1];
       expect(textSpan.props.children[1]).toBeNull();
+    }
+    const html = renderToStaticMarkup(el);
+    for (const badge of TRUE_BADGES) {
+      expect(html).toContain(badge.label);
+      expect(html).not.toContain(badge.note);
     }
   });
 });
@@ -144,6 +160,13 @@ describe("TierStrip and TierEmblem components", () => {
       const tier = tiers[i];
       expect(link.props.href).toBe(`/pricing#${tier.id}`);
     }
+
+    const html = renderToStaticMarkup(el);
+    for (const tier of tiers) {
+      expect(html).toContain(`href="/pricing#${tier.id}"`);
+      expect(html).toContain(tier.name);
+      expect(html).toContain(tier.positioning);
+    }
   });
 });
 
@@ -161,6 +184,11 @@ describe("TierCta component", () => {
     const row = el?.props.children[1];
     const emailLink = row.props.children[2];
     expect(emailLink.props.href).toBe(`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}%20Seraphim%20inquiry`);
+
+    const html = renderToStaticMarkup(el!);
+    expect(html).toContain('aria-label="Seraphim tier"');
+    expect(html).toContain('href="/pricing#seraphim"');
+    expect(html).toContain('href="/pricing#compare"');
   });
 
   it("returns null for an invalid tier", () => {

@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { badgeByKey, BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, BRAND_SUFFIX, BRAND_WORD, resolveSiteUrl, SITE_URL, TRUE_BADGES } from "../lib/brand";
 import { findings, findingById, remediation, remediationById, severityCounts } from "../lib/caseStudies";
@@ -115,6 +117,23 @@ describe("theme and tokens", () => {
 
     // Missing matchMedia falls back to dark
     expect(createEnv(null, () => false, false)).toBe("dark");
+  });
+
+  it("app/tokens.css defines every theme from THEME_NAMES with matching background color tokens", () => {
+    const css = readFileSync(join(__dirname, "..", "app", "tokens.css"), "utf8");
+    for (const name of THEME_NAMES) {
+      expect(css).toContain(`[data-theme="${name}"]`);
+      expect(css).toContain(`--ao-bg: ${THEME_META[name]};`);
+    }
+  });
+
+  it("app/icon.svg is a valid text-free SVG icon so brand renames never require editing it", () => {
+    const svg = readFileSync(join(__dirname, "..", "app", "icon.svg"), "utf8");
+    expect(svg).toMatch(/^<svg[^>]+viewBox="0 0 32 32"/);
+    expect(svg.trim()).toMatch(/<\/svg>$/);
+    expect(svg).not.toMatch(/<text\b/i);
+    expect(svg).not.toMatch(/<tspan\b/i);
+    expect(svg.toLowerCase()).not.toContain("seraphim");
   });
 });
 
