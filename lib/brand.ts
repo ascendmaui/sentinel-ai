@@ -19,10 +19,19 @@ export const BRAND_TAGLINE = "Scoped security assessments for the age of AI agen
 export const BRAND_MAIL = encodeURIComponent(BRAND_NAME);
 
 function cleanUrl(val?: string): string | undefined {
-  if (!val) return undefined;
+  if (!val || typeof val !== "string") return undefined;
   const trimmed = val.trim().replace(/\/+$/, "");
-  if (!trimmed) return undefined;
-  return trimmed.startsWith("http://") || trimmed.startsWith("https://") ? trimmed : `https://${trimmed}`;
+  if (!trimmed || /^https?:?$/i.test(trimmed)) return undefined;
+  const candidate = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  try {
+    const parsed = new URL(candidate);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return undefined;
+    if (!parsed.hostname || parsed.hostname.includes("..")) return undefined;
+    const path = parsed.pathname === "/" ? "" : parsed.pathname.replace(/\/+$/, "");
+    return `${parsed.origin}${path}`;
+  } catch {
+    return undefined;
+  }
 }
 
 /** Resolves current site origin from environment variables with localhost fallback. */
