@@ -33,7 +33,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
       <article className="post">
         <header className="cs-head">
           <p className="eyebrow">
-            <Link href="/blog">Blog</Link> · {p.date} · {p.readMins} min read
+            <Link href="/blog">Blog</Link> · <time dateTime={p.date}>{p.date}</time> · {p.readMins} min read
           </p>
           <h1>{p.title}</h1>
           <p className="lead">{p.description}</p>

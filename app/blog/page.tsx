@@ -39,7 +39,7 @@ export default function BlogIndex() {
           {posts.map((p) => (
             <Link key={p.slug} href={`/blog/${p.slug}`} className="card post-card">
               <span className="post-meta">
-                {p.date} · {p.readMins} min read
+                <time dateTime={p.date}>{p.date}</time> · {p.readMins} min read
               </span>
               <h3>{p.title}</h3>
               <p>{p.description}</p>

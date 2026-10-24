@@ -81,6 +81,7 @@ describe("Blog Page and Post Page", () => {
     for (const post of posts) {
       expect(html).toContain(post.title);
       expect(html).toContain(`/blog/${post.slug}`);
+      expect(html).toContain(`<time dateTime="${post.date}">${post.date}</time>`);
     }
   });
 
@@ -119,6 +120,7 @@ describe("Blog Page and Post Page", () => {
       expect(el.props.className).toBe("home cs");
       const html = renderToStaticMarkup(el);
       expect(html).toContain(post.title);
+      expect(html).toContain(`<time dateTime="${post.date}">${post.date}</time>`);
       expect(html).toContain('rel="noopener noreferrer"');
     }
 
