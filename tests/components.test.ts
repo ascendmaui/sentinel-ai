@@ -373,6 +373,13 @@ describe("HeroFigure component", () => {
         expect(idx).toBeLessThan(desktop.pts.length);
       }
     }
+
+    // Clamps extreme or non-finite density values without producing NaN coordinates
+    for (const d of [0, -5, 0.05, Number.NaN, Number.POSITIVE_INFINITY]) {
+      const g = buildHeroGeometry(d);
+      expect(g.pts.length).toBeGreaterThan(0);
+      expect(g.pts.every((p) => Number.isFinite(p.x) && Number.isFinite(p.y) && Number.isFinite(p.z))).toBe(true);
+    }
   });
 
   it("mountHeroFigure safely handles null/missing context, reduced motion, animation loop, visibility, and cleanup", () => {

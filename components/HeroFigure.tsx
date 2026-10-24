@@ -16,6 +16,7 @@ import { useEffect, useRef } from "react";
 type P = { x: number; y: number; z: number; w: number; s: number; a: number; side: number; layer: number; k: number };
 
 export function build(density: number) {
+  const d = Number.isFinite(density) ? Math.min(2, Math.max(0.2, density)) : 1;
   const pts: P[] = [];
   const lines: number[][] = []; // index lists forming filaments
   const add = (x: number, y: number, z: number, w = 1, s = 0, a = 1, side = 0, layer = 0, k = 0) => {
@@ -30,12 +31,12 @@ export function build(density: number) {
   ];
   for (const side of [-1, 1]) {
     for (const t of tiers) {
-      const feathers = Math.round(11 * density);
+      const feathers = Math.max(2, Math.round(11 * d));
       for (let f = 0; f < feathers; f++) {
         const k = f / (feathers - 1);
         const th = t.ang + (k - 0.5) * t.span;
         const L = t.len * (0.55 + 0.45 * Math.sin(Math.min(1, k * 1.1 + 0.15) * Math.PI * 0.62 + 0.4));
-        const steps = Math.round(22 * density);
+        const steps = Math.max(2, Math.round(22 * d));
         const idx: number[] = [];
         for (let i = 0; i <= steps; i++) {
           const s = i / steps;
@@ -50,33 +51,33 @@ export function build(density: number) {
     }
   }
   // Body: a slim flame-like column.
-  const rings = Math.round(26 * density);
+  const rings = Math.max(2, Math.round(26 * d));
   for (let r = 0; r <= rings; r++) {
     const u = r / rings;
     const yy = -0.85 + u * 1.75;
     const rad = 0.17 * Math.pow(Math.sin(Math.PI * Math.min(1, Math.max(0, u * 0.98 + 0.01))), 0.8);
-    const per = Math.max(6, Math.round(16 * density));
+    const per = Math.max(6, Math.round(16 * d));
     for (let j = 0; j < per; j++) {
       const ph = (j / per) * Math.PI * 2 + u * 2;
       add(Math.cos(ph) * rad, yy, Math.sin(ph) * rad * 0.7, 0.8, u, 0.85, 0, 3, 0);
     }
   }
   // Head and halo.
-  const hp = Math.round(60 * density);
+  const hp = Math.max(6, Math.round(60 * d));
   for (let i = 0; i < hp; i++) {
     const a = Math.random() * Math.PI * 2;
     const b = Math.acos(2 * Math.random() - 1);
     add(0.12 * Math.sin(b) * Math.cos(a), 1.06 + 0.12 * Math.cos(b), 0.12 * Math.sin(b) * Math.sin(a), 1, 0.5, 1, 0, 4, 0);
   }
   const hl: number[] = [];
-  const hs = Math.round(60 * density);
+  const hs = Math.max(6, Math.round(60 * d));
   for (let i = 0; i <= hs; i++) {
     const a = (i / hs) * Math.PI * 2;
     hl.push(add(Math.cos(a) * 0.22, 1.36, Math.sin(a) * 0.22, 1.1, 0.5, 1, 0, 5, 0));
   }
   lines.push(hl);
   // Ambient motes drifting upward.
-  const motes = Math.round(70 * density);
+  const motes = Math.max(4, Math.round(70 * d));
   const moteStart = pts.length;
   for (let i = 0; i < motes; i++) {
     add((Math.random() - 0.5) * 3.2, (Math.random() - 0.5) * 3, (Math.random() - 0.5) * 1.2, 0.7, Math.random(), 0.5, 0, 6, Math.random());
