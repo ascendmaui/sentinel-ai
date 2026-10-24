@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { badgeByKey, BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, BRAND_SUFFIX, BRAND_WORD, resolveSiteUrl, SITE_URL, TRUE_BADGES } from "../lib/brand";
 import { findings, findingById, remediation, remediationById, severityCounts } from "../lib/caseStudies";
 import { incidents, incidentById, scenarios, scenarioById } from "../lib/incidents";
@@ -392,11 +392,16 @@ describe("case studies / findings", () => {
 
 
 describe("metadata routes", () => {
-  it("robots generates permissive crawling rule and sitemap reference", () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it("robots generates permissive crawling rule and sitemap reference (and honors runtime env)", () => {
     const r = robots();
     expect(r.rules).toEqual([{ userAgent: "*", allow: "/" }]);
     expect(r.sitemap).toBe(`${SITE_URL}/sitemap.xml`);
     expect(r.sitemap).toMatch(/^https?:\/\/.*\/sitemap\.xml$/);
+
+    vi.stubEnv("SITE_URL", "https://seraphim.ai/");
+    expect(robots().sitemap).toBe("https://seraphim.ai/sitemap.xml");
   });
 
   it("sitemap includes all main pages, home page, and every blog post with valid metadata", () => {
@@ -419,6 +424,9 @@ describe("metadata routes", () => {
       expect(entry.lastModified).toBeInstanceOf(Date);
       expect(isNaN((entry.lastModified as Date).getTime())).toBe(false);
     }
+
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://seraphim.ai/");
+    expect(sitemap()[0].url).toBe("https://seraphim.ai");
   });
 });
 

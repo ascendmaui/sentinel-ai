@@ -6,8 +6,8 @@ import {
   BRAND_SUFFIX,
   BRAND_TAGLINE,
   BRAND_WORD,
+  resolveSiteUrl,
   SHOW_CODE_RAIN,
-  SITE_URL,
   TRUE_BADGES,
 } from "../../../lib/brand";
 import { json, PUBLIC_CACHE } from "../../../lib/http";
@@ -24,7 +24,7 @@ export function GET() {
       email: BRAND_EMAIL,
       mailSubject: `${BRAND_MAIL}%20inquiry`,
       tagline: BRAND_TAGLINE,
-      siteUrl: SITE_URL,
+      siteUrl: resolveSiteUrl(),
       showCodeRain: SHOW_CODE_RAIN,
       badges: TRUE_BADGES,
       theme: {

@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next";
-import { SITE_URL } from "../lib/brand";
+import { resolveSiteUrl } from "../lib/brand";
 
 export default function robots(): MetadataRoute.Robots {
+  const siteUrl = resolveSiteUrl();
   return {
     rules: [
       {
@@ -9,6 +10,6 @@ export default function robots(): MetadataRoute.Robots {
         allow: "/",
       },
     ],
-    sitemap: `${SITE_URL}/sitemap.xml`,
+    sitemap: `${siteUrl}/sitemap.xml`,
   };
 }

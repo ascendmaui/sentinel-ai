@@ -1035,6 +1035,10 @@ describe("GET /api/brand", () => {
       names: THEME_NAMES,
       meta: THEME_META,
     });
+
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://seraphim.ai/");
+    const envBody = await brandEndpoint().json();
+    expect(envBody.siteUrl).toBe("https://seraphim.ai");
   });
 });
 
