@@ -57,6 +57,9 @@ check(qPosts.count > 0 && qPosts.posts.every(p => p.title.toLowerCase().includes
 const qPostsDate = await (await get("/api/posts?q=2026")).json();
 check(qPostsDate.count === posts.posts.length, "GET /api/posts?q=2026 date search");
 
+const yearPosts = await (await get("/api/posts?year=2026")).json();
+check(yearPosts.count === posts.posts.length && yearPosts.posts.every(p => p.date.startsWith("2026")), "GET /api/posts?year=2026 filter");
+
 const limitedPosts = await (await get("/api/posts?limit=2")).json();
 check(limitedPosts.count === 2 && limitedPosts.posts.length === 2 && limitedPosts.totalCount === posts.posts.length, "GET /api/posts?limit=2");
 
@@ -97,6 +100,12 @@ check(limitedIncs.count === 2 && limitedIncs.incidents.length === 2, "GET /api/i
 
 const qIncs = await (await get("/api/incidents?q=artifactory")).json();
 check(qIncs.count > 0, "GET /api/incidents?q=artifactory filter");
+
+const yearIncs = await (await get("/api/incidents?year=2026")).json();
+check(yearIncs.count > 0 && yearIncs.incidents.every(i => i.date.includes("2026")), "GET /api/incidents?year=2026 filter");
+
+const yearIncs2024 = await (await get("/api/incidents?year=2024")).json();
+check(yearIncs2024.count > 0 && yearIncs2024.incidents.every(i => i.date.includes("2024")), "GET /api/incidents?year=2024 filter");
 
 const qIncsStatus = await (await get("/api/incidents?q=verified")).json();
 check(qIncsStatus.count > 0, "GET /api/incidents?q=verified statusLabel search");

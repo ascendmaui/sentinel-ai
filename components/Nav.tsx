@@ -35,8 +35,8 @@ export function Nav() {
           </a>
           <details className="nav-menu">
             <summary aria-label="Open menu">
-              <span />
-              <span />
+              <span aria-hidden="true" />
+              <span aria-hidden="true" />
             </summary>
             <div className="nav-menu-panel">
               {NAV_LINKS.map((l) => (

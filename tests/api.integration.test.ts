@@ -198,6 +198,18 @@ describe("GET /api/posts", () => {
     expect(fallbackRes.status).toBe(200);
     expect((await fallbackRes.json()).count).toBe(posts.length);
   });
+
+  it("filters posts by publication year", async () => {
+    const yearRes = postsIndex(req("/api/posts?year=2026"));
+    expect(yearRes.status).toBe(200);
+    const yearBody = await yearRes.json();
+    expect(yearBody.count).toBe(posts.length);
+    expect(yearBody.posts.every((p: { date: string }) => p.date.startsWith("2026"))).toBe(true);
+
+    const noneRes = postsIndex(req("/api/posts?year=2024"));
+    expect(noneRes.status).toBe(200);
+    expect((await noneRes.json()).count).toBe(0);
+  });
 });
 
 describe("GET /api/posts/[slug]", () => {
@@ -357,6 +369,24 @@ describe("GET /api/incidents", () => {
     const fallbackRes = incidentsIndex({ url: "http://" } as unknown as Request);
     expect(fallbackRes.status).toBe(200);
     expect((await fallbackRes.json()).count).toBe(incidents.length);
+  });
+
+  it("filters incidents by publication year", async () => {
+    const y2026Res = incidentsIndex(req("/api/incidents?year=2026"));
+    expect(y2026Res.status).toBe(200);
+    const y2026Body = await y2026Res.json();
+    expect(y2026Body.count).toBeGreaterThan(0);
+    expect(y2026Body.incidents.every((i: { date: string }) => i.date.includes("2026"))).toBe(true);
+
+    const y2024Res = incidentsIndex(req("/api/incidents?year=2024"));
+    expect(y2024Res.status).toBe(200);
+    const y2024Body = await y2024Res.json();
+    expect(y2024Body.count).toBeGreaterThan(0);
+    expect(y2024Body.incidents.every((i: { date: string }) => i.date.includes("2024"))).toBe(true);
+
+    const noneRes = incidentsIndex(req("/api/incidents?year=1999"));
+    expect(noneRes.status).toBe(200);
+    expect((await noneRes.json()).count).toBe(0);
   });
 });
 
@@ -716,6 +746,11 @@ describe("HTTP helper utilities", () => {
     expect(defRes.headers.get("cache-control")).toBe("no-store");
     expect(defRes.headers.get("content-type")).toBe("application/json; charset=utf-8");
     expect(await defRes.json()).toEqual({ status: "ok" });
+
+    // Handles undefined safely by serializing null rather than emitting empty body
+    const undefRes = json(undefined);
+    expect(undefRes.status).toBe(200);
+    expect(await undefRes.json()).toBeNull();
   });
 
   it("parseLimit handles valid, invalid, negative, and capped limits", () => {

@@ -266,10 +266,16 @@ describe("Nav component", () => {
     const details = actionsDiv.props.children[2];
     expect(details.type).toBe("details");
     expect(details.props.className).toBe("nav-menu");
+    const summaryEl = details.props.children[0];
+    expect(summaryEl.props["aria-label"]).toBe("Open menu");
+    for (const span of summaryEl.props.children) {
+      expect(span.props["aria-hidden"]).toBe("true");
+    }
 
     const html = renderToStaticMarkup(el);
     expect(html).toContain('class="nav-wrap"');
     expect(html).toContain('class="nav-menu"');
+    expect(html).toContain('<summary aria-label="Open menu"><span aria-hidden="true"></span><span aria-hidden="true"></span></summary>');
     expect(html).toContain('href="/#phases"');
     expect(html).toContain('href="/#contact"');
     expect(html).toContain(`mailto:${BRAND_EMAIL}`);

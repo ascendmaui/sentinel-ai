@@ -11,7 +11,7 @@ export function json(
   data: unknown,
   init: { status?: number; cacheControl?: string; headers?: Record<string, string> } = {}
 ): Response {
-  return new Response(JSON.stringify(data), {
+  return new Response(JSON.stringify(data === undefined ? null : data), {
     status: init.status ?? 200,
     headers: {
       "Content-Type": "application/json; charset=utf-8",
