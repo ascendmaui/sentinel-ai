@@ -177,6 +177,7 @@ describe("theme and tokens", () => {
       expect(globalsCss).toContain(`.tag-${tag}`);
     }
     expect(globalsCss).toContain(".post-src a");
+    expect(globalsCss).toContain(".theme-switch button.is-on");
     for (const cardCls of [".section", ".tier-card", ".inc", ".scn", ".cs-finding"]) {
       expect(globalsCss).toMatch(new RegExp(`\\${cardCls}\\s*\\{[^}]*scroll-margin-top:`));
     }

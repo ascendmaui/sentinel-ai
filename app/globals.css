@@ -160,7 +160,8 @@ button { font: inherit; }
 :root:not([data-theme]) .theme-switch [data-theme-option="dark"],
 [data-theme="dark"] .theme-switch [data-theme-option="dark"],
 [data-theme="light"] .theme-switch [data-theme-option="light"],
-[data-theme="high-contrast"] .theme-switch [data-theme-option="high-contrast"] {
+[data-theme="high-contrast"] .theme-switch [data-theme-option="high-contrast"],
+.theme-switch button.is-on {
   background: var(--ao-primary-grad); color: var(--ao-on-primary); border-color: var(--ao-primary-edge);
 }
 
