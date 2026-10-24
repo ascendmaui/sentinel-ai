@@ -47,9 +47,9 @@ export default function BlogIndex() {
           ))}
         </div>
       </section>
-      <section className="section">
+      <div className="section">
         <TierCta tier="seraphim" lead="Not sure where to start? Compare the four ways to work with us, from an entry-level passive-recon report to a full engagement." />
-      </section>
+      </div>
     </main>
   );
 }

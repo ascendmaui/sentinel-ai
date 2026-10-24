@@ -332,6 +332,12 @@ describe("Cross-page internal link, anchor (#id), and unique DOM id integrity", 
 
     for (const [sourceRoute, html] of routeHtml.entries()) {
       const pageIds = routeIds.get(sourceRoute)!;
+      for (const m of html.matchAll(/<section\b([^>]*)>/g)) {
+        expect(
+          /\baria-labelledby="[^"]+"|\baria-label="[^"]+"/.test(m[1]),
+          `${sourceRoute} <section> missing aria-labelledby or aria-label`
+        ).toBe(true);
+      }
       for (const m of html.matchAll(/\baria-labelledby="([^"]+)"/g)) {
         for (const refId of m[1].trim().split(/\s+/)) {
           expect(pageIds.has(refId), `${sourceRoute} has aria-labelledby="${refId}" pointing to missing DOM id`).toBe(true);

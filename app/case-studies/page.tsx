@@ -229,14 +229,14 @@ export default function CaseStudiesPage() {
         </div>
       </section>
 
-      <section className="section">
+      <div className="section">
         <TierCta tier="thrones" lead="A Scoped Assessment of one defined system, followed by remediation guidance and a retest, is the same shape as the case study above." />
-      </section>
+      </div>
 
-      <section className="section" id="contact">
+      <section className="section" id="contact" aria-labelledby="contact-h">
         <div className="cta-band">
           <div>
-            <h2>Want an assessment of your own?</h2>
+            <h2 id="contact-h">Want an assessment of your own?</h2>
             <p className="lead">
               Tell us what you need assessed. We&apos;ll reply with scope questions and next steps.
             </p>

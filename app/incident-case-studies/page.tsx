@@ -263,10 +263,10 @@ export default function IncidentCaseStudiesPage() {
         </div>
       </section>
 
-      <section className="section" id="contact">
+      <section className="section" id="contact" aria-labelledby="contact-h">
         <div className="cta-band">
           <div>
-            <h2>Want to know what your version of this looks like?</h2>
+            <h2 id="contact-h">Want to know what your version of this looks like?</h2>
             <p className="lead">Tell us what you run. We reply with scope questions and a suggested tier.</p>
           </div>
           <div className="row">

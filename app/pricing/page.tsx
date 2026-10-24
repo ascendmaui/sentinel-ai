@@ -178,10 +178,10 @@ export default function PricingPage() {
         </div>
       </section>
 
-      <section className="section" id="contact">
+      <section className="section" id="contact" aria-labelledby="contact-h">
         <div className="cta-band">
           <div>
-            <h2>Start with a scoping conversation.</h2>
+            <h2 id="contact-h">Start with a scoping conversation.</h2>
             <p className="lead">Tell us what you run and what worries you. We reply with scope questions and a suggested tier.</p>
           </div>
           <div className="row">
