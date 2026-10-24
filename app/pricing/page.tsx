@@ -93,7 +93,7 @@ export default function PricingPage() {
               <div className="tier-cta">
                 <a
                   className={t.id === "seraphim" ? "btn btn-gold" : "btn btn-glass"}
-                  href={`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}%20${t.name}%20inquiry`}
+                  href={`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}%20${encodeURIComponent(t.name)}%20inquiry`}
                 >
                   <Icon name="mail" /> Ask about {t.name}
                 </a>

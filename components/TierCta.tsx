@@ -19,7 +19,7 @@ export function TierCta({ tier, lead }: { tier: TierId; lead: string }) {
         <Link className="btn btn-glass btn-sm" href="/pricing#compare">
           Compare all four tiers
         </Link>
-        <a className="btn btn-glass btn-sm" href={`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}%20${t.name}%20inquiry`}>
+        <a className="btn btn-glass btn-sm" href={`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}%20${encodeURIComponent(t.name)}%20inquiry`}>
           Email us
         </a>
       </div>

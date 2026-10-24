@@ -22,7 +22,7 @@ import { GET as incidentsApi } from "../app/api/incidents/route";
 import { GET as scenariosApi } from "../app/api/scenarios/route";
 import { GET as caseStudiesApi } from "../app/api/case-studies/route";
 import { GET as tiersApi } from "../app/api/tiers/route";
-import { BRAND_NAME, SITE_URL } from "../lib/brand";
+import { BRAND_EMAIL, BRAND_NAME, SITE_URL } from "../lib/brand";
 import { findings, remediation, severityCounts } from "../lib/caseStudies";
 import { INCIDENTS_DISCLAIMER, incidents, scenarios, unverified } from "../lib/incidents";
 import * as postsModule from "../lib/posts";
@@ -335,12 +335,37 @@ describe("Cross-page internal link, anchor (#id), and unique DOM id integrity", 
         }
       }
 
+      // Landmark & heading hierarchy checks (exactly 1 <main>, 1 <h1>, and no skipped heading ranks)
+      expect([...html.matchAll(/<main\b/g)].length, `${sourceRoute} <main> count`).toBe(1);
+      const headingLevels = [...html.matchAll(/<h([1-6])\b/g)].map((m) => Number(m[1]));
+      expect(headingLevels.filter((lvl) => lvl === 1).length, `${sourceRoute} <h1> count`).toBe(1);
+      expect(headingLevels[0], `${sourceRoute} first heading is h1`).toBe(1);
+      for (let i = 1; i < headingLevels.length; i++) {
+        expect(
+          headingLevels[i] <= headingLevels[i - 1] + 1,
+          `${sourceRoute} skips heading rank from h${headingLevels[i - 1]} to h${headingLevels[i]}`
+        ).toBe(true);
+      }
+
+      // Every <svg> must either be aria-hidden="true" or have role="img" with a non-empty aria-label
+      for (const m of html.matchAll(/<svg\b([^>]*)>/g)) {
+        const attrs = m[1];
+        if (attrs.includes('role="img"')) {
+          expect(attrs, `${sourceRoute} svg[role=img] missing aria-label`).toMatch(/\baria-label="[^"]+"/);
+        } else {
+          expect(attrs, `${sourceRoute} decorative svg missing aria-hidden="true"`).toContain('aria-hidden="true"');
+        }
+      }
+
       for (const m of html.matchAll(/<a\b([^>]+)>/g)) {
         const attrs = m[1];
         const hrefMatch = attrs.match(/\bhref="([^"]+)"/);
         if (!hrefMatch) continue;
         const href = hrefMatch[1];
-        if (href.startsWith("http://") || href.startsWith("https://")) {
+        if (href.startsWith("mailto:")) {
+          expect(href.startsWith(`mailto:${BRAND_EMAIL}`), `${sourceRoute} unexpected mailto "${href}"`).toBe(true);
+          expect(href, `${sourceRoute} unencoded whitespace in mailto "${href}"`).not.toMatch(/\s/);
+        } else if (href.startsWith("http://") || href.startsWith("https://")) {
           expect(href.startsWith("https://"), `${sourceRoute} insecure external href "${href}"`).toBe(true);
           expect(attrs, `${sourceRoute} external link "${href}" missing target="_blank"`).toContain('target="_blank"');
           expect(attrs, `${sourceRoute} external link "${href}" missing rel="noopener noreferrer"`).toContain(

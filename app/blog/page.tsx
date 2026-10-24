@@ -31,7 +31,10 @@ export default function BlogIndex() {
           page.
         </p>
       </header>
-      <section className="section">
+      <section className="section" aria-labelledby="posts-h">
+        <h2 id="posts-h" className="sr-only">
+          Posts
+        </h2>
         <div className="blog-grid">
           {posts.map((p) => (
             <Link key={p.slug} href={`/blog/${p.slug}`} className="card post-card">
