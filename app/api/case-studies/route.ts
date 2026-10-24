@@ -1,7 +1,7 @@
-import { json, parseLimit, parseSearchQuery, PUBLIC_CACHE } from "../../../lib/http";
+import { json, parseLimit, parseOffset, parseSearchQuery, PUBLIC_CACHE } from "../../../lib/http";
 import { findings, remediation, severityCounts } from "../../../lib/caseStudies";
 
-/** Remediation findings and case studies index as JSON. Supports optional ?severity=, ?status=, and ?q= filters. */
+/** Remediation findings and case studies index as JSON. Supports optional ?id=, ?severity=, ?status=, ?q=, ?offset=, and ?limit= filters. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -9,11 +9,27 @@ export function GET(req?: Request): Response {
   if (req?.url) {
     try {
       const url = new URL(req.url, "http://localhost");
+      const id = parseSearchQuery(url.searchParams, "id");
       const severity = parseSearchQuery(url.searchParams, "severity");
       const status = parseSearchQuery(url.searchParams, "status");
       const q = parseSearchQuery(url.searchParams);
+      const offset = parseOffset(url.searchParams);
       const limit = parseLimit(url.searchParams);
 
+      if (id) {
+        let cleanId = id;
+        if (cleanId.startsWith("fix-")) cleanId = cleanId.slice(4);
+        const normalized = cleanId.replace(/-/g, "");
+        const withF = normalized.startsWith("f")
+          ? normalized
+          : `f${normalized.length === 1 ? `0${normalized}` : normalized}`;
+        list = list.filter(
+          (f) =>
+            f.id.toLowerCase() === cleanId ||
+            f.id.toLowerCase().replace(/-/g, "") === normalized ||
+            f.id.toLowerCase().replace(/-/g, "") === withF
+        );
+      }
       if (severity) {
         list = list.filter((f) => f.severity.toLowerCase() === severity);
       }
@@ -33,6 +49,9 @@ export function GET(req?: Request): Response {
             f.after.toLowerCase().includes(q) ||
             f.status.toLowerCase().includes(q)
         );
+      }
+      if (offset && offset > 0) {
+        list = list.slice(offset);
       }
       if (limit) {
         list = list.slice(0, limit);

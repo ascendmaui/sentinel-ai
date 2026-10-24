@@ -23,7 +23,7 @@ import * as caseStudiesModule from "../lib/caseStudies";
 import { findings } from "../lib/caseStudies";
 import { tiers } from "../lib/tiers";
 import { S, sources } from "../lib/sources";
-import { badRequest, json, methodNotAllowed, notFound, parseLimit, parseSearchQuery, SECURITY_HEADERS } from "../lib/http";
+import { badRequest, json, methodNotAllowed, notFound, parseLimit, parseOffset, parseSearchQuery, SECURITY_HEADERS } from "../lib/http";
 
 const slugCtx = (slug: string) => ({ params: Promise.resolve({ slug }) });
 const idCtx = (id: string) => ({ params: Promise.resolve({ id }) });
@@ -221,6 +221,29 @@ describe("GET /api/posts", () => {
     expect(noneRes.status).toBe(200);
     expect((await noneRes.json()).count).toBe(0);
   });
+
+  it("supports offset and skip parameters and matches tier and sources in q search", async () => {
+    const offRes = postsIndex(req("/api/posts?offset=1&limit=2"));
+    expect(offRes.status).toBe(200);
+    const offBody = await offRes.json();
+    expect(offBody.count).toBe(2);
+    expect(offBody.totalCount).toBe(posts.length);
+
+    const skipRes = postsIndex(req("/api/posts?skip=2"));
+    expect(skipRes.status).toBe(200);
+    const skipBody = await skipRes.json();
+    expect(skipBody.count).toBe(posts.length - 2);
+
+    const tierQRes = postsIndex(req("/api/posts?q=cherubim"));
+    expect(tierQRes.status).toBe(200);
+    const tierQBody = await tierQRes.json();
+    expect(tierQBody.count).toBeGreaterThan(0);
+    expect(tierQBody.posts.some((p: { tier: string }) => p.tier === "cherubim")).toBe(true);
+
+    const srcQRes = postsIndex(req("/api/posts?q=oaiAug"));
+    expect(srcQRes.status).toBe(200);
+    expect((await srcQRes.json()).count).toBeGreaterThan(0);
+  });
 });
 
 describe("GET /api/posts/[slug]", () => {
@@ -236,7 +259,7 @@ describe("GET /api/posts/[slug]", () => {
     }
   });
 
-  it("supports case-insensitive post slug lookup and trims whitespace", async () => {
+  it("supports case-insensitive post slug lookup, trims whitespace, and handles slashes", async () => {
     const first = posts[0];
     const res = await postOne(req(`/api/posts/${first.slug.toUpperCase()}`), slugCtx(first.slug.toUpperCase()));
     expect(res.status).toBe(200);
@@ -245,6 +268,10 @@ describe("GET /api/posts/[slug]", () => {
     const trimRes = await postOne(req(`/api/posts/${first.slug}`), slugCtx(`  ${first.slug}  `));
     expect(trimRes.status).toBe(200);
     expect((await trimRes.json()).slug).toBe(first.slug);
+
+    const slashRes = await postOne(req(`/api/posts/${first.slug}`), slugCtx(`/${first.slug}/`));
+    expect(slashRes.status).toBe(200);
+    expect((await slashRes.json()).slug).toBe(first.slug);
   });
 
   it.each(["nope", "", "   ", "../etc/passwd", "%2e%2e", "__proto__", "constructor", "toString"])(
@@ -411,6 +438,30 @@ describe("GET /api/incidents", () => {
     expect(noneRes.status).toBe(200);
     expect((await noneRes.json()).count).toBe(0);
   });
+
+  it("filters incidents by standing, kicker, and supports offset / skip", async () => {
+    const standRes = incidentsIndex(req("/api/incidents?standing=Documented"));
+    expect(standRes.status).toBe(200);
+    const standBody = await standRes.json();
+    expect(standBody.count).toBeGreaterThan(0);
+    expect(standBody.incidents.every((i: { standing: string }) => i.standing.toLowerCase().includes("documented"))).toBe(true);
+
+    const kickRes = incidentsIndex(req("/api/incidents?kicker=landmark"));
+    expect(kickRes.status).toBe(200);
+    const kickBody = await kickRes.json();
+    expect(kickBody.count).toBe(1);
+    expect(kickBody.incidents[0].id).toBe("openai-huggingface-2026");
+
+    const offRes = incidentsIndex(req("/api/incidents?offset=2&limit=3"));
+    expect(offRes.status).toBe(200);
+    const offBody = await offRes.json();
+    expect(offBody.count).toBe(3);
+    expect(offBody.totalCount).toBe(incidents.length);
+
+    const skipRes = incidentsIndex(req("/api/incidents?skip=1"));
+    expect(skipRes.status).toBe(200);
+    expect((await skipRes.json()).count).toBe(incidents.length - 1);
+  });
 });
 
 describe("GET /api/incidents/[id]", () => {
@@ -426,11 +477,19 @@ describe("GET /api/incidents/[id]", () => {
     }
   });
 
-  it("supports case-insensitive incident lookup and trims whitespace", async () => {
+  it("supports case-insensitive incident lookup, incident numbers (01, 1), and trims whitespace", async () => {
     const first = incidents[0];
     const res = await incidentOne(req(`/api/incidents/${first.id.toUpperCase()}`), idCtx(first.id.toUpperCase()));
     expect(res.status).toBe(200);
     expect((await res.json()).id).toBe(first.id);
+
+    const numRes = await incidentOne(req("/api/incidents/01"), idCtx("01"));
+    expect(numRes.status).toBe(200);
+    expect((await numRes.json()).id).toBe(first.id);
+
+    const singleNumRes = await incidentOne(req("/api/incidents/1"), idCtx("1"));
+    expect(singleNumRes.status).toBe(200);
+    expect((await singleNumRes.json()).id).toBe(first.id);
 
     const trimRes = await incidentOne(req(`/api/incidents/${first.id}`), idCtx(`  ${first.id}  `));
     expect(trimRes.status).toBe(200);
@@ -561,6 +620,28 @@ describe("GET /api/case-studies", () => {
     expect(fallbackRes.status).toBe(200);
     expect((await fallbackRes.json()).count).toBe(findings.length);
   });
+
+  it("filters findings by id (supports F-01, f01, fix-f-01) and supports offset", async () => {
+    const idRes = caseStudiesIndex(req("/api/case-studies?id=F-01"));
+    expect(idRes.status).toBe(200);
+    const idBody = await idRes.json();
+    expect(idBody.count).toBe(1);
+    expect(idBody.findings[0].id).toBe("F-01");
+
+    const noHyphenRes = caseStudiesIndex(req("/api/case-studies?id=f01"));
+    expect(noHyphenRes.status).toBe(200);
+    expect((await noHyphenRes.json()).findings[0].id).toBe("F-01");
+
+    const fixPrefixRes = caseStudiesIndex(req("/api/case-studies?id=fix-f-01"));
+    expect(fixPrefixRes.status).toBe(200);
+    expect((await fixPrefixRes.json()).findings[0].id).toBe("F-01");
+
+    const offRes = caseStudiesIndex(req("/api/case-studies?offset=2&limit=3"));
+    expect(offRes.status).toBe(200);
+    const offBody = await offRes.json();
+    expect(offBody.count).toBe(3);
+    expect(offBody.totalCount).toBe(findings.length);
+  });
 });
 
 describe("GET /api/case-studies/[id]", () => {
@@ -579,10 +660,22 @@ describe("GET /api/case-studies/[id]", () => {
     }
   });
 
-  it("supports case-insensitive finding lookup and trims whitespace", async () => {
+  it("supports case-insensitive finding lookup, hyphenless IDs (f01), fix- prefixes, and trims whitespace", async () => {
     const res = await caseStudyOne(req("/api/case-studies/f-01"), idCtx("f-01"));
     expect(res.status).toBe(200);
     expect((await res.json()).id).toBe("F-01");
+
+    const noHyphenRes = await caseStudyOne(req("/api/case-studies/f01"), idCtx("f01"));
+    expect(noHyphenRes.status).toBe(200);
+    expect((await noHyphenRes.json()).id).toBe("F-01");
+
+    const fixRes = await caseStudyOne(req("/api/case-studies/fix-f-01"), idCtx("fix-f-01"));
+    expect(fixRes.status).toBe(200);
+    expect((await fixRes.json()).id).toBe("F-01");
+
+    const fixNoHyphenRes = await caseStudyOne(req("/api/case-studies/fix-01"), idCtx("fix-01"));
+    expect(fixNoHyphenRes.status).toBe(200);
+    expect((await fixNoHyphenRes.json()).id).toBe("F-01");
 
     const trimRes = await caseStudyOne(req("/api/case-studies/f-01"), idCtx("  f-01  "));
     expect(trimRes.status).toBe(200);
@@ -678,6 +771,32 @@ describe("GET /api/tiers", () => {
     expect(fallbackRes.status).toBe(200);
     expect((await fallbackRes.json()).count).toBe(tiers.length);
   });
+
+  it("filters tiers by cadence, positioning, rank, and supports offset", async () => {
+    const cadRes = tiersIndex(req("/api/tiers?cadence=recurring"));
+    expect(cadRes.status).toBe(200);
+    const cadBody = await cadRes.json();
+    expect(cadBody.count).toBe(1);
+    expect(cadBody.tiers[0].id).toBe("cherubim");
+
+    const posRes = tiersIndex(req("/api/tiers?positioning=entry-level"));
+    expect(posRes.status).toBe(200);
+    const posBody = await posRes.json();
+    expect(posBody.count).toBe(1);
+    expect(posBody.tiers[0].id).toBe("angels");
+
+    const rankRes = tiersIndex(req("/api/tiers?rank=1"));
+    expect(rankRes.status).toBe(200);
+    const rankBody = await rankRes.json();
+    expect(rankBody.count).toBe(1);
+    expect(rankBody.tiers[0].id).toBe("seraphim");
+
+    const offRes = tiersIndex(req("/api/tiers?offset=1&limit=2"));
+    expect(offRes.status).toBe(200);
+    const offBody = await offRes.json();
+    expect(offBody.count).toBe(2);
+    expect(offBody.totalCount).toBe(tiers.length);
+  });
 });
 
 describe("GET /api/tiers/[id]", () => {
@@ -693,10 +812,14 @@ describe("GET /api/tiers/[id]", () => {
     }
   });
 
-  it("supports case-insensitive tier lookup and trims whitespace", async () => {
+  it("supports case-insensitive tier lookup, rank number lookup, and trims whitespace", async () => {
     const res = await tierOne(req("/api/tiers/SERAPHIM"), idCtx("SERAPHIM"));
     expect(res.status).toBe(200);
     expect((await res.json()).id).toBe("seraphim");
+
+    const rankRes = await tierOne(req("/api/tiers/1"), idCtx("1"));
+    expect(rankRes.status).toBe(200);
+    expect((await rankRes.json()).id).toBe("seraphim");
 
     const trimRes = await tierOne(req("/api/tiers/seraphim"), idCtx("  seraphim  "));
     expect(trimRes.status).toBe(200);
@@ -836,6 +959,27 @@ describe("HTTP helper utilities", () => {
     expect(parseSearchQuery(new URLSearchParams("q=test"), "")).toBeUndefined();
     expect(parseSearchQuery(new URLSearchParams("q=test"), null as unknown as string)).toBeUndefined();
   });
+
+  it("parseOffset handles valid, skip alias, negative, invalid, and capped offsets", () => {
+    expect(parseOffset(new URLSearchParams("offset=5"))).toBe(5);
+    expect(parseOffset(new URLSearchParams("skip=3"))).toBe(3);
+    expect(parseOffset(new URLSearchParams("offset=0"))).toBe(0);
+    expect(parseOffset(new URLSearchParams("skip=0"))).toBe(0);
+    expect(parseOffset(new URLSearchParams("offset=%2B4"))).toBe(4);
+    expect(parseOffset(new URLSearchParams("offset=-1"))).toBeUndefined();
+    expect(parseOffset(new URLSearchParams("offset=abc"))).toBeUndefined();
+    expect(parseOffset(new URLSearchParams("offset=1e3"))).toBeUndefined();
+    expect(parseOffset(new URLSearchParams("offset=2.5"))).toBeUndefined();
+    expect(parseOffset(new URLSearchParams("offset="))).toBeUndefined();
+    expect(parseOffset(new URLSearchParams("offset=   "))).toBeUndefined();
+    expect(parseOffset(new URLSearchParams(""))).toBeUndefined();
+    expect(parseOffset(new URLSearchParams("offset=500"), 100)).toBe(100);
+    expect(parseOffset(new URLSearchParams("offset=50"), 100)).toBe(50);
+    expect(parseOffset(undefined as unknown as URLSearchParams)).toBeUndefined();
+    expect(parseOffset(null as unknown as URLSearchParams)).toBeUndefined();
+    expect(parseOffset(new URLSearchParams("offset=5"), -1)).toBeUndefined();
+    expect(parseOffset(new URLSearchParams("offset=5"), Number.NaN)).toBeUndefined();
+  });
 });
 
 describe("GET /api/scenarios", () => {
@@ -927,7 +1071,7 @@ describe("GET /api/scenarios", () => {
     expect((await fallbackRes.json()).count).toBe(scenarios.length);
   });
 
-  it("filters scenarios by cited reference ID", async () => {
+  it("filters scenarios by cited reference ID, weaknessClass, target, and supports offset", async () => {
     const refRes = scenariosIndex(req("/api/scenarios?ref=cs26"));
     expect(refRes.status).toBe(200);
     const refBody = await refRes.json();
@@ -936,6 +1080,24 @@ describe("GET /api/scenarios", () => {
     const noneRes = scenariosIndex(req("/api/scenarios?ref=nonexistent-ref"));
     expect(noneRes.status).toBe(200);
     expect((await noneRes.json()).count).toBe(0);
+
+    const weakRes = scenariosIndex(req("/api/scenarios?weakness=credentials"));
+    expect(weakRes.status).toBe(200);
+    const weakBody = await weakRes.json();
+    expect(weakBody.count).toBeGreaterThan(0);
+    expect(weakBody.scenarios.every((s: { weaknessClass: string[] }) => s.weaknessClass.some((w) => w.toLowerCase().includes("credentials")))).toBe(true);
+
+    const targetRes = scenariosIndex(req("/api/scenarios?target=directory"));
+    expect(targetRes.status).toBe(200);
+    const targetBody = await targetRes.json();
+    expect(targetBody.count).toBe(1);
+    expect(targetBody.scenarios[0].id).toBe("onprem-domain");
+
+    const offRes = scenariosIndex(req("/api/scenarios?offset=2&limit=2"));
+    expect(offRes.status).toBe(200);
+    const offBody = await offRes.json();
+    expect(offBody.count).toBe(2);
+    expect(offBody.totalCount).toBe(scenarios.length);
   });
 });
 
@@ -954,11 +1116,23 @@ describe("GET /api/scenarios/[id]", () => {
     }
   });
 
-  it("supports case-insensitive scenario lookup and trims whitespace", async () => {
+  it("supports case-insensitive scenario lookup, scenario numbers (h1, H1, 1), and trims whitespace", async () => {
     const first = scenarios[0];
     const res = await scenarioOne(req(`/api/scenarios/${first.id.toUpperCase()}`), idCtx(first.id.toUpperCase()));
     expect(res.status).toBe(200);
     expect((await res.json()).id).toBe(first.id);
+
+    const hNumRes = await scenarioOne(req("/api/scenarios/h1"), idCtx("h1"));
+    expect(hNumRes.status).toBe(200);
+    expect((await hNumRes.json()).id).toBe(first.id);
+
+    const hUpperRes = await scenarioOne(req("/api/scenarios/H1"), idCtx("H1"));
+    expect(hUpperRes.status).toBe(200);
+    expect((await hUpperRes.json()).id).toBe(first.id);
+
+    const digitRes = await scenarioOne(req("/api/scenarios/1"), idCtx("1"));
+    expect(digitRes.status).toBe(200);
+    expect((await digitRes.json()).id).toBe(first.id);
 
     const trimRes = await scenarioOne(req(`/api/scenarios/${first.id}`), idCtx(`  ${first.id}  `));
     expect(trimRes.status).toBe(200);
@@ -1072,6 +1246,26 @@ describe("GET /api/sources", () => {
     const fallbackRes = sourcesIndex({ url: "http://" } as unknown as Request);
     expect(fallbackRes.status).toBe(200);
     expect((await fallbackRes.json()).count).toBe(sources.length);
+  });
+
+  it("filters sources by note/type and supports offset / skip", async () => {
+    const typeRes = sourcesIndex(req("/api/sources?type=primary"));
+    expect(typeRes.status).toBe(200);
+    const typeBody = await typeRes.json();
+    expect(typeBody.count).toBeGreaterThan(0);
+    expect(typeBody.sources.every((s: { note?: string }) => s.note?.toLowerCase().includes("primary"))).toBe(true);
+
+    const noteRes = sourcesIndex(req("/api/sources?note=secondary"));
+    expect(noteRes.status).toBe(200);
+    const noteBody = await noteRes.json();
+    expect(noteBody.count).toBeGreaterThan(0);
+    expect(noteBody.sources.every((s: { note?: string }) => s.note?.toLowerCase().includes("secondary"))).toBe(true);
+
+    const offRes = sourcesIndex(req("/api/sources?offset=5&limit=3"));
+    expect(offRes.status).toBe(200);
+    const offBody = await offRes.json();
+    expect(offBody.count).toBe(3);
+    expect(offBody.totalCount).toBe(sources.length);
   });
 });
 

@@ -1,7 +1,7 @@
-import { json, parseLimit, parseSearchQuery, PUBLIC_CACHE } from "../../../lib/http";
+import { json, parseLimit, parseOffset, parseSearchQuery, PUBLIC_CACHE } from "../../../lib/http";
 import { incidents, scenarios, unverified, INCIDENTS_DISCLAIMER } from "../../../lib/incidents";
 
-/** Incident case studies index as JSON. Lists incidents, summaries, counts, and disclaimer. Supports ?source=, ?year=, ?q=, and ?limit=. */
+/** Incident case studies index as JSON. Lists incidents, summaries, counts, and disclaimer. Supports ?source=, ?year=, ?standing=, ?kicker=, ?q=, ?offset=, and ?limit=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -13,6 +13,9 @@ export function GET(req?: Request): Response {
       const q = parseSearchQuery(url.searchParams);
       const source = parseSearchQuery(url.searchParams, "source");
       const year = parseSearchQuery(url.searchParams, "year");
+      const standing = parseSearchQuery(url.searchParams, "standing");
+      const kicker = parseSearchQuery(url.searchParams, "kicker");
+      const offset = parseOffset(url.searchParams);
       const limit = parseLimit(url.searchParams);
 
       if (source) {
@@ -21,6 +24,14 @@ export function GET(req?: Request): Response {
 
       if (year) {
         list = list.filter((i) => i.date.toLowerCase().includes(year));
+      }
+
+      if (standing) {
+        list = list.filter((i) => i.standing.toLowerCase().includes(standing));
+      }
+
+      if (kicker) {
+        list = list.filter((i) => i.kicker.toLowerCase().includes(kicker));
       }
 
       if (q) {
@@ -44,6 +55,10 @@ export function GET(req?: Request): Response {
             i.seraphim.limits.toLowerCase().includes(q) ||
             i.sources.some((s) => s.toLowerCase().includes(q))
         );
+      }
+
+      if (offset && offset > 0) {
+        list = list.slice(offset);
       }
 
       if (limit) {

@@ -212,7 +212,7 @@ export const posts: Post[] = [
 
 export const postBySlug = (slug: string): Post | undefined => {
   if (!slug || typeof slug !== "string") return undefined;
-  const target = slug.trim().toLowerCase();
+  const target = slug.trim().replace(/^\/+|\/+$/g, "").toLowerCase();
   if (!target) return undefined;
   return posts.find((p) => p.slug === slug || p.slug.toLowerCase() === target);
 };

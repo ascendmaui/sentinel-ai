@@ -580,13 +580,25 @@ export const incidentById = (id: string): Incident | undefined => {
   if (!id || typeof id !== "string") return undefined;
   const target = id.trim().toLowerCase();
   if (!target) return undefined;
-  return incidents.find((i) => i.id === id || i.id.toLowerCase() === target);
+  return incidents.find(
+    (i) =>
+      i.id === id ||
+      i.id.toLowerCase() === target ||
+      i.n.toLowerCase() === target ||
+      i.n.toLowerCase() === target.padStart(2, "0")
+  );
 };
 
 export const scenarioById = (id: string): Scenario | undefined => {
   if (!id || typeof id !== "string") return undefined;
   const target = id.trim().toLowerCase();
   if (!target) return undefined;
-  return scenarios.find((s) => s.id === id || s.id.toLowerCase() === target);
+  return scenarios.find(
+    (s) =>
+      s.id === id ||
+      s.id.toLowerCase() === target ||
+      s.n.toLowerCase() === target ||
+      s.n.toLowerCase() === `h${target}`
+  );
 };
 

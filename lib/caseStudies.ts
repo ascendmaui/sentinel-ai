@@ -216,9 +216,19 @@ export const remediation: Remediation[] = [
 
 export const findingById = (id: string): Finding | undefined => {
   if (!id || typeof id !== "string") return undefined;
-  const target = id.trim().toLowerCase();
+  let target = id.trim().toLowerCase();
   if (!target) return undefined;
-  return findings.find((f) => f.id.toLowerCase() === target);
+  if (target.startsWith("fix-")) target = target.slice(4);
+  const normalized = target.replace(/-/g, "");
+  const withF = normalized.startsWith("f")
+    ? normalized
+    : `f${normalized.length === 1 ? `0${normalized}` : normalized}`;
+  return findings.find(
+    (f) =>
+      f.id.toLowerCase() === target ||
+      f.id.toLowerCase().replace(/-/g, "") === normalized ||
+      f.id.toLowerCase().replace(/-/g, "") === withF
+  );
 };
 
 export const remediationById = (id: string): Remediation | undefined => {
@@ -226,7 +236,16 @@ export const remediationById = (id: string): Remediation | undefined => {
   let target = id.trim().toLowerCase();
   if (!target) return undefined;
   if (target.startsWith("fix-")) target = target.slice(4);
-  return remediation.find((r) => r.id.toLowerCase() === target);
+  const normalized = target.replace(/-/g, "");
+  const withF = normalized.startsWith("f")
+    ? normalized
+    : `f${normalized.length === 1 ? `0${normalized}` : normalized}`;
+  return remediation.find(
+    (r) =>
+      r.id.toLowerCase() === target ||
+      r.id.toLowerCase().replace(/-/g, "") === normalized ||
+      r.id.toLowerCase().replace(/-/g, "") === withF
+  );
 };
 
 

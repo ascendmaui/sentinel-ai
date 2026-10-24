@@ -1,7 +1,7 @@
-import { json, parseLimit, parseSearchQuery, PUBLIC_CACHE } from "../../../lib/http";
+import { json, parseLimit, parseOffset, parseSearchQuery, PUBLIC_CACHE } from "../../../lib/http";
 import { posts, postWords } from "../../../lib/posts";
 
-/** Blog index as JSON: post metadata only (no body). Newest first. Supports ?tier=, ?source=, ?year=, ?q=, and ?limit=. */
+/** Blog index as JSON: post metadata only (no body). Newest first. Supports ?tier=, ?source=, ?year=, ?q=, ?offset=, and ?limit=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -14,6 +14,7 @@ export function GET(req?: Request): Response {
       const source = parseSearchQuery(url.searchParams, "source");
       const year = parseSearchQuery(url.searchParams, "year");
       const q = parseSearchQuery(url.searchParams);
+      const offset = parseOffset(url.searchParams);
       const limit = parseLimit(url.searchParams);
 
       if (tier) {
@@ -32,12 +33,17 @@ export function GET(req?: Request): Response {
             p.title.toLowerCase().includes(q) ||
             p.description.toLowerCase().includes(q) ||
             p.ctaLead.toLowerCase().includes(q) ||
-            p.date.toLowerCase().includes(q)
+            p.date.toLowerCase().includes(q) ||
+            p.tier.toLowerCase().includes(q) ||
+            p.sources.some((s) => s.toLowerCase().includes(q))
         );
       }
 
       list.sort((a, b) => b.date.localeCompare(a.date));
 
+      if (offset && offset > 0) {
+        list = list.slice(offset);
+      }
       if (limit) {
         list = list.slice(0, limit);
       }

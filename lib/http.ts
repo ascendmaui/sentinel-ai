@@ -70,6 +70,23 @@ export function parseLimit(params: URLSearchParams, max = 100): number | undefin
 }
 
 /**
+ * Safely parses an optional integer offset from URL search parameters (accepts "offset" or "skip").
+ * Returns undefined if missing, non-numeric, or < 0. Bounded by optional max.
+ * Only plain base-10 non-negative integers are accepted: partial numerics such as "1e3" or "2.5"
+ * are rejected rather than silently truncated by parseInt.
+ */
+export function parseOffset(params: URLSearchParams, max = 10000): number | undefined {
+  if (!params || typeof params.get !== "function") return undefined;
+  const cap = Math.floor(max);
+  if (!Number.isFinite(max) || cap < 0) return undefined;
+  const raw = (params.get("offset") ?? params.get("skip"))?.trim();
+  if (!raw || !/^\+?\d+$/.test(raw)) return undefined;
+  const num = Number(raw);
+  if (!Number.isFinite(num) || num < 0) return undefined;
+  return Math.min(num, cap);
+}
+
+/**
  * Safely extracts a trimmed lowercase query string from URL search parameters.
  * Returns undefined if missing or containing only whitespace.
  */

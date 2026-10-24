@@ -303,10 +303,12 @@ describe("posts", () => {
     }
   });
 
-  it("postBySlug does not match inherited object properties", () => {
+  it("postBySlug does not match inherited object properties and handles slashes", () => {
     expect(postBySlug("toString")).toBeUndefined();
     expect(postBySlug(posts[0].slug)).toBe(posts[0]);
     expect(postBySlug(`  ${posts[0].slug}  `)).toBe(posts[0]);
+    expect(postBySlug(`/${posts[0].slug}`)).toBe(posts[0]);
+    expect(postBySlug(`/${posts[0].slug}/`)).toBe(posts[0]);
     expect(postBySlug("")).toBeUndefined();
     expect(postBySlug("   ")).toBeUndefined();
     expect(postBySlug(undefined as unknown as string)).toBeUndefined();
@@ -369,10 +371,15 @@ describe("tiers", () => {
     }
   });
 
-  it("tierById handles case-insensitivity and returns undefined for unknown", () => {
+  it("tierById handles case-insensitivity, rank numbers, and returns undefined for unknown", () => {
     expect(tierById("SERAPHIM")).toBeDefined();
     expect(tierById("  seraphim  ")).toBeDefined();
+    expect(tierById("1")).toBe(tiers[0]);
+    expect(tierById(" 1 ")).toBe(tiers[0]);
+    expect(tierById("4")).toBe(tiers[3]);
     expect(tierById("unknown")).toBeUndefined();
+    expect(tierById("99")).toBeUndefined();
+    expect(tierById("0")).toBeUndefined();
     expect(tierById("toString")).toBeUndefined();
     expect(tierById("")).toBeUndefined();
     expect(tierById("   ")).toBeUndefined();
@@ -438,10 +445,14 @@ describe("incidents", () => {
     }
   });
 
-  it("incidentById handles case-insensitivity and returns undefined for unknown", () => {
+  it("incidentById handles case-insensitivity, incident numbering, and returns undefined for unknown", () => {
     const first = incidents[0];
     expect(incidentById(first.id.toUpperCase())).toBe(first);
     expect(incidentById(`  ${first.id}  `)).toBe(first);
+    expect(incidentById("01")).toBe(first);
+    expect(incidentById("1")).toBe(first);
+    expect(incidentById(" 01 ")).toBe(first);
+    expect(incidentById("99")).toBeUndefined();
     expect(incidentById("unknown-incident")).toBeUndefined();
     expect(incidentById("constructor")).toBeUndefined();
     expect(incidentById("")).toBeUndefined();
@@ -471,11 +482,16 @@ describe("incidents", () => {
     }
   });
 
-  it("scenarioById handles exact, case-insensitive, and invalid lookups", () => {
+  it("scenarioById handles exact, case-insensitive, scenario numbering, and invalid lookups", () => {
     const first = scenarios[0];
     expect(scenarioById(first.id)).toBe(first);
     expect(scenarioById(first.id.toUpperCase())).toBe(first);
     expect(scenarioById(`  ${first.id}  `)).toBe(first);
+    expect(scenarioById("h1")).toBe(first);
+    expect(scenarioById("H1")).toBe(first);
+    expect(scenarioById("1")).toBe(first);
+    expect(scenarioById(" h1 ")).toBe(first);
+    expect(scenarioById("h99")).toBeUndefined();
     expect(scenarioById("unknown-scenario")).toBeUndefined();
     expect(scenarioById("constructor")).toBeUndefined();
     expect(scenarioById("")).toBeUndefined();
@@ -498,10 +514,14 @@ describe("case studies / findings", () => {
     }
   });
 
-  it("findingById handles case-insensitivity and returns undefined for unknown", () => {
+  it("findingById handles case-insensitivity, fix- prefix, hyphenless form, and returns undefined for unknown", () => {
     expect(findingById("F-01")).toBeDefined();
     expect(findingById("f-01")?.id).toBe("F-01");
     expect(findingById("  f-01  ")?.id).toBe("F-01");
+    expect(findingById("f01")?.id).toBe("F-01");
+    expect(findingById("fix-f-01")?.id).toBe("F-01");
+    expect(findingById("fix-01")?.id).toBe("F-01");
+    expect(findingById("FIX-F01")?.id).toBe("F-01");
     expect(findingById("F-99")).toBeUndefined();
     expect(findingById("toString")).toBeUndefined();
     expect(findingById("")).toBeUndefined();
@@ -512,12 +532,15 @@ describe("case studies / findings", () => {
     expect(findingById(true as unknown as string)).toBeUndefined();
   });
 
-  it("remediationById handles case-insensitivity and returns undefined for unknown", () => {
+  it("remediationById handles case-insensitivity, hyphenless form, and returns undefined for unknown", () => {
     expect(remediationById("F-01")).toBeDefined();
     expect(remediationById("f-01")?.id).toBe("F-01");
     expect(remediationById("  f-01  ")?.id).toBe("F-01");
+    expect(remediationById("f01")?.id).toBe("F-01");
     expect(remediationById("fix-f-01")?.id).toBe("F-01");
+    expect(remediationById("fix-01")?.id).toBe("F-01");
     expect(remediationById("FIX-F-01")?.id).toBe("F-01");
+    expect(remediationById("FIX-F01")?.id).toBe("F-01");
     expect(remediationById("F-99")).toBeUndefined();
     expect(remediationById("toString")).toBeUndefined();
     expect(remediationById("")).toBeUndefined();

@@ -1,7 +1,7 @@
-import { json, parseLimit, parseSearchQuery, PUBLIC_CACHE } from "../../../lib/http";
+import { json, parseLimit, parseOffset, parseSearchQuery, PUBLIC_CACHE } from "../../../lib/http";
 import { tiers, tierHref, matrix, helper, ENGAGEMENT_TERMS } from "../../../lib/tiers";
 
-/** Service tiers index as JSON: all four engagement tiers and comparison matrix. Supports ?q=. */
+/** Service tiers index as JSON: all four engagement tiers and comparison matrix. Supports ?cadence=, ?positioning=, ?rank=, ?q=, ?offset=, and ?limit=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -11,7 +11,24 @@ export function GET(req?: Request): Response {
     try {
       const url = new URL(req.url, "http://localhost");
       const q = parseSearchQuery(url.searchParams);
+      const cadence = parseSearchQuery(url.searchParams, "cadence");
+      const positioning = parseSearchQuery(url.searchParams, "positioning");
+      const rankParam = url.searchParams.get("rank")?.trim();
+      const rank = rankParam && /^\d+$/.test(rankParam) ? Number(rankParam) : undefined;
+      const offset = parseOffset(url.searchParams);
       const limit = parseLimit(url.searchParams);
+
+      if (cadence) {
+        list = list.filter((t) => t.cadence.toLowerCase().includes(cadence));
+      }
+
+      if (positioning) {
+        list = list.filter((t) => t.positioning.toLowerCase().includes(positioning));
+      }
+
+      if (rank !== undefined) {
+        list = list.filter((t) => t.rank === rank);
+      }
 
       if (q) {
         list = list.filter(
@@ -27,6 +44,10 @@ export function GET(req?: Request): Response {
             t.included.some((item) => item.toLowerCase().includes(q)) ||
             t.notIncluded.some((item) => item.toLowerCase().includes(q))
         );
+      }
+
+      if (offset && offset > 0) {
+        list = list.slice(offset);
       }
 
       if (limit) {

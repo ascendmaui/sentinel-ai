@@ -1,7 +1,7 @@
-import { json, parseLimit, parseSearchQuery, PUBLIC_CACHE } from "../../../lib/http";
+import { json, parseLimit, parseOffset, parseSearchQuery, PUBLIC_CACHE } from "../../../lib/http";
 import { scenarios } from "../../../lib/incidents";
 
-/** Hypothetical scenarios index as JSON. Lists conceptual threat models and controls. Supports ?ref=, ?q=, and ?limit=. */
+/** Hypothetical scenarios index as JSON. Lists conceptual threat models and controls. Supports ?ref=, ?weakness=, ?target=, ?q=, ?offset=, and ?limit=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -11,11 +11,22 @@ export function GET(req?: Request): Response {
     try {
       const url = new URL(req.url, "http://localhost");
       const ref = parseSearchQuery(url.searchParams, "ref");
+      const weakness = parseSearchQuery(url.searchParams, "weakness") || parseSearchQuery(url.searchParams, "weaknessClass");
+      const target = parseSearchQuery(url.searchParams, "target");
       const q = parseSearchQuery(url.searchParams);
+      const offset = parseOffset(url.searchParams);
       const limit = parseLimit(url.searchParams);
 
       if (ref) {
         list = list.filter((s) => s.refs.some((r) => r.toLowerCase() === ref));
+      }
+
+      if (weakness) {
+        list = list.filter((s) => s.weaknessClass.some((w) => w.toLowerCase().includes(weakness)));
+      }
+
+      if (target) {
+        list = list.filter((s) => s.target.toLowerCase().includes(target));
       }
 
       if (q) {
@@ -32,6 +43,10 @@ export function GET(req?: Request): Response {
             s.seraphim.some((sp) => sp.toLowerCase().includes(q)) ||
             s.refs.some((r) => r.toLowerCase().includes(q))
         );
+      }
+
+      if (offset && offset > 0) {
+        list = list.slice(offset);
       }
 
       if (limit) {
