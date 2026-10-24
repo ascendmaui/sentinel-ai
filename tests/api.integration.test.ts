@@ -15,8 +15,11 @@ import { GET as sourceOne, generateStaticParams as sourceParams } from "../app/a
 import { GET as brandEndpoint } from "../app/api/brand/route";
 import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, BRAND_PARENT, BRAND_SUFFIX, BRAND_TAGLINE, BRAND_WORD, SHOW_CODE_RAIN, SITE_URL, TRUE_BADGES } from "../lib/brand";
 import { THEME_META, THEME_NAMES } from "../lib/theme";
+import * as postsModule from "../lib/posts";
 import { posts } from "../lib/posts";
+import * as incidentsModule from "../lib/incidents";
 import { incidents, scenarios } from "../lib/incidents";
+import * as caseStudiesModule from "../lib/caseStudies";
 import { findings } from "../lib/caseStudies";
 import { tiers } from "../lib/tiers";
 import { S, sources } from "../lib/sources";
@@ -219,8 +222,19 @@ describe("GET /api/posts/[slug]", () => {
     },
   );
 
-  it("generateStaticParams covers every post", () => {
+  it("generateStaticParams covers every post and filters out unresolvable source IDs", async () => {
     expect(postParams()).toEqual(posts.map((p) => ({ slug: p.slug })));
+
+    const spy = vi.spyOn(postsModule, "postBySlug").mockReturnValueOnce({
+      ...posts[0],
+      sources: ["oaiAug", "nonexistent", "toString"],
+    });
+    const res = await postOne(req(`/api/posts/${posts[0].slug}`), slugCtx(posts[0].slug));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.sources).toHaveLength(1);
+    expect(body.sources[0].id).toBe("oaiAug");
+    spy.mockRestore();
   });
 });
 
@@ -364,8 +378,19 @@ describe("GET /api/incidents/[id]", () => {
     },
   );
 
-  it("generateStaticParams covers every incident", () => {
+  it("generateStaticParams covers every incident and filters out unresolvable source IDs", async () => {
     expect(incidentParams()).toEqual(incidents.map((i) => ({ id: i.id })));
+
+    const spy = vi.spyOn(incidentsModule, "incidentById").mockReturnValueOnce({
+      ...incidents[0],
+      sources: ["oaiAug", "nonexistent", "constructor"],
+    });
+    const res = await incidentOne(req(`/api/incidents/${incidents[0].id}`), idCtx(incidents[0].id));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.sources).toHaveLength(1);
+    expect(body.sources[0].id).toBe("oaiAug");
+    spy.mockRestore();
   });
 });
 
@@ -505,8 +530,14 @@ describe("GET /api/case-studies/[id]", () => {
     },
   );
 
-  it("generateStaticParams covers every finding", () => {
+  it("generateStaticParams covers every finding and handles missing remediation gracefully", async () => {
     expect(caseStudyParams()).toEqual(findings.map((f) => ({ id: f.id.toLowerCase() })));
+
+    const spy = vi.spyOn(caseStudiesModule, "remediationById").mockReturnValueOnce(undefined);
+    const res = await caseStudyOne(req("/api/case-studies/f-01"), idCtx("f-01"));
+    expect(res.status).toBe(200);
+    expect((await res.json()).remediation).toBeNull();
+    spy.mockRestore();
   });
 });
 
@@ -847,8 +878,19 @@ describe("GET /api/scenarios/[id]", () => {
     },
   );
 
-  it("generateStaticParams covers all scenarios", () => {
+  it("generateStaticParams covers all scenarios and filters out unresolvable ref IDs", async () => {
     expect(scenarioParams()).toEqual(scenarios.map((s) => ({ id: s.id })));
+
+    const spy = vi.spyOn(incidentsModule, "scenarioById").mockReturnValueOnce({
+      ...scenarios[0],
+      refs: ["cs26", "nonexistent", "__proto__"],
+    });
+    const res = await scenarioOne(req(`/api/scenarios/${scenarios[0].id}`), idCtx(scenarios[0].id));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.refs).toHaveLength(1);
+    expect(body.refs[0].id).toBe("cs26");
+    spy.mockRestore();
   });
 });
 

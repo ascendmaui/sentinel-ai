@@ -331,4 +331,119 @@ describe("ThemeSwitcher component", () => {
     expect(html).toContain("<span>Light</span>");
     expect(html).toContain("<span>Contrast</span>");
   });
+
+  it("handles keyboard navigation (arrows, Home, End) and click selection across themes", () => {
+    let tree: React.ReactElement<{
+      onKeyDown: (e: unknown) => void;
+      children: unknown[];
+    }> | null = null;
+    function Harness() {
+      const el = ThemeSwitcher({ showLabels: true });
+      tree = el as typeof tree;
+      return el;
+    }
+    renderToStaticMarkup(React.createElement(Harness));
+    expect(tree).not.toBeNull();
+
+    let currentAttr = "dark";
+    let metaContent = "";
+    let storedValue = "";
+    const dispatched: string[] = [];
+    const focusedIndices: number[] = [];
+
+    const prevDoc = (globalThis as Record<string, unknown>).document;
+    const prevWin = (globalThis as Record<string, unknown>).window;
+    const prevStorage = (globalThis as Record<string, unknown>).localStorage;
+
+    try {
+      (globalThis as Record<string, unknown>).document = {
+        documentElement: {
+          getAttribute: () => currentAttr,
+          setAttribute: (_k: string, v: string) => {
+            currentAttr = v;
+          },
+        },
+        querySelectorAll: () => [
+          {
+            setAttribute: (_k: string, v: string) => {
+              metaContent = v;
+            },
+          },
+        ],
+      };
+      (globalThis as Record<string, unknown>).window = {
+        dispatchEvent: (ev: CustomEvent<string>) => {
+          dispatched.push(ev.detail);
+        },
+      };
+      (globalThis as Record<string, unknown>).localStorage = {
+        setItem: (_k: string, v: string) => {
+          storedValue = v;
+        },
+      };
+
+      const makeKeyEvent = (key: string) => {
+        let prevented = false;
+        return {
+          key,
+          preventDefault: () => {
+            prevented = true;
+          },
+          get prevented() {
+            return prevented;
+          },
+          currentTarget: {
+            querySelectorAll: () =>
+              [0, 1, 2].map((idx) => ({
+                focus: () => focusedIndices.push(idx),
+              })),
+          },
+        };
+      };
+
+      // Unhandled key is ignored
+      const tabEv = makeKeyEvent("Tab");
+      tree!.props.onKeyDown(tabEv);
+      expect(tabEv.prevented).toBe(false);
+      expect(dispatched).toHaveLength(0);
+
+      // ArrowRight from default dark (index 0) -> light (index 1)
+      const rightEv = makeKeyEvent("ArrowRight");
+      tree!.props.onKeyDown(rightEv);
+      expect(rightEv.prevented).toBe(true);
+      expect(currentAttr).toBe("light");
+      expect(storedValue).toBe("light");
+      expect(metaContent).toMatch(/^#[0-9A-Fa-f]{6}$/);
+      expect(focusedIndices.at(-1)).toBe(1);
+
+      // ArrowUp from default dark (index 0) -> wraps to high-contrast (index 2)
+      const upEv = makeKeyEvent("ArrowUp");
+      tree!.props.onKeyDown(upEv);
+      expect(currentAttr).toBe("high-contrast");
+      expect(focusedIndices.at(-1)).toBe(2);
+
+      // Home -> dark (index 0), End -> high-contrast (index 2)
+      tree!.props.onKeyDown(makeKeyEvent("Home"));
+      expect(currentAttr).toBe("dark");
+      expect(focusedIndices.at(-1)).toBe(0);
+
+      tree!.props.onKeyDown(makeKeyEvent("End"));
+      expect(currentAttr).toBe("high-contrast");
+      expect(focusedIndices.at(-1)).toBe(2);
+
+      // Direct button click and localStorage private-mode error resilience
+      (globalThis as Record<string, unknown>).localStorage = {
+        setItem: () => {
+          throw new Error("QuotaExceededError");
+        },
+      };
+      const buttons = tree!.props.children[1] as React.ReactElement<{ onClick: () => void }>[];
+      expect(() => buttons[1].props.onClick()).not.toThrow();
+      expect(currentAttr).toBe("light");
+    } finally {
+      (globalThis as Record<string, unknown>).document = prevDoc;
+      (globalThis as Record<string, unknown>).window = prevWin;
+      (globalThis as Record<string, unknown>).localStorage = prevStorage;
+    }
+  });
 });
