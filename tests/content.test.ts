@@ -7,7 +7,8 @@ import { incidents, incidentById, scenarios, scenarioById, unverified } from "..
 import { posts, postBySlug, postWords } from "../lib/posts";
 import { S, sources, sourceById } from "../lib/sources";
 import { helper, matrix, tierById, tierHref, tiers } from "../lib/tiers";
-import { THEME_BOOT_SCRIPT, THEME_META, THEME_NAMES } from "../lib/theme";
+import { DEFAULT_THEME, THEME_BOOT_SCRIPT, THEME_META, THEME_NAMES } from "../lib/theme";
+import tokens from "../lib/tokens.json";
 import robots from "../app/robots";
 import sitemap from "../app/sitemap";
 
@@ -66,7 +67,11 @@ describe("brand", () => {
 
 describe("theme and tokens", () => {
   it("theme names match tokens and THEME_META keys", () => {
+    expect(tokens.name).toBe(BRAND_NAME);
+    expect(DEFAULT_THEME).toBe(tokens.defaultTheme);
+    expect(THEME_NAMES).toContain(DEFAULT_THEME);
     expect(THEME_NAMES).toEqual(["dark", "light", "high-contrast"]);
+    expect(Object.keys(tokens.themes).sort()).toEqual([...THEME_NAMES].sort());
     expect(Object.keys(THEME_META).sort()).toEqual([...THEME_NAMES].sort());
     for (const name of THEME_NAMES) {
       expect(THEME_META[name]).toMatch(/^#[0-9A-Fa-f]{6}$/);

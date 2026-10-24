@@ -11,7 +11,7 @@ import {
   TRUE_BADGES,
 } from "../../../lib/brand";
 import { json, PUBLIC_CACHE } from "../../../lib/http";
-import { THEME_META, THEME_NAMES } from "../../../lib/theme";
+import { DEFAULT_THEME, THEME_META, THEME_NAMES } from "../../../lib/theme";
 
 /** Brand identity, trust badges, and public configuration metadata as JSON. */
 export function GET() {
@@ -28,7 +28,7 @@ export function GET() {
       showCodeRain: SHOW_CODE_RAIN,
       badges: TRUE_BADGES,
       theme: {
-        default: "dark",
+        default: DEFAULT_THEME,
         names: THEME_NAMES,
         meta: THEME_META,
       },
