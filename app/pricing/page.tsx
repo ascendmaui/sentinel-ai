@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Icon } from "../../components/Icons";
 import { TierEmblem } from "../../components/TierEmblem";
 import { TrustBadges } from "../../components/TrustBadges";
-import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME } from "../../lib/brand";
+import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, OG_IMAGES } from "../../lib/brand";
 import { ENGAGEMENT_TERMS, helper, matrix, tierById, tierHref, tiers, type TierId } from "../../lib/tiers";
 
 const title = "Services and tiers";
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   title,
   description,
   alternates: { canonical: "/pricing" },
-  openGraph: { type: "website", siteName: BRAND_NAME, title: `${BRAND_NAME}: ${title}`, description, url: "/pricing" },
+  openGraph: { type: "website", siteName: BRAND_NAME, title: `${BRAND_NAME}: ${title}`, description, url: "/pricing", images: OG_IMAGES },
 };
 
 const order: TierId[] = ["seraphim", "cherubim", "thrones", "angels"];

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Icon } from "../../components/Icons";
 import { TierCta } from "../../components/TierCta";
 import { TrustBadges } from "../../components/TrustBadges";
-import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME } from "../../lib/brand";
+import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, OG_IMAGES } from "../../lib/brand";
 import { INCIDENTS_DISCLAIMER, incidents, scenarios, unverified } from "../../lib/incidents";
 import { sourceById } from "../../lib/sources";
 
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   title,
   description,
   alternates: { canonical: "/incident-case-studies" },
-  openGraph: { type: "article", siteName: BRAND_NAME, title: `${title}: rogue agent investigations`, description, url: "/incident-case-studies" },
+  openGraph: { type: "article", siteName: BRAND_NAME, title: `${title}: rogue agent investigations`, description, url: "/incident-case-studies", images: OG_IMAGES },
 };
 
 function SrcList({ ids, label = "Sources" }: { ids: string[]; label?: string }) {

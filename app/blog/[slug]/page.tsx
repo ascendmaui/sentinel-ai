@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { Fragment } from "react";
 import { Icon } from "../../../components/Icons";
 import { TierCta } from "../../../components/TierCta";
-import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME } from "../../../lib/brand";
+import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, OG_IMAGES } from "../../../lib/brand";
 import { postBySlug, posts } from "../../../lib/posts";
 import { sourceById } from "../../../lib/sources";
 
@@ -20,7 +20,7 @@ export async function generateMetadata(ctx: { params: Promise<{ slug: string }> 
     title: p.title,
     description: p.description,
     alternates: { canonical: `/blog/${p.slug}` },
-    openGraph: { type: "article", siteName: BRAND_NAME, title: p.title, description: p.description, url: `/blog/${p.slug}`, publishedTime: p.date },
+    openGraph: { type: "article", siteName: BRAND_NAME, title: p.title, description: p.description, url: `/blog/${p.slug}`, publishedTime: p.date, images: OG_IMAGES },
   };
 }
 

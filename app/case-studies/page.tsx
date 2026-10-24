@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { TierCta } from "../../components/TierCta";
 import { Icon } from "../../components/Icons";
-import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, BRAND_PARENT } from "../../lib/brand";
+import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, BRAND_PARENT, OG_IMAGES } from "../../lib/brand";
 import { findings, remediation, severityCounts } from "../../lib/caseStudies";
 
 const title = "Case studies";
@@ -18,6 +18,7 @@ export const metadata: Metadata = {
     title: "Case study 01: Self-engagement, airport ride platform",
     description,
     url: "/case-studies",
+    images: OG_IMAGES,
   },
 };
 

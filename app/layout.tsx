@@ -5,7 +5,7 @@ import { Bricolage_Grotesque, Inter, JetBrains_Mono } from "next/font/google";
 import { Nav } from "../components/Nav";
 import { Footer } from "../components/Footer";
 import { THEME_BOOT_SCRIPT, THEME_META } from "../lib/theme";
-import { BRAND_NAME, BRAND_TAGLINE, SHOW_CODE_RAIN, SITE_URL } from "../lib/brand";
+import { BRAND_NAME, BRAND_TAGLINE, OG_IMAGES, SHOW_CODE_RAIN, SITE_URL } from "../lib/brand";
 import { CodeRain } from "../components/CodeRain";
 
 const display = Bricolage_Grotesque({
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     title: `${BRAND_NAME}: ${BRAND_TAGLINE.toLowerCase()}`,
     description,
     url: "/",
-    images: [{ url: "/og.png", width: 1200, height: 630, alt: BRAND_NAME }],
+    images: OG_IMAGES,
   },
   twitter: {
     card: "summary_large_image",

@@ -18,6 +18,9 @@ export const BRAND_TAGLINE = "Scoped security assessments for the age of AI agen
 /** URL-encoded name for mailto subjects. */
 export const BRAND_MAIL = encodeURIComponent(BRAND_NAME);
 
+/** Default OpenGraph image metadata shared across all routes so child openGraph objects keep og:image. */
+export const OG_IMAGES = [{ url: "/og.png", width: 1200, height: 630, alt: BRAND_NAME }];
+
 function cleanUrl(val?: string): string | undefined {
   if (!val || typeof val !== "string") return undefined;
   const trimmed = val.trim().replace(/\/+$/, "");

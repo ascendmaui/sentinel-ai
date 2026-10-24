@@ -268,6 +268,9 @@ describe("Root Layout and Shell Metadata", () => {
       expect(meta.openGraph?.siteName, `${route} og:site_name`).toBe(BRAND_NAME);
       expect(meta.openGraph?.url, `${route} og:url`).toBe(route);
       expect(meta.openGraph?.description, `${route} og:description`).toBe(meta.description);
+      expect(meta.openGraph?.images, `${route} og:image`).toEqual([
+        { url: "/og.png", width: 1200, height: 630, alt: BRAND_NAME },
+      ]);
     }
   });
 

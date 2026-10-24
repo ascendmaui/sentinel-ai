@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BRAND_NAME } from "../../lib/brand";
+import { BRAND_NAME, OG_IMAGES } from "../../lib/brand";
 import { posts } from "../../lib/posts";
 import { TierCta } from "../../components/TierCta";
 
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   title,
   description,
   alternates: { canonical: "/blog" },
-  openGraph: { type: "website", siteName: BRAND_NAME, title: `${BRAND_NAME} blog`, description, url: "/blog" },
+  openGraph: { type: "website", siteName: BRAND_NAME, title: `${BRAND_NAME} blog`, description, url: "/blog", images: OG_IMAGES },
 };
 
 export default function BlogIndex() {

@@ -312,6 +312,7 @@ for (const path of pages) {
   checkSecurityHeaders(r, `GET ${path}`);
   const html = await r.text();
   check(html.includes('rel="canonical"'), `GET ${path} includes canonical link`);
+  check(html.includes('property="og:image"'), `GET ${path} includes og:image meta tag`);
   pageIds.set(path, new Set([...html.matchAll(/\bid="([^"]+)"/g)].map(m => m[1])));
   for (const m of html.matchAll(/href="(\/[^"#?]*)(?:#([^"?]+))?(?:\?[^"]*)?"/g)) {
     links.add(m[1]);
