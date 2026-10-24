@@ -25,7 +25,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm ci --ignore-scripts
       - name: Typecheck
         run: npm run typecheck
       - name: Unit and API integration tests
@@ -40,9 +40,9 @@ jobs:
         env:
           NEXT_TELEMETRY_DISABLED: "1"
         run: |
-          npm run start -- -p 3000 > server.log 2>&1 &
+          npm run start -- -p 3000 > /tmp/sentinel-server.log 2>&1 &
           PID=$!
-          trap 'kill $PID 2>/dev/null || true' EXIT INT TERM
+          trap 'kill $PID 2>/dev/null || true; rm -f /tmp/sentinel-server.log' EXIT INT TERM
           ready=0
           for i in $(seq 1 30); do
             if curl -fsS http://localhost:3000/api/health > /dev/null 2>&1; then
@@ -53,10 +53,10 @@ jobs:
           done
           if [ "$ready" -ne 1 ]; then
             echo "Production server failed to respond on /api/health within 30 seconds"
-            cat server.log
+            cat /tmp/sentinel-server.log
             exit 1
           fi
-          node scripts/smoke.mjs http://localhost:3000 || { cat server.log; exit 1; }
+          node scripts/smoke.mjs http://localhost:3000 || { cat /tmp/sentinel-server.log; exit 1; }
 
   audit:
     runs-on: ubuntu-latest

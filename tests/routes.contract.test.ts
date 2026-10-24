@@ -2,7 +2,7 @@
  * Route contract tests: discovers every app/api/** /route.ts on disk and enforces the same
  * contract across all of them, so a newly added route cannot ship without coverage.
  */
-import { readdirSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
@@ -187,5 +187,62 @@ describe.each(routes.map((r) => [r.path] as const))("route contract %s", (path) 
       ? await mod.GET(new Request(`http://localhost${path}`), ctx(key, mod.generateStaticParams!()[0][key]))
       : await mod.GET(new Request(`http://localhost${path}`));
     expect(await res.text()).not.toContain(canary);
+  });
+});
+
+describe("CI & Repository Hardening Contracts", () => {
+  const ROOT_DIR = join(__dirname, "..");
+
+  it(".github/workflows/ci.yml enforces least-privilege permissions, credential non-persistence, ignore-scripts, and full verification steps", () => {
+    const ciYaml = readFileSync(join(ROOT_DIR, ".github", "workflows", "ci.yml"), "utf8");
+    expect(ciYaml).toContain("contents: read");
+    const checkoutCount = [...ciYaml.matchAll(/uses:\s*actions\/checkout@v4/g)].length;
+    const persistFalseCount = [...ciYaml.matchAll(/persist-credentials:\s*false/g)].length;
+    expect(checkoutCount).toBeGreaterThanOrEqual(2);
+    expect(persistFalseCount).toBe(checkoutCount);
+
+    const npmCiLines = [...ciYaml.matchAll(/run:\s*npm ci\b[^\n]*/g)].map((m) => m[0]);
+    expect(npmCiLines.length).toBeGreaterThanOrEqual(2);
+    for (const line of npmCiLines) {
+      expect(line).toContain("--ignore-scripts");
+    }
+
+    expect(ciYaml).toContain("npm run typecheck");
+    expect(ciYaml).toContain("npm test");
+    expect(ciYaml).toContain("npm run build");
+    expect(ciYaml).toContain("node scripts/smoke.mjs");
+    expect(ciYaml).toContain("npm audit --omit=dev --audit-level=critical");
+  });
+
+  it(".github/dependabot.yml monitors both npm and github-actions ecosystems", () => {
+    const dependabotYaml = readFileSync(join(ROOT_DIR, ".github", "dependabot.yml"), "utf8");
+    expect(dependabotYaml).toContain("package-ecosystem: npm");
+    expect(dependabotYaml).toContain("package-ecosystem: github-actions");
+  });
+
+  it("package.json has zero extra runtime dependencies and maps every test suite file to a test:* script", () => {
+    const pkg = JSON.parse(readFileSync(join(ROOT_DIR, "package.json"), "utf8")) as {
+      private: boolean;
+      dependencies: Record<string, string>;
+      scripts: Record<string, string>;
+    };
+    expect(pkg.private).toBe(true);
+    expect(Object.keys(pkg.dependencies).sort()).toEqual(["next", "react", "react-dom"]);
+
+    const testFiles = readdirSync(join(ROOT_DIR, "tests"))
+      .filter((f) => f.endsWith(".test.ts"))
+      .sort();
+    const scriptCommands = Object.entries(pkg.scripts)
+      .filter(([k]) => k.startsWith("test:"))
+      .map(([, v]) => v);
+
+    expect(scriptCommands.length).toBe(testFiles.length);
+    for (const file of testFiles) {
+      expect(
+        scriptCommands.some((cmd) => cmd.includes(`tests/${file}`)),
+        `tests/${file} missing from package.json test:* scripts`
+      ).toBe(true);
+      expect(existsSync(join(ROOT_DIR, "tests", file))).toBe(true);
+    }
   });
 });
