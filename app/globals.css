@@ -256,7 +256,7 @@ button { font: inherit; }
 .hero-stage.is-3d .hero-mark { opacity: 0; transform: scale(0.9); }
 
 /* ---------- Sections ---------- */
-.section { margin-top: 112px; }
+.section { margin-top: 112px; scroll-margin-top: 96px; }
 .section-head { margin-bottom: 36px; max-width: 760px; }
 .page-header { margin-bottom: 48px; max-width: 860px; }
 .step-num {
