@@ -9,7 +9,7 @@ import { useEffect, useRef } from "react";
  * Deliberately not green and not katakana: plain ASCII glyphs in muted gold and violet-grey at very
  * low opacity, to stay clear of any film's signature look. Skipped for reduced-motion visitors.
  */
-const GLYPHS = "01<>{}[]/=+;:#%&*".split("");
+export const GLYPHS = "01<>{}[]/=+;:#%&*".split("");
 
 export function CodeRain() {
   const ref = useRef<HTMLCanvasElement>(null);

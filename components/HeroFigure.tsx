@@ -15,7 +15,7 @@ import { useEffect, useRef } from "react";
 
 type P = { x: number; y: number; z: number; w: number; s: number; a: number; side: number; layer: number; k: number };
 
-function build(density: number) {
+export function build(density: number) {
   const pts: P[] = [];
   const lines: number[][] = []; // index lists forming filaments
   const add = (x: number, y: number, z: number, w = 1, s = 0, a = 1, side = 0, layer = 0, k = 0) => {

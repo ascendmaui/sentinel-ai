@@ -10,8 +10,8 @@ import { TierCta } from "../components/TierCta";
 import { Nav } from "../components/Nav";
 import { Footer } from "../components/Footer";
 import { HeroStage } from "../components/HeroStage";
-import { HeroFigure } from "../components/HeroFigure";
-import { CodeRain } from "../components/CodeRain";
+import { build as buildHeroGeometry, HeroFigure } from "../components/HeroFigure";
+import { CodeRain, GLYPHS } from "../components/CodeRain";
 import { ThemeSwitcher } from "../components/ThemeSwitcher";
 import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, BRAND_PARENT, BRAND_SUFFIX, BRAND_WORD, TRUE_BADGES } from "../lib/brand";
 import { tiers, type TierId } from "../lib/tiers";
@@ -295,14 +295,53 @@ describe("HeroFigure component", () => {
     expect(html).toContain('aria-hidden="true"');
     expect(html).toMatch(/^<canvas[^>]*><\/canvas>$/);
   });
+
+  it("builds valid 3D seraphim geometry across desktop and mobile densities", () => {
+    const desktop = buildHeroGeometry(1);
+    const mobile = buildHeroGeometry(0.6);
+
+    expect(desktop.pts.length).toBeGreaterThan(mobile.pts.length);
+    expect(desktop.lines.length).toBeGreaterThan(mobile.lines.length);
+    expect(desktop.moteStart).toBeGreaterThan(0);
+    expect(desktop.moteStart).toBeLessThan(desktop.pts.length);
+
+    const layers = new Set<number>();
+    const sides = new Set<number>();
+    for (const p of desktop.pts) {
+      expect(Number.isFinite(p.x)).toBe(true);
+      expect(Number.isFinite(p.y)).toBe(true);
+      expect(Number.isFinite(p.z)).toBe(true);
+      expect(p.a).toBeGreaterThan(0);
+      expect(p.a).toBeLessThanOrEqual(1);
+      layers.add(p.layer);
+      sides.add(p.side);
+    }
+    expect([...layers].sort()).toEqual([0, 1, 2, 3, 4, 5, 6]);
+    expect([...sides].sort()).toEqual([-1, 0, 1]);
+
+    for (const line of desktop.lines) {
+      expect(line.length).toBeGreaterThan(1);
+      for (const idx of line) {
+        expect(idx).toBeGreaterThanOrEqual(0);
+        expect(idx).toBeLessThan(desktop.pts.length);
+      }
+    }
+  });
 });
 
 describe("CodeRain component", () => {
-  it("renders background matrix code canvas with accessibility attributes", () => {
+  it("renders background matrix code canvas with accessibility attributes and plain ASCII glyphs", () => {
     const html = renderToStaticMarkup(React.createElement(CodeRain));
     expect(html).toContain('class="code-rain"');
     expect(html).toContain('aria-hidden="true"');
     expect(html).toMatch(/^<canvas[^>]*><\/canvas>$/);
+
+    expect(GLYPHS.length).toBeGreaterThan(10);
+    for (const ch of GLYPHS) {
+      expect(ch).toHaveLength(1);
+      expect(ch.charCodeAt(0)).toBeGreaterThanOrEqual(32);
+      expect(ch.charCodeAt(0)).toBeLessThanOrEqual(126);
+    }
   });
 });
 
