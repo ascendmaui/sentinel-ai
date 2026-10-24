@@ -1,4 +1,4 @@
-import { readdirSync, statSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -319,6 +319,16 @@ describe("Cross-page internal link, anchor (#id), and unique DOM id integrity", 
       routeHtml.set(`/blog/${post.slug}`, renderToStaticMarkup(RootLayout({ children: postEl })));
     }
 
+    const globalsCss = readFileSync(join(__dirname, "..", "app", "globals.css"), "utf8");
+    const definedCssClasses = new Set([
+      ...[...globalsCss.matchAll(/\.([a-zA-Z0-9_-]+)/g)].map((m) => m[1]),
+      "cs",
+      "hero-copy",
+      "--font-display",
+      "--font-body",
+      "--font-mono",
+    ]);
+
     const routeIds = new Map<string, Set<string>>();
     for (const [route, html] of routeHtml.entries()) {
       const ids = new Set<string>();
@@ -332,6 +342,12 @@ describe("Cross-page internal link, anchor (#id), and unique DOM id integrity", 
 
     for (const [sourceRoute, html] of routeHtml.entries()) {
       const pageIds = routeIds.get(sourceRoute)!;
+      // Every CSS class emitted in rendered HTML must exist in app/globals.css (or structural/font hooks)
+      for (const m of html.matchAll(/\bclass="([^"]+)"/g)) {
+        for (const cls of m[1].trim().split(/\s+/)) {
+          expect(definedCssClasses.has(cls), `${sourceRoute} uses undefined CSS class ".${cls}"`).toBe(true);
+        }
+      }
       for (const m of html.matchAll(/<section\b([^>]*)>/g)) {
         expect(
           /\baria-labelledby="[^"]+"|\baria-label="[^"]+"/.test(m[1]),
