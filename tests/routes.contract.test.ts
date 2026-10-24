@@ -128,6 +128,15 @@ describe.each(routes.map((r) => [r.path] as const))("route contract %s", (path) 
         expect(relBody.count).toBe(1);
         expect(relBody.totalCount).toBeGreaterThanOrEqual(1);
       }
+
+      const offsetRes = await mod.GET({ url: `${path}?offset=1&limit=1` } as unknown as Request);
+      expect(offsetRes.status).toBe(200);
+      expectHardenedJson(offsetRes, `${path} offset url`);
+      const offsetBody = await offsetRes.json();
+      if ("count" in offsetBody && "totalCount" in offsetBody) {
+        expect(offsetBody.count).toBe(1);
+        expect(offsetBody.totalCount).toBeGreaterThanOrEqual(1);
+      }
     });
   } else {
     it("is a dynamic route with generateStaticParams and dynamicParams enabled", () => {
