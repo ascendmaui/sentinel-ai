@@ -9,8 +9,8 @@ export function generateStaticParams() {
 }
 
 /** One hypothetical scenario with attack approach, defender-side controls, and resolved references. */
-export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
+  const { id = "" } = (await ctx?.params) ?? {};
   const scenario = scenarioById(id);
   if (!scenario) return notFound("scenario");
   const refs = scenario.refs.map((refId) => sourceById(refId)).filter(Boolean);

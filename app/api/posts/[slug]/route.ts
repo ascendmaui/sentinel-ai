@@ -9,8 +9,8 @@ export function generateStaticParams() {
 }
 
 /** One post with its body and resolved source records. */
-export async function GET(_req: Request, { params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
+export async function GET(_req: Request, ctx: { params: Promise<{ slug: string }> }) {
+  const { slug = "" } = (await ctx?.params) ?? {};
   const p = postBySlug(slug);
   if (!p) return notFound("post");
   return json({ ...p, sources: p.sources.map((id) => sourceById(id)).filter(Boolean) }, { cacheControl: PUBLIC_CACHE });

@@ -12,8 +12,8 @@ export function generateStaticParams() {
   return posts.map((p) => ({ slug: p.slug }));
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const { slug } = await params;
+export async function generateMetadata(ctx: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug = "" } = (await ctx?.params) ?? {};
   const p = postBySlug(slug);
   if (!p) return {};
   return {
@@ -24,8 +24,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
-export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
+export default async function PostPage(ctx: { params: Promise<{ slug: string }> }) {
+  const { slug = "" } = (await ctx?.params) ?? {};
   const p = postBySlug(slug);
   if (!p) notFound();
   const resolvedSources = p.sources.map((id) => sourceById(id)).filter((s): s is NonNullable<typeof s> => Boolean(s));

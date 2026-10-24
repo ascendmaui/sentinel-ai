@@ -175,6 +175,12 @@ describe.each(routes.map((r) => [r.path] as const))("route contract %s", (path) 
         expect(typeof body.message).toBe("string");
       }
     );
+
+    it("returns a JSON 404 when route context or params is omitted", async () => {
+      const noCtxRes = await modules[path].GET(new Request(`http://localhost${path}`));
+      expect(noCtxRes.status).toBe(404);
+      expectHardenedJson(noCtxRes, `${path} no ctx`);
+    });
   }
 
   it("never echoes server-side environment values in the response body", async () => {

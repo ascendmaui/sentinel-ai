@@ -8,8 +8,8 @@ export function generateStaticParams() {
 }
 
 /** One case study finding with before/after analysis and remediation details. */
-export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
+  const { id = "" } = (await ctx?.params) ?? {};
   const finding = findingById(id);
   if (!finding) return notFound("case study finding");
   const rem = remediationById(finding.id);
