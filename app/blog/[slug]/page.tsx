@@ -6,7 +6,7 @@ import { Icon } from "../../../components/Icons";
 import { TierCta } from "../../../components/TierCta";
 import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME } from "../../../lib/brand";
 import { postBySlug, posts } from "../../../lib/posts";
-import { S } from "../../../lib/sources";
+import { sourceById } from "../../../lib/sources";
 
 export function generateStaticParams() {
   return posts.map((p) => ({ slug: p.slug }));
@@ -86,7 +86,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
           </h2>
           <ul>
             {p.sources.map((id) => {
-              const s = S[id];
+              const s = sourceById(id);
               if (!s) return null;
               return (
                 <li key={id}>

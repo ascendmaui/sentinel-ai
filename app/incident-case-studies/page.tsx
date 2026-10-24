@@ -5,7 +5,7 @@ import { TierCta } from "../../components/TierCta";
 import { TrustBadges } from "../../components/TrustBadges";
 import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME } from "../../lib/brand";
 import { INCIDENTS_DISCLAIMER, incidents, scenarios, unverified } from "../../lib/incidents";
-import { S } from "../../lib/sources";
+import { sourceById } from "../../lib/sources";
 
 const title = "Incident Case Studies";
 const description = `Rogue agent investigations. Documented incidents in which AI systems reached systems they should not have, with what is known, what is our analysis, and how ${BRAND_NAME} would help you find and close the same gaps.`;
@@ -23,7 +23,7 @@ function SrcList({ ids }: { ids: string[] }) {
       <span className="tag tag-known">Sources</span>
       <ul>
         {ids.map((id) => {
-          const s = S[id];
+          const s = sourceById(id);
           if (!s) return null;
           return (
             <li key={id}>
@@ -218,7 +218,7 @@ export default function IncidentCaseStudiesPage() {
                   <span className="tag tag-known">Related sources</span>
                   <ul>
                     {s.refs.map((id) => {
-                      const src = S[id];
+                      const src = sourceById(id);
                       if (!src) return null;
                       return (
                         <li key={id}>

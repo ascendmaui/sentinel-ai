@@ -1,6 +1,6 @@
 import { json, notFound, PUBLIC_CACHE } from "../../../../lib/http";
 import { scenarios, scenarioById } from "../../../../lib/incidents";
-import { S } from "../../../../lib/sources";
+import { sourceById } from "../../../../lib/sources";
 
 export const dynamicParams = true;
 
@@ -13,6 +13,6 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const { id } = await params;
   const scenario = scenarioById(id);
   if (!scenario) return notFound("scenario");
-  const refs = scenario.refs.map((refId) => S[refId]).filter(Boolean);
+  const refs = scenario.refs.map((refId) => sourceById(refId)).filter(Boolean);
   return json({ ...scenario, refs }, { cacheControl: PUBLIC_CACHE });
 }
