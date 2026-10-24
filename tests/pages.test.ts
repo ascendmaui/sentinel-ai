@@ -17,6 +17,11 @@ import CaseStudiesPage, { metadata as csMeta } from "../app/case-studies/page";
 import IncidentCaseStudiesPage, { metadata as incMeta } from "../app/incident-case-studies/page";
 import NotFound from "../app/not-found";
 import RootLayout, { metadata as rootMeta, viewport as rootViewport } from "../app/layout";
+import { GET as postsApi } from "../app/api/posts/route";
+import { GET as incidentsApi } from "../app/api/incidents/route";
+import { GET as scenariosApi } from "../app/api/scenarios/route";
+import { GET as caseStudiesApi } from "../app/api/case-studies/route";
+import { GET as tiersApi } from "../app/api/tiers/route";
 import { BRAND_NAME, SITE_URL } from "../lib/brand";
 import { findings, remediation, severityCounts } from "../lib/caseStudies";
 import { INCIDENTS_DISCLAIMER, incidents, scenarios, unverified } from "../lib/incidents";
@@ -311,6 +316,23 @@ describe("Cross-page internal link, anchor (#id), and unique DOM id integrity", 
           const targetSet = routeIds.get(targetRoute);
           expect(targetSet?.has(hash), `${sourceRoute} links to missing #${hash} on "${targetRoute}" (from "${href}")`).toBe(true);
         }
+      }
+    }
+
+    // Also verify that every .url returned by API index endpoints resolves to a rendered route and DOM id
+    const apiUrls: string[] = [
+      ...((await postsApi().json()).posts as { url: string }[]).map((p) => p.url),
+      ...((await incidentsApi().json()).incidents as { url: string }[]).map((i) => i.url),
+      ...((await scenariosApi().json()).scenarios as { url: string }[]).map((s) => s.url),
+      ...((await caseStudiesApi().json()).findings as { url: string }[]).map((f) => f.url),
+      ...((await tiersApi().json()).tiers as { url: string }[]).map((t) => t.url),
+    ];
+    expect(apiUrls.length).toBe(posts.length + incidents.length + scenarios.length + findings.length + tiers.length);
+    for (const url of apiUrls) {
+      const [targetRoute, hash] = url.split("#");
+      expect(routeHtml.has(targetRoute), `API item url "${url}" points to unknown route "${targetRoute}"`).toBe(true);
+      if (hash) {
+        expect(routeIds.get(targetRoute)?.has(hash), `API item url "${url}" points to missing #${hash}`).toBe(true);
       }
     }
   });
