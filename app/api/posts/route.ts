@@ -22,7 +22,9 @@ export function GET(req?: Request): Response {
           (p) =>
             p.slug.toLowerCase().includes(q) ||
             p.title.toLowerCase().includes(q) ||
-            p.description.toLowerCase().includes(q)
+            p.description.toLowerCase().includes(q) ||
+            p.ctaLead.toLowerCase().includes(q) ||
+            p.date.toLowerCase().includes(q)
         );
       }
 

@@ -51,11 +51,13 @@ export const PUBLIC_CACHE = "public, max-age=0, s-maxage=300, stale-while-revali
  * are rejected rather than silently truncated by parseInt.
  */
 export function parseLimit(params: URLSearchParams, max = 100): number | undefined {
+  if (!params || typeof params.get !== "function") return undefined;
+  if (!Number.isFinite(max) || max <= 0) return undefined;
   const raw = params.get("limit")?.trim();
   if (!raw || !/^\+?\d+$/.test(raw)) return undefined;
   const num = Number(raw);
   if (!(num > 0)) return undefined;
-  return Math.min(num, max);
+  return Math.min(num, Math.floor(max));
 }
 
 /**
@@ -63,6 +65,7 @@ export function parseLimit(params: URLSearchParams, max = 100): number | undefin
  * Returns undefined if missing or containing only whitespace.
  */
 export function parseSearchQuery(params: URLSearchParams, paramName = "q"): string | undefined {
+  if (!params || typeof params.get !== "function" || !paramName || typeof paramName !== "string") return undefined;
   const raw = params.get(paramName);
   if (!raw) return undefined;
   const trimmed = raw.trim().toLowerCase();

@@ -17,11 +17,13 @@ export function GET(req?: Request): Response {
         list = list.filter(
           (i) =>
             i.id.toLowerCase().includes(q) ||
+            i.n.toLowerCase().includes(q) ||
             i.title.toLowerCase().includes(q) ||
+            i.date.toLowerCase().includes(q) ||
             i.kicker.toLowerCase().includes(q) ||
             i.oneLine.toLowerCase().includes(q) ||
             i.standing.toLowerCase().includes(q) ||
-            i.timeline.some((t) => t.t.toLowerCase().includes(q)) ||
+            i.timeline.some((t) => t.d.toLowerCase().includes(q) || t.t.toLowerCase().includes(q)) ||
             i.did.some((d) => d.toLowerCase().includes(q)) ||
             i.howIn.some((h) => h.toLowerCase().includes(q)) ||
             i.vuln.some((v) => v.toLowerCase().includes(q)) ||

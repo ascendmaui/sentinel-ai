@@ -101,7 +101,7 @@ describe("GET /api/posts", () => {
     expect(body.totalCount).toBe(posts.length);
   });
 
-  it("filters by search query parameter q", async () => {
+  it("filters by search query parameter q across title, description, ctaLead, and date", async () => {
     const res = postsIndex(req("/api/posts?q=hugging"));
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -111,6 +111,19 @@ describe("GET /api/posts", () => {
         p.title.toLowerCase().includes("hugging") || p.description.toLowerCase().includes("hugging");
       expect(match).toBe(true);
     }
+
+    // Search in post ctaLead
+    const ctaRes = postsIndex(req("/api/posts?q=email%20change%20reports"));
+    expect(ctaRes.status).toBe(200);
+    const ctaJson = await ctaRes.json();
+    expect(ctaJson.count).toBe(1);
+    expect(ctaJson.posts[0].slug).toBe("defending-against-agent-speed-attacks");
+
+    // Search in post date
+    const dateRes = postsIndex(req("/api/posts?q=2026-09-29"));
+    expect(dateRes.status).toBe(200);
+    const dateJson = await dateRes.json();
+    expect(dateJson.count).toBe(posts.length);
   });
 
   it("limits result count using limit query parameter", async () => {
@@ -292,6 +305,19 @@ describe("GET /api/incidents", () => {
     expect(seraphimRes.status).toBe(200);
     expect((await seraphimRes.json()).count).toBeGreaterThan(0);
 
+    // Search by incident number n, date, and timeline date (t.d)
+    const numRes = incidentsIndex(req("/api/incidents?q=08"));
+    expect(numRes.status).toBe(200);
+    expect((await numRes.json()).incidents.some((i: { id: string }) => i.id === "hf-spaces-2024")).toBe(true);
+
+    const dateRes = incidentsIndex(req("/api/incidents?q=31%20may%202024"));
+    expect(dateRes.status).toBe(200);
+    expect((await dateRes.json()).count).toBe(1);
+
+    const tlDateRes = incidentsIndex(req("/api/incidents?q=27%20jul%202026"));
+    expect(tlDateRes.status).toBe(200);
+    expect((await tlDateRes.json()).count).toBe(1);
+
     // Search with no match
     const noneRes = incidentsIndex(req("/api/incidents?q=absolutely-no-match-xyz"));
     expect(noneRes.status).toBe(200);
@@ -394,6 +420,17 @@ describe("GET /api/case-studies", () => {
     const afterRes = caseStudiesIndex(req("/api/case-studies?q=database%20vault"));
     expect(afterRes.status).toBe(200);
     expect((await afterRes.json()).count).toBe(1);
+
+    // Search in status and severity via q
+    const statusQRes = caseStudiesIndex(req("/api/case-studies?q=rolled-back%20transaction"));
+    expect(statusQRes.status).toBe(200);
+    const statusQBody = await statusQRes.json();
+    expect(statusQBody.count).toBe(1);
+    expect(statusQBody.findings[0].id).toBe("F-08");
+
+    const sevQRes = caseStudiesIndex(req("/api/case-studies?q=high"));
+    expect(sevQRes.status).toBe(200);
+    expect((await sevQRes.json()).count).toBeGreaterThan(0);
   });
 
   it("limits findings result count and handles whitespace query", async () => {
@@ -519,6 +556,19 @@ describe("GET /api/tiers", () => {
     const sumRes = tiersIndex(req("/api/tiers?q=comprehensive"));
     expect(sumRes.status).toBe(200);
     expect((await sumRes.json()).count).toBeGreaterThan(0);
+
+    // Search in cadence and notIncluded
+    const cadenceRes = tiersIndex(req("/api/tiers?q=agreed%20schedule"));
+    expect(cadenceRes.status).toBe(200);
+    const cadenceBody = await cadenceRes.json();
+    expect(cadenceBody.count).toBe(1);
+    expect(cadenceBody.tiers[0].id).toBe("cherubim");
+
+    const notIncRes = tiersIndex(req("/api/tiers?q=self-serve%20scanner"));
+    expect(notIncRes.status).toBe(200);
+    const notIncBody = await notIncRes.json();
+    expect(notIncBody.count).toBe(1);
+    expect(notIncBody.tiers[0].id).toBe("angels");
 
     const noneRes = tiersIndex(req("/api/tiers?q=no-such-tier-xyz"));
     expect(noneRes.status).toBe(200);
@@ -650,6 +700,14 @@ describe("HTTP helper utilities", () => {
     expect(parseLimit(new URLSearchParams("limit=-Infinity"))).toBeUndefined();
     expect(parseLimit(new URLSearchParams("limit=\t42\n"))).toBe(42);
     expect(parseLimit(new URLSearchParams(`limit=${"9".repeat(400)}`), 100)).toBe(100);
+    // Defensive against invalid params or non-positive max
+    expect(parseLimit(undefined as unknown as URLSearchParams)).toBeUndefined();
+    expect(parseLimit(null as unknown as URLSearchParams)).toBeUndefined();
+    expect(parseLimit(new URLSearchParams("limit=5"), 0)).toBeUndefined();
+    expect(parseLimit(new URLSearchParams("limit=5"), -10)).toBeUndefined();
+    expect(parseLimit(new URLSearchParams("limit=5"), Number.NaN)).toBeUndefined();
+    expect(parseLimit(new URLSearchParams("limit=5"), Number.POSITIVE_INFINITY)).toBeUndefined();
+    expect(parseLimit(new URLSearchParams("limit=5"), 3.9)).toBe(3);
   });
 
   it("parseSearchQuery handles valid, whitespace, and custom param keys", () => {
@@ -660,6 +718,10 @@ describe("HTTP helper utilities", () => {
     expect(parseSearchQuery(new URLSearchParams(""))).toBeUndefined();
     expect(parseSearchQuery(new URLSearchParams("tier=CHERUBIM"), "tier")).toBe("cherubim");
     expect(parseSearchQuery(new URLSearchParams("year=2026"), "year")).toBe("2026");
+    expect(parseSearchQuery(undefined as unknown as URLSearchParams)).toBeUndefined();
+    expect(parseSearchQuery(null as unknown as URLSearchParams)).toBeUndefined();
+    expect(parseSearchQuery(new URLSearchParams("q=test"), "")).toBeUndefined();
+    expect(parseSearchQuery(new URLSearchParams("q=test"), null as unknown as string)).toBeUndefined();
   });
 });
 
@@ -725,6 +787,19 @@ describe("GET /api/scenarios", () => {
     const seraphimRes = scenariosIndex(req("/api/scenarios?q=authorization"));
     expect(seraphimRes.status).toBe(200);
     expect((await seraphimRes.json()).count).toBeGreaterThan(0);
+
+    // Search by scenario code n and speed field
+    const codeRes = scenariosIndex(req("/api/scenarios?q=h6"));
+    expect(codeRes.status).toBe(200);
+    const codeBody = await codeRes.json();
+    expect(codeBody.count).toBe(1);
+    expect(codeBody.scenarios[0].id).toBe("agent-sandbox-egress");
+
+    const speedRes = scenariosIndex(req("/api/scenarios?q=29%20minutes"));
+    expect(speedRes.status).toBe(200);
+    const speedBody = await speedRes.json();
+    expect(speedBody.count).toBe(1);
+    expect(speedBody.scenarios[0].id).toBe("legacy-edge-appliance");
 
     const noneRes = scenariosIndex(req("/api/scenarios?q=no-match-scenario-xyz"));
     expect(noneRes.status).toBe(200);
