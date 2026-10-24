@@ -300,6 +300,27 @@ describe("Cross-page internal link, anchor (#id), and unique DOM id integrity", 
     }
 
     for (const [sourceRoute, html] of routeHtml.entries()) {
+      const pageIds = routeIds.get(sourceRoute)!;
+      for (const m of html.matchAll(/\baria-labelledby="([^"]+)"/g)) {
+        for (const refId of m[1].trim().split(/\s+/)) {
+          expect(pageIds.has(refId), `${sourceRoute} has aria-labelledby="${refId}" pointing to missing DOM id`).toBe(true);
+        }
+      }
+
+      for (const m of html.matchAll(/<a\b([^>]+)>/g)) {
+        const attrs = m[1];
+        const hrefMatch = attrs.match(/\bhref="([^"]+)"/);
+        if (!hrefMatch) continue;
+        const href = hrefMatch[1];
+        if (href.startsWith("http://") || href.startsWith("https://")) {
+          expect(href.startsWith("https://"), `${sourceRoute} insecure external href "${href}"`).toBe(true);
+          expect(attrs, `${sourceRoute} external link "${href}" missing target="_blank"`).toContain('target="_blank"');
+          expect(attrs, `${sourceRoute} external link "${href}" missing rel="noopener noreferrer"`).toContain(
+            'rel="noopener noreferrer"'
+          );
+        }
+      }
+
       for (const m of html.matchAll(/\bhref="([^"]+)"/g)) {
         const href = m[1];
         if (href.startsWith("mailto:") || href.startsWith("https://") || href.startsWith("http://")) {

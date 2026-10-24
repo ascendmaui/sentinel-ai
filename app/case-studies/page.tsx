@@ -229,7 +229,7 @@ export default function CaseStudiesPage() {
         </div>
       </section>
 
-      <section className="section" aria-labelledby="cs-next">
+      <section className="section">
         <TierCta tier="thrones" lead="A Scoped Assessment of one defined system, followed by remediation guidance and a retest, is the same shape as the case study above." />
       </section>
 
