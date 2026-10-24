@@ -10,9 +10,9 @@ import { TierCta } from "../components/TierCta";
 import { Nav } from "../components/Nav";
 import { Footer } from "../components/Footer";
 import { HeroStage } from "../components/HeroStage";
-import { build as buildHeroGeometry, HeroFigure } from "../components/HeroFigure";
-import { CodeRain, GLYPHS } from "../components/CodeRain";
-import { ThemeSwitcher } from "../components/ThemeSwitcher";
+import { build as buildHeroGeometry, HeroFigure, mountHeroFigure } from "../components/HeroFigure";
+import { CodeRain, GLYPHS, mountCodeRain } from "../components/CodeRain";
+import { apply as applyTheme, current as currentTheme, ThemeSwitcher } from "../components/ThemeSwitcher";
 import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, BRAND_PARENT, BRAND_SUFFIX, BRAND_WORD, TRUE_BADGES } from "../lib/brand";
 import { tiers, type TierId } from "../lib/tiers";
 
@@ -327,6 +327,142 @@ describe("HeroFigure component", () => {
       }
     }
   });
+
+  it("mountHeroFigure safely handles null/missing context, reduced motion, animation loop, visibility, and cleanup", () => {
+    expect(mountHeroFigure(null)).toBeUndefined();
+    expect(mountHeroFigure({ getContext: () => null } as unknown as HTMLCanvasElement)).toBeUndefined();
+    expect(
+      mountHeroFigure({ getContext: () => ({}), parentElement: null } as unknown as HTMLCanvasElement)
+    ).toBeUndefined();
+
+    const prevWin = (globalThis as Record<string, unknown>).window;
+    const prevDoc = (globalThis as Record<string, unknown>).document;
+    const prevRaf = (globalThis as Record<string, unknown>).requestAnimationFrame;
+    const prevCaf = (globalThis as Record<string, unknown>).cancelAnimationFrame;
+    const prevIO = (globalThis as Record<string, unknown>).IntersectionObserver;
+
+    try {
+      let reduceMatches = false;
+      let docHidden = false;
+      let rafCallback: ((now: number) => void) | null = null;
+      let ioCallback: ((entries: { isIntersecting: boolean }[]) => void) | null = null;
+      let motionListener: (() => void) | null = null;
+      let visListener: (() => void) | null = null;
+      let resizeListener: (() => void) | null = null;
+      const stageClasses = new Set<string>();
+      let clearRectCalls = 0;
+
+      const makeCtx = () => ({
+        setTransform: () => {},
+        createRadialGradient: () => ({ addColorStop: () => {} }),
+        fillRect: () => {},
+        clearRect: () => {
+          clearRectCalls++;
+        },
+        beginPath: () => {},
+        moveTo: () => {},
+        lineTo: () => {},
+        stroke: () => {},
+        drawImage: () => {},
+        arc: () => {},
+        fill: () => {},
+        fillStyle: "",
+        strokeStyle: "",
+        lineWidth: 1,
+        globalAlpha: 1,
+        globalCompositeOperation: "source-over",
+      });
+
+      const fakeCanvas = {
+        width: 0,
+        height: 0,
+        getContext: () => makeCtx(),
+        getBoundingClientRect: () => ({ width: 320, height: 320 }),
+        parentElement: {
+          classList: {
+            add: (c: string) => stageClasses.add(c),
+            remove: (c: string) => stageClasses.delete(c),
+          },
+        },
+      } as unknown as HTMLCanvasElement;
+
+      (globalThis as Record<string, unknown>).window = {
+        devicePixelRatio: 1,
+        matchMedia: (q: string) => ({
+          get matches() {
+            return q.includes("reduce") ? reduceMatches : true; // mobile density 0.6 for speed
+          },
+          addEventListener: (_e: string, fn: () => void) => {
+            motionListener = fn;
+          },
+          removeEventListener: () => {},
+        }),
+        addEventListener: (_e: string, fn: () => void) => {
+          resizeListener = fn;
+        },
+        removeEventListener: () => {},
+      };
+      (globalThis as Record<string, unknown>).document = {
+        get hidden() {
+          return docHidden;
+        },
+        createElement: () => ({ width: 0, height: 0, getContext: () => makeCtx() }),
+        addEventListener: (_e: string, fn: () => void) => {
+          visListener = fn;
+        },
+        removeEventListener: () => {},
+      };
+      (globalThis as Record<string, unknown>).requestAnimationFrame = (fn: (now: number) => void) => {
+        rafCallback = fn;
+        return 1;
+      };
+      (globalThis as Record<string, unknown>).cancelAnimationFrame = () => {};
+      (globalThis as Record<string, unknown>).IntersectionObserver = class {
+        constructor(cb: (entries: { isIntersecting: boolean }[]) => void) {
+          ioCallback = cb;
+        }
+        observe() {}
+        disconnect() {}
+      };
+
+      const cleanup = mountHeroFigure(fakeCanvas);
+      expect(typeof cleanup).toBe("function");
+      expect(stageClasses.has("is-3d")).toBe(true);
+
+      // Run one animation frame
+      expect(rafCallback).not.toBeNull();
+      rafCallback!(performance.now() + 100);
+      expect(clearRectCalls).toBeGreaterThan(0);
+
+      // IntersectionObserver off-screen then on-screen
+      ioCallback!([{ isIntersecting: false }]);
+      ioCallback!([{ isIntersecting: true }]);
+
+      // Document visibility toggle
+      docHidden = true;
+      visListener!();
+      docHidden = false;
+      visListener!();
+
+      // Switch to reduced motion and resize
+      reduceMatches = true;
+      motionListener!();
+      resizeListener!();
+
+      // Switch back to normal motion
+      reduceMatches = false;
+      motionListener!();
+
+      cleanup!();
+      expect(stageClasses.has("is-3d")).toBe(false);
+    } finally {
+      (globalThis as Record<string, unknown>).window = prevWin;
+      (globalThis as Record<string, unknown>).document = prevDoc;
+      (globalThis as Record<string, unknown>).requestAnimationFrame = prevRaf;
+      (globalThis as Record<string, unknown>).cancelAnimationFrame = prevCaf;
+      (globalThis as Record<string, unknown>).IntersectionObserver = prevIO;
+    }
+  });
 });
 
 describe("CodeRain component", () => {
@@ -341,6 +477,95 @@ describe("CodeRain component", () => {
       expect(ch).toHaveLength(1);
       expect(ch.charCodeAt(0)).toBeGreaterThanOrEqual(32);
       expect(ch.charCodeAt(0)).toBeLessThanOrEqual(126);
+    }
+  });
+
+  it("mountCodeRain handles null, reduced motion, 2d frame rendering, visibility changes, and cleanup", () => {
+    expect(mountCodeRain(null)).toBeUndefined();
+
+    const prevWin = (globalThis as Record<string, unknown>).window;
+    const prevDoc = (globalThis as Record<string, unknown>).document;
+    const prevRaf = (globalThis as Record<string, unknown>).requestAnimationFrame;
+    const prevCaf = (globalThis as Record<string, unknown>).cancelAnimationFrame;
+
+    try {
+      let reduceMatches = true;
+      let docHidden = false;
+      let rafCallback: ((now: number) => void) | null = null;
+      let visListener: (() => void) | null = null;
+      let resizeListener: (() => void) | null = null;
+      let fillTextCount = 0;
+
+      (globalThis as Record<string, unknown>).window = {
+        innerWidth: 640,
+        innerHeight: 100,
+        matchMedia: (q: string) => ({
+          matches: q.includes("reduce") ? reduceMatches : true,
+        }),
+        addEventListener: (_e: string, fn: () => void) => {
+          resizeListener = fn;
+        },
+        removeEventListener: () => {},
+      };
+      (globalThis as Record<string, unknown>).document = {
+        get hidden() {
+          return docHidden;
+        },
+        addEventListener: (_e: string, fn: () => void) => {
+          visListener = fn;
+        },
+        removeEventListener: () => {},
+      };
+      (globalThis as Record<string, unknown>).requestAnimationFrame = (fn: (now: number) => void) => {
+        rafCallback = fn;
+        return 1;
+      };
+      (globalThis as Record<string, unknown>).cancelAnimationFrame = () => {};
+
+      const fakeCanvas = {
+        width: 0,
+        height: 0,
+        getContext: () => ({
+          font: "",
+          fillStyle: "",
+          globalCompositeOperation: "source-over",
+          fillRect: () => {},
+          fillText: () => {
+            fillTextCount++;
+          },
+        }),
+      } as unknown as HTMLCanvasElement;
+
+      // Reduced motion returns early
+      expect(mountCodeRain(fakeCanvas)).toBeUndefined();
+
+      // Missing 2D context returns early
+      reduceMatches = false;
+      expect(mountCodeRain({ getContext: () => null } as unknown as HTMLCanvasElement)).toBeUndefined();
+
+      // Active animation loop
+      const cleanup = mountCodeRain(fakeCanvas);
+      expect(typeof cleanup).toBe("function");
+      expect(rafCallback).not.toBeNull();
+      // Advance multiple frames so columns wrap past H + 40
+      for (let i = 1; i <= 20; i++) {
+        rafCallback!(performance.now() + i * 1000);
+      }
+      expect(fillTextCount).toBeGreaterThan(0);
+
+      // Pause and resume on visibilitychange, plus resize
+      docHidden = true;
+      visListener!();
+      docHidden = false;
+      visListener!();
+      resizeListener!();
+
+      cleanup!();
+    } finally {
+      (globalThis as Record<string, unknown>).window = prevWin;
+      (globalThis as Record<string, unknown>).document = prevDoc;
+      (globalThis as Record<string, unknown>).requestAnimationFrame = prevRaf;
+      (globalThis as Record<string, unknown>).cancelAnimationFrame = prevCaf;
     }
   });
 });
@@ -479,6 +704,14 @@ describe("ThemeSwitcher component", () => {
       const buttons = tree!.props.children[1] as React.ReactElement<{ onClick: () => void }>[];
       expect(() => buttons[1].props.onClick()).not.toThrow();
       expect(currentAttr).toBe("light");
+      expect(currentTheme()).toBe("light");
+
+      // applyTheme without persistence does not write localStorage
+      applyTheme("high-contrast", false);
+      expect(currentTheme()).toBe("high-contrast");
+
+      currentAttr = "unknown";
+      expect(currentTheme()).toBe("dark");
     } finally {
       (globalThis as Record<string, unknown>).document = prevDoc;
       (globalThis as Record<string, unknown>).window = prevWin;

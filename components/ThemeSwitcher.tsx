@@ -10,12 +10,12 @@ const THEMES: { id: ThemeName; label: string; short: string }[] = [
 ];
 const EVENT = "sa-theme-change";
 
-function current(): ThemeName {
+export function current(): ThemeName {
   const t = document.documentElement.getAttribute("data-theme");
   return t === "light" || t === "high-contrast" ? t : "dark";
 }
 
-function apply(t: ThemeName, persist: boolean) {
+export function apply(t: ThemeName, persist: boolean) {
   document.documentElement.setAttribute("data-theme", t);
   document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.setAttribute("content", META[t]));
   if (persist) {
