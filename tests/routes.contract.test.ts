@@ -7,6 +7,7 @@ import { join, relative, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { PUBLIC_CACHE, SECURITY_HEADERS } from "../lib/http";
+import nextConfig from "../next.config.mjs";
 
 const API_DIR = join(__dirname, "..", "app", "api");
 
@@ -79,6 +80,16 @@ describe("API route discovery", () => {
   it("every route on disk is registered, and every registered route exists", () => {
     expect(routes.map((r) => r.path).sort()).toEqual(Object.keys(REGISTRY).sort());
   });
+
+  it("next.config.mjs enforces strict mode, disables X-Powered-By, and stays in sync with SECURITY_HEADERS", async () => {
+    expect(nextConfig.reactStrictMode).toBe(true);
+    expect(nextConfig.poweredByHeader).toBe(false);
+    expect(typeof nextConfig.headers).toBe("function");
+    const headerRules = await nextConfig.headers!();
+    expect(headerRules).toHaveLength(1);
+    expect(headerRules[0].source).toBe("/:path*");
+    expect(Object.fromEntries(headerRules[0].headers.map((h) => [h.key, h.value]))).toEqual(SECURITY_HEADERS);
+  });
 });
 
 describe.each(routes.map((r) => [r.path] as const))("route contract %s", (path) => {
@@ -120,10 +131,10 @@ describe.each(routes.map((r) => [r.path] as const))("route contract %s", (path) 
       expect(new Set(params.map((p) => p[key])).size).toBe(params.length);
     });
 
-    it("every generated param resolves to 200 hardened JSON, case-insensitively", async () => {
+    it("every generated param resolves to 200 hardened JSON, case-insensitively and with surrounding whitespace", async () => {
       const mod = modules[path];
       for (const p of mod.generateStaticParams!()) {
-        for (const value of [p[key], p[key].toUpperCase()]) {
+        for (const value of [p[key], p[key].toUpperCase(), `  ${p[key]}  `]) {
           const res = await mod.GET(new Request(`http://localhost${path}`), ctx(key, value));
           expect(res.status, `${path} ${value}`).toBe(200);
           expectHardenedJson(res, `${path} ${value}`);
@@ -132,7 +143,18 @@ describe.each(routes.map((r) => [r.path] as const))("route contract %s", (path) 
       }
     });
 
-    it.each(["does-not-exist", "", "__proto__", "constructor", "toString", "../health", "%00"])(
+    it.each([
+      "does-not-exist",
+      "",
+      "   ",
+      "__proto__",
+      "constructor",
+      "toString",
+      "valueOf",
+      "../health",
+      "%00",
+      undefined as unknown as string,
+    ])(
       "unknown or hostile param %j -> JSON 404, not cacheable",
       async (value) => {
         const res = await modules[path].GET(new Request(`http://localhost${path}`), ctx(key, value));
