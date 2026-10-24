@@ -37,7 +37,7 @@ export function mountCodeRain(canvas: HTMLCanvasElement | null): (() => void) | 
   let running = true;
   const step = (now: number) => {
     if (!running) return;
-    const dt = Math.min(0.05, (now - last) / 1000);
+    const dt = Math.max(0, Math.min(0.05, (now - last) / 1000));
     last = now;
     ctx.fillStyle = "rgba(7,7,12,0.14)";
     ctx.globalCompositeOperation = "destination-out";
@@ -56,22 +56,36 @@ export function mountCodeRain(canvas: HTMLCanvasElement | null): (() => void) | 
     raf = requestAnimationFrame(step);
   };
   raf = requestAnimationFrame(step);
-  const onVis = () => {
-    if (document.hidden) {
-      running = false;
-      cancelAnimationFrame(raf);
-    } else if (!running) {
+  const stop = () => {
+    running = false;
+    cancelAnimationFrame(raf);
+  };
+  const resume = () => {
+    if (!running && !document.hidden && !reduce.matches) {
       running = true;
       last = performance.now();
       raf = requestAnimationFrame(step);
     }
   };
+  const onVis = () => {
+    if (document.hidden) stop();
+    else resume();
+  };
+  const onMotion = () => {
+    if (reduce.matches) {
+      stop();
+      ctx.clearRect(0, 0, W, H);
+    } else {
+      resume();
+    }
+  };
   document.addEventListener("visibilitychange", onVis);
+  reduce.addEventListener("change", onMotion);
   window.addEventListener("resize", resize);
   return () => {
-    running = false;
-    cancelAnimationFrame(raf);
+    stop();
     document.removeEventListener("visibilitychange", onVis);
+    reduce.removeEventListener("change", onMotion);
     window.removeEventListener("resize", resize);
   };
 }

@@ -469,7 +469,8 @@ describe("HeroFigure component", () => {
       rafCallback!(performance.now() + 100);
       expect(clearRectCalls).toBeGreaterThan(0);
 
-      // IntersectionObserver off-screen then on-screen
+      // IntersectionObserver empty entries, off-screen, then on-screen
+      ioCallback!([]);
       ioCallback!([{ isIntersecting: false }]);
       ioCallback!([{ isIntersecting: true }]);
 
@@ -490,6 +491,13 @@ describe("HeroFigure component", () => {
 
       cleanup!();
       expect(stageClasses.has("is-3d")).toBe(false);
+
+      // Returns undefined if glow sprite 2d context is unavailable
+      (globalThis as Record<string, unknown>).document = {
+        ...(globalThis as Record<string, unknown>).document as object,
+        createElement: () => ({ width: 0, height: 0, getContext: () => null }),
+      };
+      expect(mountHeroFigure(fakeCanvas)).toBeUndefined();
     } finally {
       (globalThis as Record<string, unknown>).window = prevWin;
       (globalThis as Record<string, unknown>).document = prevDoc;
@@ -528,14 +536,22 @@ describe("CodeRain component", () => {
       let docHidden = false;
       let rafCallback: ((now: number) => void) | null = null;
       let visListener: (() => void) | null = null;
+      let motionListener: (() => void) | null = null;
       let resizeListener: (() => void) | null = null;
       let fillTextCount = 0;
+      let clearRectCount = 0;
 
       (globalThis as Record<string, unknown>).window = {
         innerWidth: 640,
         innerHeight: 100,
         matchMedia: (q: string) => ({
-          matches: q.includes("reduce") ? reduceMatches : true,
+          get matches() {
+            return q.includes("reduce") ? reduceMatches : true;
+          },
+          addEventListener: (_e: string, fn: () => void) => {
+            motionListener = fn;
+          },
+          removeEventListener: () => {},
         }),
         addEventListener: (_e: string, fn: () => void) => {
           resizeListener = fn;
@@ -565,6 +581,9 @@ describe("CodeRain component", () => {
           fillStyle: "",
           globalCompositeOperation: "source-over",
           fillRect: () => {},
+          clearRect: () => {
+            clearRectCount++;
+          },
           fillText: () => {
             fillTextCount++;
           },
@@ -594,6 +613,13 @@ describe("CodeRain component", () => {
       docHidden = false;
       visListener!();
       resizeListener!();
+
+      // Toggle prefers-reduced-motion on and off at runtime
+      reduceMatches = true;
+      motionListener!();
+      expect(clearRectCount).toBe(1);
+      reduceMatches = false;
+      motionListener!();
 
       cleanup!();
     } finally {

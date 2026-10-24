@@ -112,7 +112,8 @@ export function mountHeroFigure(canvas: HTMLCanvasElement | null): (() => void) 
   // Pre-rendered glow sprite.
   const spr = document.createElement("canvas");
   spr.width = spr.height = 64;
-  const sg = spr.getContext("2d")!;
+  const sg = spr.getContext("2d");
+  if (!sg) return;
   const gr = sg.createRadialGradient(32, 32, 0, 32, 32, 32);
   gr.addColorStop(0, "rgba(255,244,214,1)");
   gr.addColorStop(0.25, "rgba(255,214,130,0.55)");
@@ -242,12 +243,16 @@ export function mountHeroFigure(canvas: HTMLCanvasElement | null): (() => void) 
   if (reduce.matches) still();
   else start();
 
-  const io = new IntersectionObserver(([e]) => {
-    visible = e.isIntersecting;
-    if (visible) start();
-    else stop();
-  });
-  io.observe(stage);
+  const io =
+    typeof IntersectionObserver !== "undefined"
+      ? new IntersectionObserver(([e]) => {
+          if (!e) return;
+          visible = e.isIntersecting;
+          if (visible) start();
+          else stop();
+        })
+      : null;
+  io?.observe(stage);
   const onVis = () => (document.hidden ? stop() : start());
   const onMotion = () => {
     if (reduce.matches) {
@@ -264,7 +269,7 @@ export function mountHeroFigure(canvas: HTMLCanvasElement | null): (() => void) 
   window.addEventListener("resize", onResize);
   return () => {
     stop();
-    io.disconnect();
+    io?.disconnect();
     document.removeEventListener("visibilitychange", onVis);
     reduce.removeEventListener("change", onMotion);
     window.removeEventListener("resize", onResize);
