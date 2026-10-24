@@ -655,6 +655,8 @@ describe("ThemeSwitcher component", () => {
     expect(html).toContain('aria-label="Dark theme"');
     expect(html).toContain('aria-label="Light theme"');
     expect(html).toContain('aria-label="High-contrast theme"');
+    expect(html).toContain('aria-checked="true"');
+    expect(html).toContain('aria-checked="false"');
     // Without showLabels, text span is not rendered
     expect(html).not.toContain('<span>Dark</span>');
   });

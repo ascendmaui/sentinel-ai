@@ -393,6 +393,11 @@ describe("Cross-page internal link, anchor (#id), and unique DOM id integrity", 
       for (const m of html.matchAll(/<th\b([^>]*)>/g)) {
         expect(m[1], `${sourceRoute} <th> missing scope="col" or scope="row"`).toMatch(/\bscope="(?:col|row)"/);
       }
+      for (const m of html.matchAll(/<button\b([^>]*)>/g)) {
+        if (m[1].includes('role="radio"')) {
+          expect(m[1], `${sourceRoute} role="radio" missing aria-checked`).toMatch(/\baria-checked="(?:true|false)"/);
+        }
+      }
 
       // Copy honesty guardrails: no unverified certification claims anywhere on the site
       expect(html, `${sourceRoute} certification claim`).not.toMatch(/\b(?:SOC\s*2|ISO\s*27001|FedRAMP|PCI-DSS)\b/i);

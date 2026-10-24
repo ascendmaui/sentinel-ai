@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
-import { THEME_KEY, THEME_META as META, type ThemeName } from "../lib/theme";
+import { DEFAULT_THEME, THEME_KEY, THEME_META as META, type ThemeName } from "../lib/theme";
 
 const THEMES: { id: ThemeName; label: string; short: string }[] = [
   { id: "dark", label: "Dark theme", short: "Dark" },
@@ -12,7 +12,7 @@ const EVENT = "sa-theme-change";
 
 export function current(): ThemeName {
   const t = document.documentElement.getAttribute("data-theme");
-  return t === "light" || t === "high-contrast" ? t : "dark";
+  return t === "dark" || t === "light" || t === "high-contrast" ? t : DEFAULT_THEME;
 }
 
 export function apply(t: ThemeName, persist: boolean) {
@@ -75,7 +75,7 @@ export function mountThemeSync(setTheme: (t: ThemeName) => void): () => void {
       /* ignore */
     }
     if (saved === "dark" || saved === "light" || saved === "high-contrast") return;
-    apply(mqs[1].matches ? "high-contrast" : mqs[0].matches ? "light" : "dark", false);
+    apply(mqs[1].matches ? "high-contrast" : mqs[0].matches ? "light" : DEFAULT_THEME, false);
   };
   mqs.forEach((m) => m.addEventListener("change", onSystem));
   return () => {
@@ -96,7 +96,7 @@ export function ThemeSwitcher({ className = "", showLabels = false }: { classNam
   };
 
   const onKey = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    const i = THEMES.findIndex((t) => t.id === (theme ?? "dark"));
+    const i = THEMES.findIndex((t) => t.id === (theme ?? DEFAULT_THEME));
     let n = -1;
     if (e.key === "ArrowRight" || e.key === "ArrowDown") n = (i + 1) % THEMES.length;
     if (e.key === "ArrowLeft" || e.key === "ArrowUp") n = (i - 1 + THEMES.length) % THEMES.length;
@@ -120,13 +120,13 @@ export function ThemeSwitcher({ className = "", showLabels = false }: { classNam
         Color theme
       </span>
       {THEMES.map((t) => {
-        const on = (theme ?? "dark") === t.id;
+        const on = (theme ?? DEFAULT_THEME) === t.id;
         return (
           <button
             key={t.id}
             type="button"
             role="radio"
-            aria-checked={theme === null ? undefined : on}
+            aria-checked={on}
             aria-label={t.label}
             title={t.label}
             tabIndex={on ? 0 : -1}
