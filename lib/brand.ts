@@ -26,7 +26,15 @@ function cleanUrl(val?: string): string | undefined {
   try {
     const parsed = new URL(candidate);
     if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return undefined;
-    if (!parsed.hostname || parsed.hostname.includes("..")) return undefined;
+    if (parsed.username || parsed.password) return undefined;
+    if (
+      !parsed.hostname ||
+      parsed.hostname.includes("..") ||
+      parsed.hostname.startsWith(".") ||
+      parsed.hostname.endsWith(".")
+    ) {
+      return undefined;
+    }
     const path = parsed.pathname === "/" ? "" : parsed.pathname.replace(/\/+$/, "");
     return `${parsed.origin}${path}`;
   } catch {
@@ -36,11 +44,12 @@ function cleanUrl(val?: string): string | undefined {
 
 /** Resolves current site origin from environment variables with localhost fallback. */
 export function resolveSiteUrl(env: Record<string, string | undefined> = process.env): string {
+  if (!env || typeof env !== "object") return "http://localhost:3000";
   const nextPublic = cleanUrl(env.NEXT_PUBLIC_SITE_URL);
   if (nextPublic) return nextPublic;
   const siteUrl = cleanUrl(env.SITE_URL);
   if (siteUrl) return siteUrl;
-  if (env.VERCEL_ENV === "production") {
+  if (env.VERCEL_ENV?.trim().toLowerCase() === "production") {
     const prodUrl = cleanUrl(env.VERCEL_PROJECT_PRODUCTION_URL);
     if (prodUrl) return prodUrl;
   }

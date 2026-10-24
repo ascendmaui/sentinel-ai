@@ -39,6 +39,10 @@ describe("brand", () => {
     expect(resolveSiteUrl({ NEXT_PUBLIC_SITE_URL: "///", SITE_URL: "https://valid.seraphim.ai" })).toBe("https://valid.seraphim.ai");
     expect(resolveSiteUrl({ NEXT_PUBLIC_SITE_URL: "https://", SITE_URL: "http://", VERCEL_URL: "preview.vercel.app" })).toBe("https://preview.vercel.app");
     expect(resolveSiteUrl({ NEXT_PUBLIC_SITE_URL: "not a valid url", SITE_URL: "bad..host..name" })).toBe("http://localhost:3000");
+    expect(resolveSiteUrl({ NEXT_PUBLIC_SITE_URL: "https://user:pass@seraphim.ai", SITE_URL: "https://.seraphim.ai" })).toBe("http://localhost:3000");
+    expect(resolveSiteUrl({ NEXT_PUBLIC_SITE_URL: "https://seraphim.ai." })).toBe("http://localhost:3000");
+    expect(resolveSiteUrl({ VERCEL_ENV: "  PRODUCTION  ", VERCEL_PROJECT_PRODUCTION_URL: "prod.seraphim.ai" })).toBe("https://prod.seraphim.ai");
+    expect(resolveSiteUrl(null as unknown as Record<string, string | undefined>)).toBe("http://localhost:3000");
     expect(resolveSiteUrl({ VERCEL_ENV: "preview", VERCEL_PROJECT_PRODUCTION_URL: "prod.seraphim.ai", VERCEL_URL: "branch-preview.vercel.app" })).toBe("https://branch-preview.vercel.app");
     expect(resolveSiteUrl({ VERCEL_ENV: "production", VERCEL_PROJECT_PRODUCTION_URL: "   ", VERCEL_URL: "fallback-prod.vercel.app" })).toBe("https://fallback-prod.vercel.app");
     expect(resolveSiteUrl({})).toBe("http://localhost:3000");
