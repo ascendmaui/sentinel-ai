@@ -1,8 +1,9 @@
 import { readdirSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { join, relative, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
+import sitemap from "../app/sitemap";
 
 vi.mock("next/font/google", () => ({
   Bricolage_Grotesque: () => ({ variable: "--font-display" }),
@@ -450,5 +451,33 @@ describe("App Router page and layout export contracts", () => {
         expect(ALLOWED_SEGMENT_EXPORTS.has(key), `${file} unexpected export "${key}"`).toBe(true);
       }
     }
+  });
+
+  it("sitemap.ts covers every page.tsx route on disk (including expanded generateStaticParams) with zero duplicates", async () => {
+    const pageFiles = findSegmentFiles(APP_DIR).filter((f) => f.endsWith(`${sep}page.tsx`));
+    const expectedUrls: string[] = [];
+
+    for (const file of pageFiles) {
+      const segments = relative(APP_DIR, file).split(sep).slice(0, -1);
+      const routePattern = "/" + segments.join("/");
+      const dynMatch = routePattern.match(/\[(\w+)\]/);
+      if (dynMatch) {
+        const paramKey = dynMatch[1];
+        const mod = (await import(pathToFileURL(file).href)) as {
+          generateStaticParams?: () => Record<string, string>[];
+        };
+        expect(typeof mod.generateStaticParams, `${file} generateStaticParams`).toBe("function");
+        for (const p of mod.generateStaticParams!()) {
+          expectedUrls.push(`${SITE_URL}${routePattern.replace(`[${paramKey}]`, p[paramKey])}`);
+        }
+      } else {
+        expectedUrls.push(routePattern === "/" ? SITE_URL : `${SITE_URL}${routePattern}`);
+      }
+    }
+
+    const sitemapEntries = sitemap();
+    const sitemapUrls = sitemapEntries.map((e) => e.url);
+    expect(new Set(sitemapUrls).size).toBe(sitemapUrls.length);
+    expect([...sitemapUrls].sort()).toEqual([...expectedUrls].sort());
   });
 });
