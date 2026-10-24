@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { badgeByKey, BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, BRAND_SUFFIX, BRAND_WORD, resolveSiteUrl, SITE_URL, TRUE_BADGES } from "../lib/brand";
@@ -119,11 +119,46 @@ describe("theme and tokens", () => {
     expect(createEnv(null, () => false, false)).toBe("dark");
   });
 
-  it("app/tokens.css defines every theme from THEME_NAMES with matching background color tokens", () => {
+  it("app/tokens.css defines every theme from THEME_NAMES with matching background color tokens and identical custom property sets", () => {
     const css = readFileSync(join(__dirname, "..", "app", "tokens.css"), "utf8");
+    const themePropertySets: string[][] = [];
     for (const name of THEME_NAMES) {
       expect(css).toContain(`[data-theme="${name}"]`);
       expect(css).toContain(`--ao-bg: ${THEME_META[name]};`);
+      const blockMatch = css.match(new RegExp(`\\[data-theme="${name}"\\]\\s*\\{([^}]+)\\}`));
+      expect(blockMatch, `theme block for ${name}`).not.toBeNull();
+      const props = [...blockMatch![1].matchAll(/(--[a-z0-9-]+)\s*:/g)].map((m) => m[1]).sort();
+      expect(props.length).toBeGreaterThanOrEqual(45);
+      themePropertySets.push(props);
+    }
+    expect(themePropertySets[1]).toEqual(themePropertySets[0]);
+    expect(themePropertySets[2]).toEqual(themePropertySets[0]);
+  });
+
+  it("every CSS var(--...) reference without fallback across app/ and components/ resolves to a defined custom property", () => {
+    const rootDir = join(__dirname, "..");
+    const tokensCss = readFileSync(join(rootDir, "app", "tokens.css"), "utf8");
+    const globalsCss = readFileSync(join(rootDir, "app", "globals.css"), "utf8");
+    const definedVars = new Set<string>(["--font-display", "--font-body", "--font-mono"]);
+    for (const m of tokensCss.matchAll(/(--[a-z0-9-]+)\s*:/g)) definedVars.add(m[1]);
+    for (const m of globalsCss.matchAll(/(--[a-z0-9-]+)\s*:/g)) definedVars.add(m[1]);
+
+    const walkFiles = (dir: string): string[] => {
+      const out: string[] = [];
+      for (const entry of readdirSync(dir)) {
+        const full = join(dir, entry);
+        if (statSync(full).isDirectory()) out.push(...walkFiles(full));
+        else if (/\.(css|tsx|ts)$/.test(entry)) out.push(full);
+      }
+      return out;
+    };
+
+    const sourceFiles = [...walkFiles(join(rootDir, "app")), ...walkFiles(join(rootDir, "components"))];
+    for (const file of sourceFiles) {
+      const content = readFileSync(file, "utf8");
+      for (const m of content.matchAll(/var\(\s*(--[a-z0-9-]+)\s*\)/g)) {
+        expect(definedVars.has(m[1]), `${file} references undefined CSS custom property ${m[1]}`).toBe(true);
+      }
     }
   });
 
