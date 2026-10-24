@@ -74,7 +74,9 @@ const missingPost = await get("/api/posts/does-not-exist");
 check(missingPost.status === 404 && (await missingPost.json()).error === "not_found", "unknown post -> JSON 404");
 check(missingPost.headers.get("cache-control") === "no-store", "404 unknown post cache-control is no-store");
 checkSecurityHeaders(missingPost, "404 unknown post");
-check((await get("/blog/does-not-exist")).status === 404, "unknown blog page -> 404");
+const missingBlogPage = await get("/blog/does-not-exist");
+check(missingBlogPage.status === 404, "unknown blog page -> 404");
+checkSecurityHeaders(missingBlogPage, "404 unknown blog page");
 
 // 3. Incidents API
 const headIncs = await get("/api/incidents", { method: "HEAD" });
@@ -281,17 +283,21 @@ const headRobots = await get("/robots.txt", { method: "HEAD" });
 check(headRobots.status === 200, "HEAD /robots.txt -> 200");
 const robotsRes = await get("/robots.txt");
 check(robotsRes.status === 200 && (await robotsRes.text()).includes("sitemap.xml"), "GET /robots.txt ok");
+checkSecurityHeaders(robotsRes, "GET /robots.txt");
 
 const headSitemap = await get("/sitemap.xml", { method: "HEAD" });
 check(headSitemap.status === 200, "HEAD /sitemap.xml -> 200");
 const sitemapRes = await get("/sitemap.xml");
 check(sitemapRes.status === 200 && (await sitemapRes.text()).includes("urlset"), "GET /sitemap.xml ok");
+checkSecurityHeaders(sitemapRes, "GET /sitemap.xml");
 
 const iconRes = await get("/icon.svg");
 check(iconRes.status === 200 && (await iconRes.text()).includes("<svg"), "GET /icon.svg returns SVG");
+checkSecurityHeaders(iconRes, "GET /icon.svg");
 
 const ogRes = await get("/og.png");
 check(ogRes.status === 200 && (ogRes.headers.get("content-type") || "").includes("image/png"), "GET /og.png returns PNG");
+checkSecurityHeaders(ogRes, "GET /og.png");
 
 // 12. Crawl internal page links
 
@@ -299,7 +305,9 @@ const links = new Set();
 for (const path of pages) {
   const r = await get(path);
   check(r.status === 200, `GET ${path} -> 200`);
+  checkSecurityHeaders(r, `GET ${path}`);
   const html = await r.text();
+  check(html.includes('rel="canonical"'), `GET ${path} includes canonical link`);
   for (const m of html.matchAll(/href="(\/[^"#?]*)(?:[#?][^"]*)?"/g)) links.add(m[1]);
 }
 for (const l of links) {
