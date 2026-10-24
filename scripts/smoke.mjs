@@ -15,6 +15,7 @@ const checkSecurityHeaders = (r, label) => {
   check(r.headers.get("referrer-policy") === "no-referrer", `${label} Referrer-Policy no-referrer`);
   check(r.headers.get("x-dns-prefetch-control") === "off", `${label} X-DNS-Prefetch-Control off`);
   check(Boolean(r.headers.get("permissions-policy")?.includes("camera=()")), `${label} Permissions-Policy camera=()`);
+  check(r.headers.get("x-powered-by") === null, `${label} omits X-Powered-By`);
 };
 
 // 1. Health check & HEAD requests
@@ -236,11 +237,17 @@ const endpoints405 = [
   "/api/health",
   "/api/brand",
   "/api/posts",
+  `/api/posts/${posts.posts[0].slug}`,
   "/api/incidents",
+  `/api/incidents/${incs.incidents[0].id}`,
   "/api/case-studies",
+  "/api/case-studies/f-01",
   "/api/scenarios",
+  "/api/scenarios/legacy-internal-app",
   "/api/sources",
+  "/api/sources/oaiAug",
   "/api/tiers",
+  "/api/tiers/seraphim",
 ];
 for (const endpoint of endpoints405) {
   const postRes = await get(endpoint, { method: "POST" });

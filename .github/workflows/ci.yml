@@ -35,7 +35,7 @@ jobs:
         env:
           NEXT_TELEMETRY_DISABLED: "1"
       - name: Verify clean working tree (no uncommitted build side-effects)
-        run: git diff --exit-code
+        run: git diff --exit-code && [ -z "$(git status --porcelain)" ]
       - name: Smoke test the production server
         env:
           NEXT_TELEMETRY_DISABLED: "1"
