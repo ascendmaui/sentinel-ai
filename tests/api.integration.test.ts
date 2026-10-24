@@ -326,10 +326,14 @@ describe("GET /api/incidents", () => {
     expect(inferredRes.status).toBe(200);
     expect((await inferredRes.json()).count).toBeGreaterThan(0);
 
-    // Search in seraphim controls/limits
+    // Search in seraphim controls/limits and source IDs
     const seraphimRes = incidentsIndex(req("/api/incidents?q=tabletop"));
     expect(seraphimRes.status).toBe(200);
     expect((await seraphimRes.json()).count).toBeGreaterThan(0);
+
+    const srcIdRes = incidentsIndex(req("/api/incidents?q=oaiaug"));
+    expect(srcIdRes.status).toBe(200);
+    expect((await srcIdRes.json()).count).toBeGreaterThan(0);
 
     // Search by incident number n, date, and timeline date (t.d)
     const numRes = incidentsIndex(req("/api/incidents?q=08"));
@@ -843,6 +847,10 @@ describe("GET /api/scenarios", () => {
     const speedBody = await speedRes.json();
     expect(speedBody.count).toBe(1);
     expect(speedBody.scenarios[0].id).toBe("legacy-edge-appliance");
+
+    const refRes = scenariosIndex(req("/api/scenarios?q=oaiaug"));
+    expect(refRes.status).toBe(200);
+    expect((await refRes.json()).count).toBeGreaterThan(0);
 
     const noneRes = scenariosIndex(req("/api/scenarios?q=no-match-scenario-xyz"));
     expect(noneRes.status).toBe(200);

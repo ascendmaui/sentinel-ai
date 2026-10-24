@@ -31,7 +31,8 @@ export function GET(req?: Request): Response {
             i.inferred.some((inf) => inf.toLowerCase().includes(q)) ||
             i.seraphim.flag.some((sf) => sf.toLowerCase().includes(q)) ||
             i.seraphim.prepare.some((sp) => sp.toLowerCase().includes(q)) ||
-            i.seraphim.limits.toLowerCase().includes(q)
+            i.seraphim.limits.toLowerCase().includes(q) ||
+            i.sources.some((s) => s.toLowerCase().includes(q))
         );
       }
 

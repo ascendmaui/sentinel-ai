@@ -12,6 +12,6 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const { id } = await params;
   const finding = findingById(id);
   if (!finding) return notFound("case study finding");
-  const rem = remediationById(id);
+  const rem = remediationById(finding.id);
   return json({ ...finding, remediation: rem ?? null }, { cacheControl: PUBLIC_CACHE });
 }

@@ -1,5 +1,5 @@
 import { json, parseLimit, parseSearchQuery, PUBLIC_CACHE } from "../../../lib/http";
-import { tiers, matrix, helper, ENGAGEMENT_TERMS } from "../../../lib/tiers";
+import { tiers, tierHref, matrix, helper, ENGAGEMENT_TERMS } from "../../../lib/tiers";
 
 /** Service tiers index as JSON: all four engagement tiers and comparison matrix. Supports ?q=. */
 export function GET(): Response;
@@ -50,7 +50,7 @@ export function GET(req?: Request): Response {
         cadence: t.cadence,
         summary: t.summary,
         includedCount: t.included.length,
-        url: `/pricing#${t.id}`,
+        url: tierHref(t.id),
       })),
       matrix,
       helper,

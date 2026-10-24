@@ -24,7 +24,8 @@ export function GET(req?: Request): Response {
             s.approach.toLowerCase().includes(q) ||
             s.speed.toLowerCase().includes(q) ||
             s.controls.some((c) => c.toLowerCase().includes(q)) ||
-            s.seraphim.some((sp) => sp.toLowerCase().includes(q))
+            s.seraphim.some((sp) => sp.toLowerCase().includes(q)) ||
+            s.refs.some((r) => r.toLowerCase().includes(q))
         );
       }
 
