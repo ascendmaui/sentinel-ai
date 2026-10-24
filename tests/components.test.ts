@@ -12,7 +12,13 @@ import { Footer } from "../components/Footer";
 import { HeroStage } from "../components/HeroStage";
 import { build as buildHeroGeometry, HeroFigure, mountHeroFigure } from "../components/HeroFigure";
 import { CodeRain, GLYPHS, mountCodeRain } from "../components/CodeRain";
-import { apply as applyTheme, current as currentTheme, ThemeSwitcher } from "../components/ThemeSwitcher";
+import {
+  apply as applyTheme,
+  current as currentTheme,
+  mountThemeSync,
+  ThemeSwitcher,
+} from "../components/ThemeSwitcher";
+import { THEME_KEY, type ThemeName } from "../lib/theme";
 import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, BRAND_PARENT, BRAND_SUFFIX, BRAND_WORD, TRUE_BADGES } from "../lib/brand";
 import { tiers, type TierId } from "../lib/tiers";
 
@@ -712,6 +718,93 @@ describe("ThemeSwitcher component", () => {
 
       currentAttr = "unknown";
       expect(currentTheme()).toBe("dark");
+    } finally {
+      (globalThis as Record<string, unknown>).document = prevDoc;
+      (globalThis as Record<string, unknown>).window = prevWin;
+      (globalThis as Record<string, unknown>).localStorage = prevStorage;
+    }
+  });
+
+  it("mountThemeSync synchronizes custom events, honors valid stored themes, and reacts to OS preference changes", () => {
+    const prevDoc = (globalThis as Record<string, unknown>).document;
+    const prevWin = (globalThis as Record<string, unknown>).window;
+    const prevStorage = (globalThis as Record<string, unknown>).localStorage;
+
+    try {
+      let currentAttr = "light";
+      let storedTheme: string | null = null;
+      let throwOnGet = false;
+      let lightMatch = false;
+      let contrastMatch = false;
+      let eventListener: ((e: Event) => void) | null = null;
+      const mqListeners: (() => void)[] = [];
+      const observedThemes: ThemeName[] = [];
+
+      (globalThis as Record<string, unknown>).document = {
+        documentElement: {
+          getAttribute: () => currentAttr,
+          setAttribute: (_k: string, v: string) => {
+            currentAttr = v;
+          },
+        },
+        querySelectorAll: () => [],
+      };
+      (globalThis as Record<string, unknown>).window = {
+        addEventListener: (_ev: string, fn: (e: Event) => void) => {
+          eventListener = fn;
+        },
+        removeEventListener: () => {},
+        dispatchEvent: (ev: CustomEvent<ThemeName>) => {
+          eventListener?.(ev);
+        },
+        matchMedia: (q: string) => ({
+          get matches() {
+            return q.includes("contrast") ? contrastMatch : lightMatch;
+          },
+          addEventListener: (_ev: string, fn: () => void) => {
+            mqListeners.push(fn);
+          },
+          removeEventListener: () => {},
+        }),
+      };
+      (globalThis as Record<string, unknown>).localStorage = {
+        getItem: (k: string) => {
+          if (throwOnGet) throw new Error("SecurityError");
+          return k === THEME_KEY ? storedTheme : null;
+        },
+        setItem: (_k: string, v: string) => {
+          storedTheme = v;
+        },
+      };
+
+      const cleanup = mountThemeSync((t) => observedThemes.push(t));
+      expect(observedThemes.at(-1)).toBe("light");
+
+      // OS change when no valid theme is saved (or invalid string is saved) updates theme
+      storedTheme = "invalid-stale-value";
+      contrastMatch = true;
+      mqListeners[0]();
+      expect(currentAttr).toBe("high-contrast");
+      expect(observedThemes.at(-1)).toBe("high-contrast");
+
+      contrastMatch = false;
+      lightMatch = true;
+      mqListeners[0]();
+      expect(currentAttr).toBe("light");
+
+      lightMatch = false;
+      throwOnGet = true;
+      mqListeners[0]();
+      expect(currentAttr).toBe("dark");
+      throwOnGet = false;
+
+      // OS change when a valid theme IS saved is ignored
+      storedTheme = "light";
+      contrastMatch = true;
+      mqListeners[0]();
+      expect(currentAttr).toBe("dark");
+
+      cleanup();
     } finally {
       (globalThis as Record<string, unknown>).document = prevDoc;
       (globalThis as Record<string, unknown>).window = prevWin;

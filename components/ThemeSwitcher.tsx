@@ -62,31 +62,33 @@ function Glyph({ id }: { id: ThemeName }) {
   );
 }
 
+export function mountThemeSync(setTheme: (t: ThemeName) => void): () => void {
+  setTheme(current());
+  const onChange = (e: Event) => setTheme((e as CustomEvent<ThemeName>).detail);
+  window.addEventListener(EVENT, onChange);
+  const mqs = [window.matchMedia("(prefers-color-scheme: light)"), window.matchMedia("(prefers-contrast: more)")];
+  const onSystem = () => {
+    let saved: string | null = null;
+    try {
+      saved = localStorage.getItem(THEME_KEY);
+    } catch {
+      /* ignore */
+    }
+    if (saved === "dark" || saved === "light" || saved === "high-contrast") return;
+    apply(mqs[1].matches ? "high-contrast" : mqs[0].matches ? "light" : "dark", false);
+  };
+  mqs.forEach((m) => m.addEventListener("change", onSystem));
+  return () => {
+    window.removeEventListener(EVENT, onChange);
+    mqs.forEach((m) => m.removeEventListener("change", onSystem));
+  };
+}
+
 export function ThemeSwitcher({ className = "", showLabels = false }: { className?: string; showLabels?: boolean }) {
   const [theme, setTheme] = useState<ThemeName | null>(null);
   const labelId = useId();
 
-  useEffect(() => {
-    setTheme(current());
-    const onChange = (e: Event) => setTheme((e as CustomEvent<ThemeName>).detail);
-    window.addEventListener(EVENT, onChange);
-    const mqs = [window.matchMedia("(prefers-color-scheme: light)"), window.matchMedia("(prefers-contrast: more)")];
-    const onSystem = () => {
-      let saved: string | null = null;
-      try {
-        saved = localStorage.getItem(THEME_KEY);
-      } catch {
-        /* ignore */
-      }
-      if (saved) return;
-      apply(mqs[1].matches ? "high-contrast" : mqs[0].matches ? "light" : "dark", false);
-    };
-    mqs.forEach((m) => m.addEventListener("change", onSystem));
-    return () => {
-      window.removeEventListener(EVENT, onChange);
-      mqs.forEach((m) => m.removeEventListener("change", onSystem));
-    };
-  }, []);
+  useEffect(() => mountThemeSync(setTheme), []);
 
   const choose = (t: ThemeName) => {
     setTheme(t);
