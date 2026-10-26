@@ -11,7 +11,22 @@ export function json(
   data: unknown,
   init: { status?: number; cacheControl?: string; headers?: Record<string, string> } = {}
 ): Response {
-  return new Response(JSON.stringify(data === undefined ? null : data), {
+  let body: string;
+  try {
+    body = JSON.stringify(data === undefined ? null : data);
+  } catch {
+    body = JSON.stringify({ error: "internal_error", message: "Serialization failed" });
+    return new Response(body, {
+      status: 500,
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        "Cache-Control": "no-store",
+        ...SECURITY_HEADERS,
+        ...(init.headers ?? {}),
+      },
+    });
+  }
+  return new Response(body, {
     status: init.status ?? 200,
     headers: {
       "Content-Type": "application/json; charset=utf-8",
@@ -53,7 +68,7 @@ export function methodNotAllowed(allowed: string[] = ["GET", "HEAD"]): Response 
 export const PUBLIC_CACHE = "public, max-age=0, s-maxage=300, stale-while-revalidate=600";
 
 /**
- * Safely parses an optional integer limit from URL search parameters.
+ * Safely parses an optional integer limit from URL search parameters (accepts "limit" or "take").
  * Returns undefined if missing, non-numeric, or <= 0. Bounded by max.
  * Only plain base-10 integers are accepted: partial numerics such as "1e3", "2.5" or "10abc"
  * are rejected rather than silently truncated by parseInt.
@@ -62,7 +77,7 @@ export function parseLimit(params: URLSearchParams, max = 100): number | undefin
   if (!params || typeof params.get !== "function") return undefined;
   const cap = Math.floor(max);
   if (!Number.isFinite(max) || cap <= 0) return undefined;
-  const raw = params.get("limit")?.trim();
+  const raw = (params.get("limit") ?? params.get("take"))?.trim();
   if (!raw || !/^\+?\d+$/.test(raw)) return undefined;
   const num = Number(raw);
   if (!(num > 0)) return undefined;
