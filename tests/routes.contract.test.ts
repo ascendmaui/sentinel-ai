@@ -156,9 +156,35 @@ describe.each(routes.map((r) => [r.path] as const))("route contract %s", (path) 
         expect(pageRowsBody.totalCount).toBeGreaterThanOrEqual(1);
       }
 
+      const pgRowsPerPageRes = await mod.GET({ url: `${path}?pg=1&rows_per_page=1` } as unknown as Request);
+      expect(pgRowsPerPageRes.status).toBe(200);
+      expectHardenedJson(pgRowsPerPageRes, `${path} pg/rows_per_page url`);
+      const pgRowsPerPageBody = await pgRowsPerPageRes.json();
+      if ("count" in pgRowsPerPageBody && "totalCount" in pgRowsPerPageBody) {
+        expect(pgRowsPerPageBody.count).toBe(1);
+        expect(pgRowsPerPageBody.totalCount).toBeGreaterThanOrEqual(1);
+      }
+
+      const pageIdxRowsPerPageRes = await mod.GET({ url: `${path}?page_idx=1&rowsPerPage=1` } as unknown as Request);
+      expect(pageIdxRowsPerPageRes.status).toBe(200);
+      expectHardenedJson(pageIdxRowsPerPageRes, `${path} page_idx/rowsPerPage url`);
+      const pageIdxRowsPerPageBody = await pageIdxRowsPerPageRes.json();
+      if ("count" in pageIdxRowsPerPageBody && "totalCount" in pageIdxRowsPerPageBody) {
+        expect(pageIdxRowsPerPageBody.count).toBe(1);
+        expect(pageIdxRowsPerPageBody.totalCount).toBeGreaterThanOrEqual(1);
+      }
+
       const sortOrderRes = await mod.GET({ url: `${path}?sort_by=desc&orderBy=desc&order=latest` } as unknown as Request);
       expect(sortOrderRes.status).toBe(200);
       expectHardenedJson(sortOrderRes, `${path} sort/order url`);
+
+      const sortDirectionRes = await mod.GET({ url: `${path}?order=forward&sort_dir=backward` } as unknown as Request);
+      expect(sortDirectionRes.status).toBe(200);
+      expectHardenedJson(sortDirectionRes, `${path} forward/backward sort url`);
+
+      const sortNumericRes = await mod.GET({ url: `${path}?order=1&sort=-1` } as unknown as Request);
+      expect(sortNumericRes.status).toBe(200);
+      expectHardenedJson(sortNumericRes, `${path} numeric sort url`);
     });
   } else {
     it("is a dynamic route with generateStaticParams and dynamicParams enabled", () => {
