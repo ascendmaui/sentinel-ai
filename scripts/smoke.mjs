@@ -147,6 +147,18 @@ check(postOneByIndex.status === 200 && (await postOneByIndex.json()).slug === po
 const postOneByP1 = await get("/api/posts/p-1");
 check(postOneByP1.status === 200 && (await postOneByP1.json()).slug === posts.posts[0].slug, "GET /api/posts/p-1 -> 200");
 
+const postOneByJsonIndex = await get("/api/posts/1.json");
+check(postOneByJsonIndex.status === 200 && (await postOneByJsonIndex.json()).slug === posts.posts[0].slug, "GET /api/posts/1.json -> 200");
+
+const postOneByP1Json = await get("/api/posts/p-1.json");
+check(postOneByP1Json.status === 200 && (await postOneByP1Json.json()).slug === posts.posts[0].slug, "GET /api/posts/p-1.json -> 200");
+
+const postIdAliasPosts = await (await get("/api/posts?postId=1")).json();
+check(postIdAliasPosts.count === 1 && postIdAliasPosts.posts[0].slug === posts.posts[0].slug, "GET /api/posts?postId=1 filter");
+
+const readTimeAliasPosts = await (await get("/api/posts?read_time=8")).json();
+check(readTimeAliasPosts.count > 0 && readTimeAliasPosts.posts.every(p => p.readMins === 8), "GET /api/posts?read_time=8 filter");
+
 for (const p of posts.posts) {
   const r = await get(`/api/posts/${p.slug}`);
   const b = await r.json();
@@ -204,6 +216,12 @@ check(idIncFilter.count === 1 && idIncFilter.incidents[0].id === "openai-hugging
 
 const nIncFilter = await (await get("/api/incidents?n=01")).json();
 check(nIncFilter.count === 1 && nIncFilter.incidents[0].id === "openai-huggingface-2026", "GET /api/incidents?n=01 filter");
+
+const caseIdAliasIncs = await (await get("/api/incidents?caseId=01")).json();
+check(caseIdAliasIncs.count === 1 && caseIdAliasIncs.incidents[0].id === "openai-huggingface-2026", "GET /api/incidents?caseId=01 (caseId alias)");
+
+const inc1Inc = await get("/api/incidents/incident1");
+check(inc1Inc.status === 200 && (await inc1Inc.json()).id === "openai-huggingface-2026", "GET /api/incidents/incident1 (hyphenless)");
 
 const qIncsStatus = await (await get("/api/incidents?q=verified")).json();
 check(qIncsStatus.count > 0, "GET /api/incidents?q=verified statusLabel search");
@@ -305,6 +323,12 @@ const csHyphenless = await get("/api/case-studies/f01");
 check(csHyphenless.status === 200 && (await csHyphenless.json()).id === "F-01", "GET /api/case-studies/f01 (hyphenless)");
 const csFixPrefix = await get("/api/case-studies/fix-f-01");
 check(csFixPrefix.status === 200 && (await csFixPrefix.json()).id === "F-01", "GET /api/case-studies/fix-f-01 (fix- prefix)");
+
+const csCs1 = await get("/api/case-studies/cs1");
+check(csCs1.status === 200 && (await csCs1.json()).id === "F-01", "GET /api/case-studies/cs1 (hyphenless)");
+
+const csFixFilter = await (await get("/api/case-studies?fix=idempotency")).json();
+check(csFixFilter.count > 0, "GET /api/case-studies?fix=idempotency filter");
 
 const csF1 = await get("/api/case-studies/f-1");
 check(csF1.status === 200 && (await csF1.json()).id === "F-01", "GET /api/case-studies/f-1 (single digit with hyphen)");
@@ -468,6 +492,12 @@ const scScenarioAlias = await (await get("/api/scenarios?scenario=sc1")).json();
 check(scScenarioAlias.count === 1 && scScenarioAlias.scenarios[0].id === "legacy-internal-app", "GET /api/scenarios?scenario=sc1 filter");
 const sc1Res = await get("/api/scenarios/sc1");
 check(sc1Res.status === 200 && (await sc1Res.json()).id === "legacy-internal-app", "GET /api/scenarios/sc1 -> 200");
+
+const scScenario1 = await get("/api/scenarios/scenario1");
+check(scScenario1.status === 200 && (await scScenario1.json()).id === "legacy-internal-app", "GET /api/scenarios/scenario1 (hyphenless)");
+
+const scSeraphim = await (await get("/api/scenarios?seraphim=recon")).json();
+check(scSeraphim.count > 0, "GET /api/scenarios?seraphim=recon filter");
 const scPage = await (await get("/api/scenarios?page=2&limit=2")).json();
 check(scPage.count === 2, "GET /api/scenarios?page=2&limit=2 (page pagination)");
 const jsonSc = await get(`/api/scenarios/legacy-internal-app.json`);
@@ -541,6 +571,18 @@ check(srcByRank.status === 200 && (await srcByRank.json()).id === "oaiAug", "GET
 
 const srcByS1 = await get("/api/sources/s1");
 check(srcByS1.status === 200 && (await srcByS1.json()).id === "oaiAug", "GET /api/sources/s1 (s1 prefix)");
+
+const srcBySrc1 = await get("/api/sources/src1");
+check(srcBySrc1.status === 200 && (await srcBySrc1.json()).id === "oaiAug", "GET /api/sources/src1 (src1 prefix)");
+
+const srcBySource1 = await get("/api/sources/source1");
+check(srcBySource1.status === 200 && (await srcBySource1.json()).id === "oaiAug", "GET /api/sources/source1 (source1 prefix)");
+
+const srcBySrcAlias = await (await get("/api/sources?src=oaiAug")).json();
+check(srcBySrcAlias.count === 1 && srcBySrcAlias.sources[0].id === "oaiAug", "GET /api/sources?src=oaiAug filter");
+
+const srcByUrl = await (await get("/api/sources?url=openai.com")).json();
+check(srcByUrl.count > 0 && srcByUrl.sources.every(s => s.url.includes("openai.com")), "GET /api/sources?url=openai.com filter");
 
 const sourcesPage = await (await get("/api/sources?page=2&limit=2")).json();
 check(sourcesPage.count === 2, "GET /api/sources?page=2&limit=2 (page pagination)");

@@ -1,7 +1,7 @@
 import { json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
 import { scenarioById, scenarios } from "../../../lib/incidents";
 
-/** Hypothetical scenarios index as JSON. Lists conceptual threat models and controls. Supports ?id=, ?n=, ?ref=, ?source=, ?weakness=, ?target=, ?control=, ?speed=, ?approach=, ?q=, ?order=, ?offset=, ?limit=, and ?page=. */
+/** Hypothetical scenarios index as JSON. Lists conceptual threat models and controls. Supports ?id=, ?n=, ?ref=, ?source=, ?weakness=, ?target=, ?control=, ?speed=, ?approach=, ?seraphim=, ?analysis=, ?q=, ?order=, ?offset=, ?limit=, and ?page=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -27,6 +27,7 @@ export function GET(req?: Request): Response {
       const control = parseSearchQuery(url.searchParams, "control") || parseSearchQuery(url.searchParams, "controls");
       const speed = parseSearchQuery(url.searchParams, "speed");
       const approach = parseSearchQuery(url.searchParams, "approach");
+      const seraphim = parseSearchQuery(url.searchParams, "seraphim") || parseSearchQuery(url.searchParams, "analysis");
       const q = parseSearchQuery(url.searchParams);
       const limit = parseLimit(url.searchParams);
       const offset = parseOffset(url.searchParams, 10000, limit);
@@ -36,7 +37,8 @@ export function GET(req?: Request): Response {
         const matched = scenarioById(id);
         let cleanId = id.replace(/\.(html|json)$/, "");
         cleanId = cleanId.replace(/^(scenario|sc)[-_]/, "");
-        if (cleanId.startsWith("sc") && /^\d+$/.test(cleanId.slice(2))) cleanId = cleanId.slice(2);
+        if (cleanId.startsWith("scenario") && /^(?:h)?\d+$/.test(cleanId.slice(8))) cleanId = cleanId.slice(8);
+        else if (cleanId.startsWith("sc") && /^\d+$/.test(cleanId.slice(2))) cleanId = cleanId.slice(2);
         if (cleanId.startsWith("h-") || cleanId.startsWith("h_")) cleanId = `h${cleanId.slice(2)}`;
         cleanId = cleanId.replace(/^h0*(\d+)$/, "h$1").replace(/^0*(\d+)$/, "$1");
         const normalized = cleanId.startsWith("h") ? cleanId : `h${cleanId}`;
@@ -55,7 +57,8 @@ export function GET(req?: Request): Response {
         const matched = scenarioById(n);
         let cleanN = n.replace(/\.(html|json)$/, "");
         cleanN = cleanN.replace(/^(scenario|sc)[-_]/, "");
-        if (cleanN.startsWith("sc") && /^\d+$/.test(cleanN.slice(2))) cleanN = cleanN.slice(2);
+        if (cleanN.startsWith("scenario") && /^(?:h)?\d+$/.test(cleanN.slice(8))) cleanN = cleanN.slice(8);
+        else if (cleanN.startsWith("sc") && /^\d+$/.test(cleanN.slice(2))) cleanN = cleanN.slice(2);
         if (cleanN.startsWith("h-") || cleanN.startsWith("h_")) cleanN = `h${cleanN.slice(2)}`;
         cleanN = cleanN.replace(/^h0*(\d+)$/, "h$1").replace(/^0*(\d+)$/, "$1");
         const normalized = cleanN.startsWith("h") ? cleanN : `h${cleanN}`;
@@ -100,6 +103,10 @@ export function GET(req?: Request): Response {
 
       if (approach) {
         list = list.filter((s) => s.approach.toLowerCase().includes(approach));
+      }
+
+      if (seraphim) {
+        list = list.filter((s) => s.seraphim.some((sp) => sp.toLowerCase().includes(seraphim)));
       }
 
       if (q) {

@@ -300,6 +300,12 @@ describe("sources registry", () => {
     expect(sourceById("s-1")).toBe(sources[0]);
     expect(sourceById("s_1")).toBe(sources[0]);
     expect(sourceById("s1")).toBe(sources[0]);
+    expect(sourceById("source1")).toBe(sources[0]);
+    expect(sourceById("source01")).toBe(sources[0]);
+    expect(sourceById("source-1")).toBe(sources[0]);
+    expect(sourceById("src1")).toBe(sources[0]);
+    expect(sourceById("src01")).toBe(sources[0]);
+    expect(sourceById("src-1")).toBe(sources[0]);
     expect(sourceById("+1")).toBe(sources[0]);
     expect(sourceById("")).toBeUndefined();
     expect(sourceById("   ")).toBeUndefined();
@@ -356,6 +362,12 @@ describe("posts", () => {
     expect(postBySlug("1")).toBe(posts[0]);
     expect(postBySlug("01")).toBe(posts[0]);
     expect(postBySlug("+1")).toBe(posts[0]);
+    expect(postBySlug("1.json")).toBe(posts[0]);
+    expect(postBySlug("01.json")).toBe(posts[0]);
+    expect(postBySlug("1.html")).toBe(posts[0]);
+    expect(postBySlug("p-1.json")).toBe(posts[0]);
+    expect(postBySlug("post-1.json")).toBe(posts[0]);
+    expect(postBySlug("blog-1.json")).toBe(posts[0]);
     expect(postBySlug("4")).toBe(posts[3]);
     expect(postBySlug("04")).toBe(posts[3]);
     expect(postBySlug("+4")).toBe(posts[3]);
@@ -583,6 +595,10 @@ describe("incidents", () => {
     expect(incidentById("i_1")).toBe(first);
     expect(incidentById("inc01")).toBe(first);
     expect(incidentById("i1")).toBe(first);
+    expect(incidentById("incident1")).toBe(first);
+    expect(incidentById("incident01")).toBe(first);
+    expect(incidentById("case1")).toBe(first);
+    expect(incidentById("case01")).toBe(first);
     expect(incidentById("/01/")).toBe(first);
     expect(incidentById("/openai-huggingface-2026/")).toBe(first);
     expect(incidentById("//i-1//")).toBe(first);
@@ -644,6 +660,9 @@ describe("incidents", () => {
     const first = scenarios[0];
     expect(scenarioById("scenario_1")).toBe(first);
     expect(scenarioById("scenario-1")).toBe(first);
+    expect(scenarioById("scenario1")).toBe(first);
+    expect(scenarioById("scenario01")).toBe(first);
+    expect(scenarioById("scenarioh1")).toBe(first);
     expect(scenarioById("sc_1")).toBe(first);
     expect(scenarioById("sc-1")).toBe(first);
     expect(scenarioById("h_1")).toBe(first);
@@ -703,6 +722,10 @@ describe("case studies / findings", () => {
     expect(findingById("cs-1")?.id).toBe("F-01");
     expect(findingById("cs_01")?.id).toBe("F-01");
     expect(findingById("cs_1")?.id).toBe("F-01");
+    expect(findingById("cs1")?.id).toBe("F-01");
+    expect(findingById("cs01")?.id).toBe("F-01");
+    expect(findingById("finding1")?.id).toBe("F-01");
+    expect(findingById("finding01")?.id).toBe("F-01");
     expect(findingById("case-study-01")?.id).toBe("F-01");
     expect(findingById("case_study_01")?.id).toBe("F-01");
     expect(findingById("/f-01/")?.id).toBe("F-01");
@@ -712,6 +735,10 @@ describe("case studies / findings", () => {
     expect(remediationById("cs-1")?.id).toBe("F-01");
     expect(remediationById("cs_01")?.id).toBe("F-01");
     expect(remediationById("cs_1")?.id).toBe("F-01");
+    expect(remediationById("cs1")?.id).toBe("F-01");
+    expect(remediationById("cs01")?.id).toBe("F-01");
+    expect(remediationById("finding1")?.id).toBe("F-01");
+    expect(remediationById("finding01")?.id).toBe("F-01");
     expect(remediationById("case-study-01")?.id).toBe("F-01");
     expect(remediationById("case_study_01")?.id).toBe("F-01");
     expect(remediationById("/f-01/")?.id).toBe("F-01");

@@ -2626,6 +2626,274 @@ describe("Entity query aliases, numeric indexing, and helper extensions", () => 
 
     const recentParams = new URLSearchParams("order=recent");
     expect(parseSortOrder(recentParams)).toBe("desc");
+
+    const forwardParams = new URLSearchParams("order=forward");
+    expect(parseSortOrder(forwardParams)).toBe("asc");
+
+    const backwardParams = new URLSearchParams("order=backward");
+    expect(parseSortOrder(backwardParams)).toBe("desc");
+
+    const backwardsParams = new URLSearchParams("order=backwards");
+    expect(parseSortOrder(backwardsParams)).toBe("desc");
+
+    const numAscParams = new URLSearchParams("order=1");
+    expect(parseSortOrder(numAscParams)).toBe("asc");
+
+    const plusAscParams = new URLSearchParams("order=+1");
+    expect(parseSortOrder(plusAscParams)).toBe("asc");
+
+    const numDescParams = new URLSearchParams("order=-1");
+    expect(parseSortOrder(numDescParams)).toBe("desc");
+
+    const rowsPerPageParams = new URLSearchParams("rows_per_page=20");
+    expect(parseLimit(rowsPerPageParams)).toBe(20);
+
+    const rowsPerPageCamelParams = new URLSearchParams("rowsPerPage=15");
+    expect(parseLimit(rowsPerPageCamelParams)).toBe(15);
+
+    const pgParams = new URLSearchParams("pg=5");
+    expect(parsePage(pgParams)).toBe(5);
+
+    const pageIdxParams = new URLSearchParams("page_idx=2");
+    expect(parsePage(pageIdxParams)).toBe(2);
+
+    const pageIdxCamelParams = new URLSearchParams("pageIdx=4");
+    expect(parsePage(pageIdxCamelParams)).toBe(4);
+  });
+
+  it("GET /api/posts and GET /api/posts/[slug] handle extended aliases and numeric index extensions", async () => {
+    const post1 = posts[0];
+    const postIdRes = postsIndex(req("/api/posts?postId=1"));
+    expect(postIdRes.status).toBe(200);
+    expect((await postIdRes.json()).posts[0].slug).toBe(post1.slug);
+
+    const postIdSnakeRes = postsIndex(req("/api/posts?post_id=1"));
+    expect(postIdSnakeRes.status).toBe(200);
+    expect((await postIdSnakeRes.json()).posts[0].slug).toBe(post1.slug);
+
+    const articleRes = postsIndex(req("/api/posts?article=1"));
+    expect(articleRes.status).toBe(200);
+    expect((await articleRes.json()).posts[0].slug).toBe(post1.slug);
+
+    const articleIdRes = postsIndex(req("/api/posts?article_id=1"));
+    expect(articleIdRes.status).toBe(200);
+    expect((await articleIdRes.json()).posts[0].slug).toBe(post1.slug);
+
+    const articleIdCamelRes = postsIndex(req("/api/posts?articleId=1"));
+    expect(articleIdCamelRes.status).toBe(200);
+    expect((await articleIdCamelRes.json()).posts[0].slug).toBe(post1.slug);
+
+    const readTimeRes = postsIndex(req("/api/posts?read_time=8"));
+    expect(readTimeRes.status).toBe(200);
+    expect((await readTimeRes.json()).posts.every((p: { readMins: number }) => p.readMins === 8)).toBe(true);
+
+    const readTimeCamelRes = postsIndex(req("/api/posts?readTime=8"));
+    expect(readTimeCamelRes.status).toBe(200);
+    expect((await readTimeCamelRes.json()).posts.every((p: { readMins: number }) => p.readMins === 8)).toBe(true);
+
+    const readingTimeRes = postsIndex(req("/api/posts?reading_time=8"));
+    expect(readingTimeRes.status).toBe(200);
+    expect((await readingTimeRes.json()).posts.every((p: { readMins: number }) => p.readMins === 8)).toBe(true);
+
+    const readingMinsRes = postsIndex(req("/api/posts?reading_mins=8"));
+    expect(readingMinsRes.status).toBe(200);
+    expect((await readingMinsRes.json()).posts.every((p: { readMins: number }) => p.readMins === 8)).toBe(true);
+
+    const sourceIdRes = postsIndex(req("/api/posts?source_id=oaiAug"));
+    expect(sourceIdRes.status).toBe(200);
+    expect((await sourceIdRes.json()).count).toBeGreaterThan(0);
+
+    const sourceIdCamelRes = postsIndex(req("/api/posts?sourceId=oaiAug"));
+    expect(sourceIdCamelRes.status).toBe(200);
+    expect((await sourceIdCamelRes.json()).count).toBeGreaterThan(0);
+
+    const srcRes = postsIndex(req("/api/posts?src=oaiAug"));
+    expect(srcRes.status).toBe(200);
+    expect((await srcRes.json()).count).toBeGreaterThan(0);
+
+    const json1Res = await postOne(req("/api/posts/1.json"), slugCtx("1.json"));
+    expect(json1Res.status).toBe(200);
+    expect((await json1Res.json()).slug).toBe(post1.slug);
+
+    const json01Res = await postOne(req("/api/posts/01.json"), slugCtx("01.json"));
+    expect(json01Res.status).toBe(200);
+    expect((await json01Res.json()).slug).toBe(post1.slug);
+
+    const jsonP1Res = await postOne(req("/api/posts/p-1.json"), slugCtx("p-1.json"));
+    expect(jsonP1Res.status).toBe(200);
+    expect((await jsonP1Res.json()).slug).toBe(post1.slug);
+
+    const jsonPost1Res = await postOne(req("/api/posts/post-1.json"), slugCtx("post-1.json"));
+    expect(jsonPost1Res.status).toBe(200);
+    expect((await jsonPost1Res.json()).slug).toBe(post1.slug);
+
+    const jsonBlog1Res = await postOne(req("/api/posts/blog-1.json"), slugCtx("blog-1.json"));
+    expect(jsonBlog1Res.status).toBe(200);
+    expect((await jsonBlog1Res.json()).slug).toBe(post1.slug);
+
+    const html1Res = await postOne(req("/api/posts/1.html"), slugCtx("1.html"));
+    expect(html1Res.status).toBe(200);
+    expect((await html1Res.json()).slug).toBe(post1.slug);
+  });
+
+  it("GET /api/case-studies supports fix, rationale, what, before, after filters and hyphenless finding lookups", async () => {
+    const f8 = findings.find((f) => f.id === "F-08")!;
+    const fixRes = caseStudiesIndex(req("/api/case-studies?fix=idempotency"));
+    expect(fixRes.status).toBe(200);
+    expect((await fixRes.json()).findings.some((f: { id: string }) => f.id === "F-07")).toBe(true);
+
+    const rationaleRes = caseStudiesIndex(req("/api/case-studies?rationale=availability"));
+    expect(rationaleRes.status).toBe(200);
+    expect((await rationaleRes.json()).findings.some((f: { id: string }) => f.id === f8.id)).toBe(true);
+
+    const whatRes = caseStudiesIndex(req("/api/case-studies?what=policy"));
+    expect(whatRes.status).toBe(200);
+    expect((await whatRes.json()).findings.some((f: { id: string }) => f.id === f8.id)).toBe(true);
+
+    const beforeRes = caseStudiesIndex(req("/api/case-studies?before=circular"));
+    expect(beforeRes.status).toBe(200);
+    expect((await beforeRes.json()).findings.some((f: { id: string }) => f.id === f8.id)).toBe(true);
+
+    const afterRes = caseStudiesIndex(req("/api/case-studies?after=helper"));
+    expect(afterRes.status).toBe(200);
+    expect((await afterRes.json()).findings.some((f: { id: string }) => f.id === f8.id)).toBe(true);
+
+    const cs1Res = caseStudiesIndex(req("/api/case-studies?finding=cs1"));
+    expect(cs1Res.status).toBe(200);
+    expect((await cs1Res.json()).findings[0].id).toBe("F-01");
+
+    const cs01Res = caseStudiesIndex(req("/api/case-studies?case_study=cs01"));
+    expect(cs01Res.status).toBe(200);
+    expect((await cs01Res.json()).findings[0].id).toBe("F-01");
+
+    const finding1Res = caseStudiesIndex(req("/api/case-studies?id=finding1"));
+    expect(finding1Res.status).toBe(200);
+    expect((await finding1Res.json()).findings[0].id).toBe("F-01");
+
+    const oneCs1 = await caseStudyOne(req("/api/case-studies/cs1"), idCtx("cs1"));
+    expect(oneCs1.status).toBe(200);
+    expect((await oneCs1.json()).id).toBe("F-01");
+
+    const oneCs01 = await caseStudyOne(req("/api/case-studies/cs01"), idCtx("cs01"));
+    expect(oneCs01.status).toBe(200);
+    expect((await oneCs01.json()).id).toBe("F-01");
+
+    const oneFinding1 = await caseStudyOne(req("/api/case-studies/finding1"), idCtx("finding1"));
+    expect(oneFinding1.status).toBe(200);
+    expect((await oneFinding1.json()).id).toBe("F-01");
+  });
+
+  it("GET /api/scenarios supports seraphim analysis filter and scenario hyphenless lookups", async () => {
+    const sc1 = scenarios[0];
+    const seraphimRes = scenariosIndex(req("/api/scenarios?seraphim=recon"));
+    expect(seraphimRes.status).toBe(200);
+    expect((await seraphimRes.json()).count).toBeGreaterThan(0);
+
+    const analysisRes = scenariosIndex(req("/api/scenarios?analysis=controls"));
+    expect(analysisRes.status).toBe(200);
+    expect((await analysisRes.json()).count).toBeGreaterThan(0);
+
+    const sc1ParamRes = scenariosIndex(req("/api/scenarios?scenario=scenario1"));
+    expect(sc1ParamRes.status).toBe(200);
+    expect((await sc1ParamRes.json()).scenarios[0].id).toBe(sc1.id);
+
+    const sc01ParamRes = scenariosIndex(req("/api/scenarios?id=scenario01"));
+    expect(sc01ParamRes.status).toBe(200);
+    expect((await sc01ParamRes.json()).scenarios[0].id).toBe(sc1.id);
+
+    const oneScenario1 = await scenarioOne(req("/api/scenarios/scenario1"), idCtx("scenario1"));
+    expect(oneScenario1.status).toBe(200);
+    expect((await oneScenario1.json()).id).toBe(sc1.id);
+
+    const oneScenario01 = await scenarioOne(req("/api/scenarios/scenario01"), idCtx("scenario01"));
+    expect(oneScenario01.status).toBe(200);
+    expect((await oneScenario01.json()).id).toBe(sc1.id);
+
+    const oneScenarioH1 = await scenarioOne(req("/api/scenarios/scenarioh1"), idCtx("scenarioh1"));
+    expect(oneScenarioH1.status).toBe(200);
+    expect((await oneScenarioH1.json()).id).toBe(sc1.id);
+  });
+
+  it("GET /api/incidents supports caseId alias and incident/case hyphenless lookups", async () => {
+    const inc1 = incidents[0];
+    const caseIdRes = incidentsIndex(req("/api/incidents?caseId=01"));
+    expect(caseIdRes.status).toBe(200);
+    expect((await caseIdRes.json()).incidents[0].id).toBe(inc1.id);
+
+    const inc1ParamRes = incidentsIndex(req("/api/incidents?incident=incident1"));
+    expect(inc1ParamRes.status).toBe(200);
+    expect((await inc1ParamRes.json()).incidents[0].id).toBe(inc1.id);
+
+    const case01ParamRes = incidentsIndex(req("/api/incidents?case=case01"));
+    expect(case01ParamRes.status).toBe(200);
+    expect((await case01ParamRes.json()).incidents[0].id).toBe(inc1.id);
+
+    const oneInc1 = await incidentOne(req("/api/incidents/incident1"), idCtx("incident1"));
+    expect(oneInc1.status).toBe(200);
+    expect((await oneInc1.json()).id).toBe(inc1.id);
+
+    const oneInc01 = await incidentOne(req("/api/incidents/incident01"), idCtx("incident01"));
+    expect(oneInc01.status).toBe(200);
+    expect((await oneInc01.json()).id).toBe(inc1.id);
+
+    const oneCase1 = await incidentOne(req("/api/incidents/case1"), idCtx("case1"));
+    expect(oneCase1.status).toBe(200);
+    expect((await oneCase1.json()).id).toBe(inc1.id);
+
+    const oneCase01 = await incidentOne(req("/api/incidents/case01"), idCtx("case01"));
+    expect(oneCase01.status).toBe(200);
+    expect((await oneCase01.json()).id).toBe(inc1.id);
+  });
+
+  it("GET /api/sources supports source_id, src, url/domain filters, and source1/src1 lookups", async () => {
+    const s1 = sources[0];
+    const sourceIdRes = sourcesIndex(req("/api/sources?source_id=oaiAug"));
+    expect(sourceIdRes.status).toBe(200);
+    expect((await sourceIdRes.json()).sources[0].id).toBe(s1.id);
+
+    const sourceIdCamelRes = sourcesIndex(req("/api/sources?sourceId=oaiAug"));
+    expect(sourceIdCamelRes.status).toBe(200);
+    expect((await sourceIdCamelRes.json()).sources[0].id).toBe(s1.id);
+
+    const srcRes = sourcesIndex(req("/api/sources?src=oaiAug"));
+    expect(srcRes.status).toBe(200);
+    expect((await srcRes.json()).sources[0].id).toBe(s1.id);
+
+    const srcIdRes = sourcesIndex(req("/api/sources?src_id=oaiAug"));
+    expect(srcIdRes.status).toBe(200);
+    expect((await srcIdRes.json()).sources[0].id).toBe(s1.id);
+
+    const urlRes = sourcesIndex(req("/api/sources?url=openai.com"));
+    expect(urlRes.status).toBe(200);
+    expect((await urlRes.json()).sources.every((s: { url: string }) => s.url.includes("openai.com"))).toBe(true);
+
+    const domainRes = sourcesIndex(req("/api/sources?domain=huggingface.co"));
+    expect(domainRes.status).toBe(200);
+    expect((await domainRes.json()).sources.every((s: { url: string }) => s.url.includes("huggingface.co"))).toBe(true);
+
+    const linkRes = sourcesIndex(req("/api/sources?link=metr.org"));
+    expect(linkRes.status).toBe(200);
+    expect((await linkRes.json()).sources.every((s: { url: string }) => s.url.includes("metr.org"))).toBe(true);
+
+    const hrefRes = sourcesIndex(req("/api/sources?href=f5.com"));
+    expect(hrefRes.status).toBe(200);
+    expect((await hrefRes.json()).sources.every((s: { url: string }) => s.url.includes("f5.com"))).toBe(true);
+
+    const oneSource1 = await sourceOne(req("/api/sources/source1"), idCtx("source1"));
+    expect(oneSource1.status).toBe(200);
+    expect((await oneSource1.json()).id).toBe(s1.id);
+
+    const oneSource01 = await sourceOne(req("/api/sources/source01"), idCtx("source01"));
+    expect(oneSource01.status).toBe(200);
+    expect((await oneSource01.json()).id).toBe(s1.id);
+
+    const oneSrc1 = await sourceOne(req("/api/sources/src1"), idCtx("src1"));
+    expect(oneSrc1.status).toBe(200);
+    expect((await oneSrc1.json()).id).toBe(s1.id);
+
+    const oneSrc01 = await sourceOne(req("/api/sources/src01"), idCtx("src01"));
+    expect(oneSrc01.status).toBe(200);
+    expect((await oneSrc01.json()).id).toBe(s1.id);
   });
 });
 

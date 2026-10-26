@@ -37,7 +37,9 @@ export function sourceById(id: string): Source | undefined {
   if (Object.prototype.hasOwnProperty.call(S, trimmed)) return S[trimmed];
   let target = trimmed.toLowerCase().replace(/\.(html|json)$/, "");
   if (target.startsWith("source-") || target.startsWith("source_")) target = target.slice(7);
+  else if (target.startsWith("source") && /^\d+$/.test(target.slice(6))) target = target.slice(6);
   else if (target.startsWith("src-") || target.startsWith("src_")) target = target.slice(4);
+  else if (target.startsWith("src") && /^\d+$/.test(target.slice(3))) target = target.slice(3);
   else if (target.startsWith("s-") || target.startsWith("s_")) target = target.slice(2);
   else if (target.startsWith("s") && /^\d+$/.test(target.slice(1))) target = target.slice(1);
   if (target.startsWith("+")) target = target.slice(1);

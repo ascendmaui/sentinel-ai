@@ -108,6 +108,14 @@ describe("Blog Page and Post Page", () => {
     expect(p1Meta.title).toBe(posts[0].title);
     expect(p1Meta.alternates?.canonical).toBe(`/blog/${posts[0].slug}`);
 
+    const jsonMeta = await postMeta({ params: Promise.resolve({ slug: "1.json" }) });
+    expect(jsonMeta.title).toBe(posts[0].title);
+    expect(jsonMeta.alternates?.canonical).toBe(`/blog/${posts[0].slug}`);
+
+    const p1JsonMeta = await postMeta({ params: Promise.resolve({ slug: "p-1.json" }) });
+    expect(p1JsonMeta.title).toBe(posts[0].title);
+    expect(p1JsonMeta.alternates?.canonical).toBe(`/blog/${posts[0].slug}`);
+
     const postPrefixedMeta = await postMeta({ params: Promise.resolve({ slug: `post-${posts[0].slug}` }) });
     expect(postPrefixedMeta.title).toBe(posts[0].title);
     expect(postPrefixedMeta.alternates?.canonical).toBe(`/blog/${posts[0].slug}`);
@@ -141,7 +149,7 @@ describe("Blog Page and Post Page", () => {
     }
 
     // Resolves by numeric index and prefix aliases
-    for (const alias of ["1", "01", "p-1", "post-1", `post-${posts[0].slug}`]) {
+    for (const alias of ["1", "01", "p-1", "post-1", "1.json", "01.json", "p-1.json", `post-${posts[0].slug}`]) {
       const el = await PostPage({ params: Promise.resolve({ slug: alias }) });
       const html = renderToStaticMarkup(el);
       expect(html).toContain(posts[0].title);

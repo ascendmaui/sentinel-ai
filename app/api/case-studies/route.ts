@@ -1,7 +1,7 @@
 import { json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
 import { findingById, findings, remediation, severityCounts } from "../../../lib/caseStudies";
 
-/** Remediation findings and case studies index as JSON. Supports optional ?id=, ?n=, ?severity=, ?sev=, ?status=, ?q=, ?order=, ?offset=, ?limit=, and ?page= filters. */
+/** Remediation findings and case studies index as JSON. Supports optional ?id=, ?n=, ?finding=, ?finding_id=, ?findingId=, ?case_study=, ?caseStudy=, ?slug=, ?title=, ?severity=, ?sev=, ?status=, ?fix=, ?rationale=, ?what=, ?before=, ?after=, ?q=, ?order=, ?offset=, ?limit=, and ?page= filters. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -21,6 +21,11 @@ export function GET(req?: Request): Response {
       const title = parseSearchQuery(url.searchParams, "title");
       const severity = parseSearchQuery(url.searchParams, "severity") || parseSearchQuery(url.searchParams, "sev");
       const status = parseSearchQuery(url.searchParams, "status");
+      const fix = parseSearchQuery(url.searchParams, "fix") || parseSearchQuery(url.searchParams, "remediation");
+      const rationale = parseSearchQuery(url.searchParams, "rationale");
+      const what = parseSearchQuery(url.searchParams, "what") || parseSearchQuery(url.searchParams, "summary");
+      const before = parseSearchQuery(url.searchParams, "before");
+      const after = parseSearchQuery(url.searchParams, "after");
       const q = parseSearchQuery(url.searchParams);
       const limit = parseLimit(url.searchParams);
       const offset = parseOffset(url.searchParams, 10000, limit);
@@ -31,8 +36,10 @@ export function GET(req?: Request): Response {
         let cleanId = id.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
         if (cleanId.startsWith("fix-") || cleanId.startsWith("fix_")) cleanId = cleanId.slice(4);
         else if (cleanId.startsWith("finding-") || cleanId.startsWith("finding_")) cleanId = cleanId.slice(8);
+        else if (cleanId.startsWith("finding") && /^\d+$/.test(cleanId.slice(7))) cleanId = cleanId.slice(7);
         else if (cleanId.startsWith("case-study-") || cleanId.startsWith("case_study_")) cleanId = cleanId.slice(11);
         else if (cleanId.startsWith("cs-") || cleanId.startsWith("cs_")) cleanId = cleanId.slice(3);
+        else if (cleanId.startsWith("cs") && /^\d+$/.test(cleanId.slice(2))) cleanId = cleanId.slice(2);
         const normalized = cleanId.replace(/[-_]/g, "");
         const numMatch = normalized.match(/^(?:f)?0*(\d+)$/);
         const withF = numMatch ? `f${numMatch[1].padStart(2, "0")}` : normalized;
@@ -52,6 +59,21 @@ export function GET(req?: Request): Response {
       }
       if (status) {
         list = list.filter((f) => f.status.toLowerCase().includes(status));
+      }
+      if (fix) {
+        list = list.filter((f) => f.fix.toLowerCase().includes(fix));
+      }
+      if (rationale) {
+        list = list.filter((f) => f.rationale.toLowerCase().includes(rationale));
+      }
+      if (what) {
+        list = list.filter((f) => f.what.toLowerCase().includes(what));
+      }
+      if (before) {
+        list = list.filter((f) => f.before.toLowerCase().includes(before));
+      }
+      if (after) {
+        list = list.filter((f) => f.after.toLowerCase().includes(after));
       }
       if (q) {
         list = list.filter(

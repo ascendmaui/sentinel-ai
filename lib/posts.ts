@@ -220,7 +220,8 @@ export const postBySlug = (slug: string): Post | undefined => {
   }
   target = target.replace(/^\/+|\/+$/g, "").toLowerCase();
   if (!target) return undefined;
-  const withoutExt = target.replace(/\.(html|json)$/, "");
+  const rawTarget = target;
+  target = target.replace(/\.(html|json)$/, "");
 
   if (target.startsWith("post-") || target.startsWith("post_")) target = target.slice(5);
   else if (target.startsWith("blog-") || target.startsWith("blog_")) target = target.slice(5);
@@ -236,14 +237,11 @@ export const postBySlug = (slug: string): Post | undefined => {
     return posts[num - 1];
   }
 
-  const cleanWithoutExt = target.replace(/\.(html|json)$/, "");
-
   return posts.find(
     (p) =>
       p.slug === slug ||
       p.slug.toLowerCase() === target ||
-      p.slug.toLowerCase() === withoutExt ||
-      p.slug.toLowerCase() === cleanWithoutExt
+      p.slug.toLowerCase() === rawTarget
   );
 };
 export const postWords = (p: Post): number => {

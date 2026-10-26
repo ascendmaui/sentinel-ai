@@ -1,7 +1,7 @@
 import { json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
 import { postBySlug, posts, postWords } from "../../../lib/posts";
 
-/** Blog index as JSON: post metadata only (no body). Newest first by default. Supports ?slug=, ?id=, ?tier=, ?source=, ?ref=, ?year=, ?date=, ?readMins=, ?q=, ?order=, ?offset=, ?limit=, and ?page=. */
+/** Blog index as JSON: post metadata only (no body). Newest first by default. Supports ?slug=, ?id=, ?n=, ?post=, ?post_id=, ?postId=, ?article=, ?article_id=, ?articleId=, ?title=, ?tier=, ?source=, ?source_id=, ?sourceId=, ?src=, ?ref=, ?year=, ?date=, ?readMins=, ?read_mins=, ?read_time=, ?q=, ?order=, ?offset=, ?limit=, and ?page=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -14,16 +14,33 @@ export function GET(req?: Request): Response {
         parseSearchQuery(url.searchParams, "slug") ||
         parseSearchQuery(url.searchParams, "id") ||
         parseSearchQuery(url.searchParams, "n") ||
-        parseSearchQuery(url.searchParams, "post");
+        parseSearchQuery(url.searchParams, "post") ||
+        parseSearchQuery(url.searchParams, "post_id") ||
+        parseSearchQuery(url.searchParams, "postId") ||
+        parseSearchQuery(url.searchParams, "article") ||
+        parseSearchQuery(url.searchParams, "article_id") ||
+        parseSearchQuery(url.searchParams, "articleId");
       const title = parseSearchQuery(url.searchParams, "title");
       const tier = parseSearchQuery(url.searchParams, "tier");
-      const source = parseSearchQuery(url.searchParams, "source") || parseSearchQuery(url.searchParams, "ref");
+      const source =
+        parseSearchQuery(url.searchParams, "source") ||
+        parseSearchQuery(url.searchParams, "source_id") ||
+        parseSearchQuery(url.searchParams, "sourceId") ||
+        parseSearchQuery(url.searchParams, "src") ||
+        parseSearchQuery(url.searchParams, "src_id") ||
+        parseSearchQuery(url.searchParams, "ref");
       const year = parseSearchQuery(url.searchParams, "year") || parseSearchQuery(url.searchParams, "date");
       const q = parseSearchQuery(url.searchParams);
       const readMinsParam = (
         url.searchParams.get("readMins") ??
         url.searchParams.get("mins") ??
-        url.searchParams.get("read_mins")
+        url.searchParams.get("read_mins") ??
+        url.searchParams.get("read_time") ??
+        url.searchParams.get("readTime") ??
+        url.searchParams.get("reading_time") ??
+        url.searchParams.get("readingTime") ??
+        url.searchParams.get("reading_mins") ??
+        url.searchParams.get("readingMins")
       )?.trim();
       const readMins = readMinsParam && /^\+?\d+$/.test(readMinsParam) ? Number(readMinsParam) : undefined;
       const limit = parseLimit(url.searchParams);

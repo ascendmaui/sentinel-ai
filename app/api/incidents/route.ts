@@ -18,6 +18,7 @@ export function GET(req?: Request): Response {
         parseSearchQuery(url.searchParams, "incidentId") ||
         parseSearchQuery(url.searchParams, "case") ||
         parseSearchQuery(url.searchParams, "case_id") ||
+        parseSearchQuery(url.searchParams, "caseId") ||
         parseSearchQuery(url.searchParams, "slug");
       const n = parseSearchQuery(url.searchParams, "n");
       const source = parseSearchQuery(url.searchParams, "source") || parseSearchQuery(url.searchParams, "ref");
@@ -38,7 +39,9 @@ export function GET(req?: Request): Response {
         const matched = incidentById(id);
         let cleanId = id.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
         cleanId = cleanId.replace(/^(incident|case|inc)[-_]/, "");
-        if (cleanId.startsWith("i-") || cleanId.startsWith("i_")) cleanId = cleanId.slice(2);
+        if (cleanId.startsWith("incident") && /^\d+$/.test(cleanId.slice(8))) cleanId = cleanId.slice(8);
+        else if (cleanId.startsWith("case") && /^\d+$/.test(cleanId.slice(4))) cleanId = cleanId.slice(4);
+        else if (cleanId.startsWith("i-") || cleanId.startsWith("i_")) cleanId = cleanId.slice(2);
         else if (cleanId.startsWith("inc") && /^\d+$/.test(cleanId.slice(3))) cleanId = cleanId.slice(3);
         else if (cleanId.startsWith("i") && /^\d+$/.test(cleanId.slice(1))) cleanId = cleanId.slice(1);
         list = list.filter(
@@ -57,7 +60,9 @@ export function GET(req?: Request): Response {
         const matched = incidentById(n);
         let cleanN = n.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
         cleanN = cleanN.replace(/^(incident|case|inc)[-_]/, "");
-        if (cleanN.startsWith("i-") || cleanN.startsWith("i_")) cleanN = cleanN.slice(2);
+        if (cleanN.startsWith("incident") && /^\d+$/.test(cleanN.slice(8))) cleanN = cleanN.slice(8);
+        else if (cleanN.startsWith("case") && /^\d+$/.test(cleanN.slice(4))) cleanN = cleanN.slice(4);
+        else if (cleanN.startsWith("i-") || cleanN.startsWith("i_")) cleanN = cleanN.slice(2);
         else if (cleanN.startsWith("inc") && /^\d+$/.test(cleanN.slice(3))) cleanN = cleanN.slice(3);
         else if (cleanN.startsWith("i") && /^\d+$/.test(cleanN.slice(1))) cleanN = cleanN.slice(1);
         list = list.filter(

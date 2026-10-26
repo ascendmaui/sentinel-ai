@@ -1,7 +1,7 @@
 import { json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
 import { sources, sourceById } from "../../../lib/sources";
 
-/** Authoritative sources index as JSON. Lists verified research references. Supports ?id=, ?q=, ?year=, ?date=, ?label=, ?title=, ?note=, ?type=, ?source=, ?ref=, ?slug=, ?n=, ?order=, ?offset=, ?limit=, and ?page=. */
+/** Authoritative sources index as JSON. Lists verified research references. Supports ?id=, ?source=, ?source_id=, ?sourceId=, ?src=, ?src_id=, ?ref=, ?slug=, ?n=, ?url=, ?link=, ?domain=, ?year=, ?date=, ?label=, ?title=, ?note=, ?type=, ?q=, ?order=, ?offset=, ?limit=, and ?page=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -13,6 +13,11 @@ export function GET(req?: Request): Response {
       const id =
         parseSearchQuery(url.searchParams, "id") ||
         parseSearchQuery(url.searchParams, "source") ||
+        parseSearchQuery(url.searchParams, "source_id") ||
+        parseSearchQuery(url.searchParams, "sourceId") ||
+        parseSearchQuery(url.searchParams, "src") ||
+        parseSearchQuery(url.searchParams, "src_id") ||
+        parseSearchQuery(url.searchParams, "srcId") ||
         parseSearchQuery(url.searchParams, "ref") ||
         parseSearchQuery(url.searchParams, "slug") ||
         parseSearchQuery(url.searchParams, "n");
@@ -22,6 +27,11 @@ export function GET(req?: Request): Response {
         parseSearchQuery(url.searchParams, "label") ||
         parseSearchQuery(url.searchParams, "title");
       const note = parseSearchQuery(url.searchParams, "note") || parseSearchQuery(url.searchParams, "type");
+      const urlFilter =
+        parseSearchQuery(url.searchParams, "url") ||
+        parseSearchQuery(url.searchParams, "link") ||
+        parseSearchQuery(url.searchParams, "domain") ||
+        parseSearchQuery(url.searchParams, "href");
       const limit = parseLimit(url.searchParams);
       const offset = parseOffset(url.searchParams, 10000, limit);
       const order = parseSortOrder(url.searchParams);
@@ -30,7 +40,9 @@ export function GET(req?: Request): Response {
         const matched = sourceById(id);
         let cleanId = id.trim().toLowerCase().replace(/\.(html|json)$/, "");
         if (cleanId.startsWith("source-") || cleanId.startsWith("source_")) cleanId = cleanId.slice(7);
+        else if (cleanId.startsWith("source") && /^\d+$/.test(cleanId.slice(6))) cleanId = cleanId.slice(6);
         else if (cleanId.startsWith("src-") || cleanId.startsWith("src_")) cleanId = cleanId.slice(4);
+        else if (cleanId.startsWith("src") && /^\d+$/.test(cleanId.slice(3))) cleanId = cleanId.slice(3);
         else if (cleanId.startsWith("s-") || cleanId.startsWith("s_")) cleanId = cleanId.slice(2);
         else if (cleanId.startsWith("s") && /^\d+$/.test(cleanId.slice(1))) cleanId = cleanId.slice(1);
         const lowerId = id.trim().toLowerCase();
@@ -50,6 +62,9 @@ export function GET(req?: Request): Response {
       }
       if (note) {
         list = list.filter((s) => s.note && s.note.toLowerCase().includes(note));
+      }
+      if (urlFilter) {
+        list = list.filter((s) => s.url.toLowerCase().includes(urlFilter));
       }
       if (q) {
         list = list.filter(
