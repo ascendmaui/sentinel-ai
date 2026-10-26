@@ -221,7 +221,30 @@ export const postBySlug = (slug: string): Post | undefined => {
   target = target.replace(/^\/+|\/+$/g, "").toLowerCase();
   if (!target) return undefined;
   const withoutExt = target.replace(/\.(html|json)$/, "");
-  return posts.find((p) => p.slug === slug || p.slug.toLowerCase() === target || p.slug.toLowerCase() === withoutExt);
+
+  if (target.startsWith("post-") || target.startsWith("post_")) target = target.slice(5);
+  else if (target.startsWith("blog-") || target.startsWith("blog_")) target = target.slice(5);
+  else if (target.startsWith("p-") || target.startsWith("p_")) target = target.slice(2);
+  else if (target.startsWith("p") && /^\d+$/.test(target.slice(1))) target = target.slice(1);
+  else if (target.startsWith("post") && /^\d+$/.test(target.slice(4))) target = target.slice(4);
+  else if (target.startsWith("blog") && /^\d+$/.test(target.slice(4))) target = target.slice(4);
+
+  if (target.startsWith("+")) target = target.slice(1);
+  const numClean = target.replace(/^0+/, "");
+  const num = parseInt(numClean || target, 10);
+  if (!Number.isNaN(num) && num >= 1 && num <= posts.length && String(num) === (numClean || target)) {
+    return posts[num - 1];
+  }
+
+  const cleanWithoutExt = target.replace(/\.(html|json)$/, "");
+
+  return posts.find(
+    (p) =>
+      p.slug === slug ||
+      p.slug.toLowerCase() === target ||
+      p.slug.toLowerCase() === withoutExt ||
+      p.slug.toLowerCase() === cleanWithoutExt
+  );
 };
 export const postWords = (p: Post): number => {
   if (!p || !Array.isArray(p.body)) return 0;

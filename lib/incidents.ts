@@ -614,6 +614,7 @@ export const scenarioById = (id: string): Scenario | undefined => {
   target = target.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
   if (target.startsWith("scenario-") || target.startsWith("scenario_")) target = target.slice(9);
   else if (target.startsWith("sc-") || target.startsWith("sc_")) target = target.slice(3);
+  else if (target.startsWith("sc") && /^\d+$/.test(target.slice(2))) target = target.slice(2);
   if (target.startsWith("h-") || target.startsWith("h_")) target = `h${target.slice(2)}`;
   target = target.replace(/^h0*(\d+)$/, "h$1").replace(/^0*(\d+)$/, "$1");
   return scenarios.find(

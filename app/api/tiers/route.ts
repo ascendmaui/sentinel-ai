@@ -1,5 +1,5 @@
 import { json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
-import { tiers, tierHref, matrix, helper, ENGAGEMENT_TERMS } from "../../../lib/tiers";
+import { tiers, tierById, tierHref, matrix, helper, ENGAGEMENT_TERMS } from "../../../lib/tiers";
 
 /** Service tiers index as JSON: all four engagement tiers and comparison matrix. Supports ?id=, ?tier=, ?name=, ?cadence=, ?positioning=, ?rank=, ?q=, ?order=, ?offset=, ?limit=, and ?page=. */
 export function GET(): Response;
@@ -11,7 +11,13 @@ export function GET(req?: Request): Response {
     try {
       const url = new URL(req.url, "http://localhost");
       const q = parseSearchQuery(url.searchParams);
-      const id = parseSearchQuery(url.searchParams, "id") || parseSearchQuery(url.searchParams, "tier");
+      const id =
+        parseSearchQuery(url.searchParams, "id") ||
+        parseSearchQuery(url.searchParams, "tier") ||
+        parseSearchQuery(url.searchParams, "tier_id") ||
+        parseSearchQuery(url.searchParams, "tierId") ||
+        parseSearchQuery(url.searchParams, "slug") ||
+        parseSearchQuery(url.searchParams, "n");
       const name = parseSearchQuery(url.searchParams, "name");
       const cadence = parseSearchQuery(url.searchParams, "cadence");
       const positioning = parseSearchQuery(url.searchParams, "positioning");
@@ -22,6 +28,7 @@ export function GET(req?: Request): Response {
       const order = parseSortOrder(url.searchParams);
 
       if (id) {
+        const matched = tierById(id);
         let cleanId = id.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
         if (cleanId.startsWith("tier-") || cleanId.startsWith("tier_")) cleanId = cleanId.slice(5);
         else if (cleanId.startsWith("tier")) cleanId = cleanId.slice(4);
@@ -34,7 +41,8 @@ export function GET(req?: Request): Response {
             t.id.toLowerCase() === id ||
             t.id.toLowerCase() === cleanId ||
             String(t.rank) === cleanId ||
-            (numClean && String(t.rank) === numClean)
+            (numClean && String(t.rank) === numClean) ||
+            (matched && t.id.toLowerCase() === matched.id.toLowerCase())
         );
       }
 

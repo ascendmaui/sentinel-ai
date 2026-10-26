@@ -1,5 +1,5 @@
 import { json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
-import { incidents, scenarios, unverified, INCIDENTS_DISCLAIMER } from "../../../lib/incidents";
+import { incidentById, incidents, scenarios, unverified, INCIDENTS_DISCLAIMER } from "../../../lib/incidents";
 
 /** Incident case studies index as JSON. Lists incidents, summaries, counts, and disclaimer. Supports ?id=, ?n=, ?source=, ?ref=, ?year=, ?date=, ?title=, ?standing=, ?kicker=, ?vuln=, ?cve=, ?impact=, ?q=, ?order=, ?offset=, ?limit=, and ?page=. */
 export function GET(): Response;
@@ -11,7 +11,14 @@ export function GET(req?: Request): Response {
     try {
       const url = new URL(req.url, "http://localhost");
       const q = parseSearchQuery(url.searchParams);
-      const id = parseSearchQuery(url.searchParams, "id");
+      const id =
+        parseSearchQuery(url.searchParams, "id") ||
+        parseSearchQuery(url.searchParams, "incident") ||
+        parseSearchQuery(url.searchParams, "incident_id") ||
+        parseSearchQuery(url.searchParams, "incidentId") ||
+        parseSearchQuery(url.searchParams, "case") ||
+        parseSearchQuery(url.searchParams, "case_id") ||
+        parseSearchQuery(url.searchParams, "slug");
       const n = parseSearchQuery(url.searchParams, "n");
       const source = parseSearchQuery(url.searchParams, "source") || parseSearchQuery(url.searchParams, "ref");
       const year = parseSearchQuery(url.searchParams, "year") || parseSearchQuery(url.searchParams, "date");
@@ -28,6 +35,7 @@ export function GET(req?: Request): Response {
       const order = parseSortOrder(url.searchParams);
 
       if (id) {
+        const matched = incidentById(id);
         let cleanId = id.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
         cleanId = cleanId.replace(/^(incident|case|inc)[-_]/, "");
         if (cleanId.startsWith("i-") || cleanId.startsWith("i_")) cleanId = cleanId.slice(2);
@@ -40,11 +48,13 @@ export function GET(req?: Request): Response {
             i.n.toLowerCase() === id ||
             i.n.toLowerCase() === cleanId ||
             i.n.toLowerCase() === cleanId.padStart(2, "0") ||
-            (cleanId.replace(/^0+/, "") && i.n.replace(/^0+/, "") === cleanId.replace(/^0+/, ""))
+            (cleanId.replace(/^0+/, "") && i.n.replace(/^0+/, "") === cleanId.replace(/^0+/, "")) ||
+            (matched && i.id.toLowerCase() === matched.id.toLowerCase())
         );
       }
 
       if (n) {
+        const matched = incidentById(n);
         let cleanN = n.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
         cleanN = cleanN.replace(/^(incident|case|inc)[-_]/, "");
         if (cleanN.startsWith("i-") || cleanN.startsWith("i_")) cleanN = cleanN.slice(2);
@@ -55,7 +65,8 @@ export function GET(req?: Request): Response {
             i.n.toLowerCase() === n ||
             i.n.toLowerCase() === cleanN ||
             i.n.toLowerCase() === cleanN.padStart(2, "0") ||
-            (cleanN.replace(/^0+/, "") && i.n.replace(/^0+/, "") === cleanN.replace(/^0+/, ""))
+            (cleanN.replace(/^0+/, "") && i.n.replace(/^0+/, "") === cleanN.replace(/^0+/, "")) ||
+            (matched && i.id.toLowerCase() === matched.id.toLowerCase())
         );
       }
 

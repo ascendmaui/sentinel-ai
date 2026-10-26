@@ -1,5 +1,5 @@
 import { json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
-import { posts, postWords } from "../../../lib/posts";
+import { postBySlug, posts, postWords } from "../../../lib/posts";
 
 /** Blog index as JSON: post metadata only (no body). Newest first by default. Supports ?slug=, ?id=, ?tier=, ?source=, ?ref=, ?year=, ?date=, ?readMins=, ?q=, ?order=, ?offset=, ?limit=, and ?page=. */
 export function GET(): Response;
@@ -10,7 +10,11 @@ export function GET(req?: Request): Response {
   if (req?.url) {
     try {
       const url = new URL(req.url, "http://localhost");
-      const slug = parseSearchQuery(url.searchParams, "slug") || parseSearchQuery(url.searchParams, "id");
+      const slug =
+        parseSearchQuery(url.searchParams, "slug") ||
+        parseSearchQuery(url.searchParams, "id") ||
+        parseSearchQuery(url.searchParams, "n") ||
+        parseSearchQuery(url.searchParams, "post");
       const title = parseSearchQuery(url.searchParams, "title");
       const tier = parseSearchQuery(url.searchParams, "tier");
       const source = parseSearchQuery(url.searchParams, "source") || parseSearchQuery(url.searchParams, "ref");
@@ -27,13 +31,15 @@ export function GET(req?: Request): Response {
       const order = parseSortOrder(url.searchParams);
 
       if (slug) {
+        const matched = postBySlug(slug);
         const cleanSlug = slug.replace(/^\/+|\/+$/g, "");
         const withoutExt = cleanSlug.replace(/\.(html|json)$/, "");
         list = list.filter(
           (p) =>
             p.slug.toLowerCase() === slug ||
             p.slug.toLowerCase() === cleanSlug ||
-            p.slug.toLowerCase() === withoutExt
+            p.slug.toLowerCase() === withoutExt ||
+            (matched && p.slug.toLowerCase() === matched.slug.toLowerCase())
         );
       }
 

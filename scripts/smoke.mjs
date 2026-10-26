@@ -135,6 +135,18 @@ check(startAtAlias.count === 2 && startAtAlias.posts.length === 2, "GET /api/pos
 const termQueryAlias = await (await get("/api/posts?term=openai")).json();
 check(termQueryAlias.count > 0, "GET /api/posts?term=openai");
 
+const nPosts = await (await get("/api/posts?n=1")).json();
+check(nPosts.count === 1 && nPosts.posts[0].slug === posts.posts[0].slug, "GET /api/posts?n=1 filter");
+
+const postAliasPosts = await (await get("/api/posts?post=1")).json();
+check(postAliasPosts.count === 1 && postAliasPosts.posts[0].slug === posts.posts[0].slug, "GET /api/posts?post=1 filter");
+
+const postOneByIndex = await get("/api/posts/1");
+check(postOneByIndex.status === 200 && (await postOneByIndex.json()).slug === posts.posts[0].slug, "GET /api/posts/1 -> 200");
+
+const postOneByP1 = await get("/api/posts/p-1");
+check(postOneByP1.status === 200 && (await postOneByP1.json()).slug === posts.posts[0].slug, "GET /api/posts/p-1 -> 200");
+
 for (const p of posts.posts) {
   const r = await get(`/api/posts/${p.slug}`);
   const b = await r.json();
@@ -237,6 +249,8 @@ const inc01Inc = await get("/api/incidents/inc01");
 check(inc01Inc.status === 200 && (await inc01Inc.json()).id === "openai-huggingface-2026", "GET /api/incidents/inc01 (inc<N>)");
 const incIdFilter = await (await get("/api/incidents?id=i-01")).json();
 check(incIdFilter.count === 1 && incIdFilter.incidents[0].id === "openai-huggingface-2026", "GET /api/incidents?id=i-01 filter");
+const incIncidentAlias = await (await get("/api/incidents?incident=01")).json();
+check(incIncidentAlias.count === 1 && incIncidentAlias.incidents[0].id === "openai-huggingface-2026", "GET /api/incidents?incident=01 alias filter");
 const jsonInc = await get(`/api/incidents/${incs.incidents[0].id}.json`);
 check(jsonInc.status === 200 && (await jsonInc.json()).id === incs.incidents[0].id, "GET /api/incidents/[id].json -> 200");
 const missingInc = await get("/api/incidents/does-not-exist");
@@ -278,6 +292,9 @@ check(csById.count === 1 && csById.findings[0].id === "F-01", "GET /api/case-stu
 
 const csByN = await (await get("/api/case-studies?n=F-01")).json();
 check(csByN.count === 1 && csByN.findings[0].id === "F-01", "GET /api/case-studies?n=F-01 filter");
+
+const csFindingAlias = await (await get("/api/case-studies?finding=f-01")).json();
+check(csFindingAlias.count === 1 && csFindingAlias.findings[0].id === "F-01", "GET /api/case-studies?finding=f-01 alias filter");
 
 const csOne = await get("/api/case-studies/f-01");
 const csOneBody = await csOne.json();
@@ -374,6 +391,9 @@ check(tierIdHyphen.count === 1 && tierIdHyphen.tiers[0].id === "seraphim", "GET 
 const tierFilterZero = await (await get("/api/tiers?tier=01")).json();
 check(tierFilterZero.count === 1 && tierFilterZero.tiers[0].id === "seraphim", "GET /api/tiers?tier=01 filter");
 
+const tierIdSnake = await (await get("/api/tiers?tier_id=seraphim")).json();
+check(tierIdSnake.count === 1 && tierIdSnake.tiers[0].id === "seraphim", "GET /api/tiers?tier_id=seraphim filter");
+
 const tiersPage = await (await get("/api/tiers?page=2&limit=2")).json();
 check(tiersPage.count === 2, "GET /api/tiers?page=2&limit=2 (page pagination)");
 const jsonTier = await get("/api/tiers/seraphim.json");
@@ -443,6 +463,11 @@ const scTitle = await (await get("/api/scenarios?title=legacy")).json();
 check(scTitle.count > 0 && scTitle.scenarios[0].title.toLowerCase().includes("legacy"), "GET /api/scenarios?title=legacy filter");
 const scWeaknessClass = await (await get("/api/scenarios?weakness_class=credentials")).json();
 check(scWeaknessClass.count > 0, "GET /api/scenarios?weakness_class=credentials filter");
+
+const scScenarioAlias = await (await get("/api/scenarios?scenario=sc1")).json();
+check(scScenarioAlias.count === 1 && scScenarioAlias.scenarios[0].id === "legacy-internal-app", "GET /api/scenarios?scenario=sc1 filter");
+const sc1Res = await get("/api/scenarios/sc1");
+check(sc1Res.status === 200 && (await sc1Res.json()).id === "legacy-internal-app", "GET /api/scenarios/sc1 -> 200");
 const scPage = await (await get("/api/scenarios?page=2&limit=2")).json();
 check(scPage.count === 2, "GET /api/scenarios?page=2&limit=2 (page pagination)");
 const jsonSc = await get(`/api/scenarios/legacy-internal-app.json`);
@@ -564,6 +589,9 @@ check(brandBadgeZero.badge?.key === "passive", "GET /api/brand?badge=01 returns 
 
 const brandBadgeB1 = await (await get("/api/brand?badge=b1")).json();
 check(brandBadgeB1.badge?.key === "passive", "GET /api/brand?badge=b1 returns badge");
+
+const brandNameFilter = await (await get("/api/brand?name=passive")).json();
+check(brandNameFilter.badge?.key === "passive", "GET /api/brand?name=passive returns badge");
 
 // 9. Method Not Allowed on dynamic API endpoints (Next.js dynamic route handlers return 405 for unexported methods)
 const endpoints405 = [

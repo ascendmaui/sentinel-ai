@@ -82,6 +82,8 @@ describe("brand", () => {
     expect(badgeByKey("b_1")).toEqual(TRUE_BADGES[0]);
     expect(badgeByKey("b1")).toEqual(TRUE_BADGES[0]);
     expect(badgeByKey("+1")).toEqual(TRUE_BADGES[0]);
+    expect(badgeByKey("Passive recon only")).toEqual(TRUE_BADGES[0]);
+    expect(badgeByKey("Written client authorization required")).toEqual(TRUE_BADGES[1]);
   });
 });
 
@@ -348,6 +350,28 @@ describe("posts", () => {
     expect(postBySlug(`${posts[0].slug}.json`)).toBe(posts[0]);
     expect(postBySlug(`${posts[0].slug}.html`)).toBe(posts[0]);
     expect(postBySlug(encodeURIComponent(posts[0].slug))).toBe(posts[0]);
+    expect(postBySlug("post-" + posts[0].slug)).toBe(posts[0]);
+    expect(postBySlug("blog-" + posts[0].slug)).toBe(posts[0]);
+    expect(postBySlug("p-" + posts[0].slug)).toBe(posts[0]);
+    expect(postBySlug("1")).toBe(posts[0]);
+    expect(postBySlug("01")).toBe(posts[0]);
+    expect(postBySlug("+1")).toBe(posts[0]);
+    expect(postBySlug("4")).toBe(posts[3]);
+    expect(postBySlug("04")).toBe(posts[3]);
+    expect(postBySlug("+4")).toBe(posts[3]);
+    expect(postBySlug("p-1")).toBe(posts[0]);
+    expect(postBySlug("p_1")).toBe(posts[0]);
+    expect(postBySlug("p1")).toBe(posts[0]);
+    expect(postBySlug("p01")).toBe(posts[0]);
+    expect(postBySlug("post-1")).toBe(posts[0]);
+    expect(postBySlug("post_1")).toBe(posts[0]);
+    expect(postBySlug("post1")).toBe(posts[0]);
+    expect(postBySlug("blog-1")).toBe(posts[0]);
+    expect(postBySlug("blog_1")).toBe(posts[0]);
+    expect(postBySlug("blog1")).toBe(posts[0]);
+    expect(postBySlug("0")).toBeUndefined();
+    expect(postBySlug("5")).toBeUndefined();
+    expect(postBySlug("99")).toBeUndefined();
     expect(postBySlug("")).toBeUndefined();
     expect(postBySlug("   ")).toBeUndefined();
     expect(postBySlug(undefined as unknown as string)).toBeUndefined();
@@ -596,6 +620,8 @@ describe("incidents", () => {
     expect(scenarioById("scenario_h1")).toBe(first);
     expect(scenarioById("sc-1")).toBe(first);
     expect(scenarioById("sc_1")).toBe(first);
+    expect(scenarioById("sc1")).toBe(first);
+    expect(scenarioById("sc01")).toBe(first);
     expect(scenarioById("h-1")).toBe(first);
     expect(scenarioById("h_1")).toBe(first);
     expect(scenarioById("h01")).toBe(first);

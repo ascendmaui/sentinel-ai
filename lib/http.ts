@@ -90,6 +90,7 @@ export function parseLimit(params: URLSearchParams, max = 100): number | undefin
     params.get("count") ??
     params.get("page_limit") ??
     params.get("pageLimit") ??
+    params.get("rows") ??
     params.get("max")
   )?.trim();
   if (!raw || !/^\+?\d+$/.test(raw)) return undefined;
@@ -114,7 +115,9 @@ export function parsePage(params: URLSearchParams, max = 10000): number | undefi
     params.get("pageNumber") ??
     params.get("page_number") ??
     params.get("pageNo") ??
-    params.get("page_no")
+    params.get("page_no") ??
+    params.get("page_index") ??
+    params.get("pageIndex")
   )?.trim();
   if (!raw || !/^\+?\d+$/.test(raw)) return undefined;
   const num = Number(raw);
@@ -176,12 +179,14 @@ export function parseSortOrder(params: URLSearchParams, paramName = "order"): So
     params.get("direction") ??
     params.get("sort_dir") ??
     params.get("sortDir") ??
+    params.get("sort_by") ??
+    params.get("sortBy") ??
     params.get("orderBy") ??
     params.get("order_by")
   )?.trim().toLowerCase();
   if (!raw) return undefined;
   if (raw === "asc" || raw === "ascending" || raw === "oldest" || raw === "earliest" || raw === "first") return "asc";
-  if (raw === "desc" || raw === "descending" || raw === "newest" || raw === "latest" || raw === "last" || raw === "reverse") return "desc";
+  if (raw === "desc" || raw === "descending" || raw === "newest" || raw === "latest" || raw === "last" || raw === "reverse" || raw === "recent") return "desc";
   return undefined;
 }
 

@@ -1,5 +1,5 @@
 import { json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
-import { findings, remediation, severityCounts } from "../../../lib/caseStudies";
+import { findingById, findings, remediation, severityCounts } from "../../../lib/caseStudies";
 
 /** Remediation findings and case studies index as JSON. Supports optional ?id=, ?n=, ?severity=, ?sev=, ?status=, ?q=, ?order=, ?offset=, ?limit=, and ?page= filters. */
 export function GET(): Response;
@@ -9,7 +9,15 @@ export function GET(req?: Request): Response {
   if (req?.url) {
     try {
       const url = new URL(req.url, "http://localhost");
-      const id = parseSearchQuery(url.searchParams, "id") || parseSearchQuery(url.searchParams, "n");
+      const id =
+        parseSearchQuery(url.searchParams, "id") ||
+        parseSearchQuery(url.searchParams, "n") ||
+        parseSearchQuery(url.searchParams, "finding") ||
+        parseSearchQuery(url.searchParams, "finding_id") ||
+        parseSearchQuery(url.searchParams, "findingId") ||
+        parseSearchQuery(url.searchParams, "case_study") ||
+        parseSearchQuery(url.searchParams, "caseStudy") ||
+        parseSearchQuery(url.searchParams, "slug");
       const title = parseSearchQuery(url.searchParams, "title");
       const severity = parseSearchQuery(url.searchParams, "severity") || parseSearchQuery(url.searchParams, "sev");
       const status = parseSearchQuery(url.searchParams, "status");
@@ -19,6 +27,7 @@ export function GET(req?: Request): Response {
       const order = parseSortOrder(url.searchParams);
 
       if (id) {
+        const matched = findingById(id);
         let cleanId = id.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
         if (cleanId.startsWith("fix-") || cleanId.startsWith("fix_")) cleanId = cleanId.slice(4);
         else if (cleanId.startsWith("finding-") || cleanId.startsWith("finding_")) cleanId = cleanId.slice(8);
@@ -31,7 +40,8 @@ export function GET(req?: Request): Response {
           (f) =>
             f.id.toLowerCase() === cleanId ||
             f.id.toLowerCase().replace(/[-_]/g, "") === normalized ||
-            f.id.toLowerCase().replace(/[-_]/g, "") === withF
+            f.id.toLowerCase().replace(/[-_]/g, "") === withF ||
+            (matched && f.id.toLowerCase() === matched.id.toLowerCase())
         );
       }
       if (title) {
