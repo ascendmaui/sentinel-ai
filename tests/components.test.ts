@@ -171,6 +171,23 @@ describe("TrustBadges component", () => {
     expect(html).toContain("Passive recon only");
     expect(html).toContain("Written client authorization required");
     expect(html).not.toContain("Private local models");
+
+    const aliasEl = TrustBadges({ keys: ["badge-passive", "2", "  local  ", "unknown"] });
+    const aliasItems = aliasEl.props.children;
+    expect(aliasItems).toHaveLength(3);
+    expect(aliasItems[0].key).toBe("passive");
+    expect(aliasItems[1].key).toBe("auth");
+    expect(aliasItems[2].key).toBe("local");
+    const aliasHtml = renderToStaticMarkup(aliasEl);
+    expect(aliasHtml).toContain("Passive recon only");
+    expect(aliasHtml).toContain("Written client authorization required");
+    expect(aliasHtml).toContain("Private local models");
+
+    const emptyKeysEl = TrustBadges({ keys: [] });
+    expect(emptyKeysEl.props.children).toHaveLength(TRUE_BADGES.length);
+
+    const malformedKeysEl = TrustBadges({ keys: [null, undefined, 123 as unknown as string] as unknown as string[] });
+    expect(malformedKeysEl.props.children).toHaveLength(0);
   });
 });
 
@@ -228,6 +245,14 @@ describe("TierStrip and TierEmblem components", () => {
     const customHtml = renderToStaticMarkup(customEl);
     expect(customHtml).toContain('class="tier-strip custom-strip"');
     expect(customHtml).toContain('class="tier-strip-active"');
+
+    const numStrip = TierStrip({ activeTier: "2" });
+    const numStripHtml = renderToStaticMarkup(numStrip);
+    expect(numStripHtml).toContain('class="tier-strip-active"');
+
+    const prefixStrip = TierStrip({ activeTier: "tier-cherubim" });
+    const prefixStripHtml = renderToStaticMarkup(prefixStrip);
+    expect(prefixStripHtml).toContain('class="tier-strip-active"');
   });
 });
 
