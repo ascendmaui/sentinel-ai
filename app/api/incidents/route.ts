@@ -28,8 +28,11 @@ export function GET(req?: Request): Response {
       const order = parseSortOrder(url.searchParams);
 
       if (id) {
-        let cleanId = id.replace(/\.(html|json)$/, "");
+        let cleanId = id.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
         cleanId = cleanId.replace(/^(incident|case|inc)[-_]/, "");
+        if (cleanId.startsWith("i-") || cleanId.startsWith("i_")) cleanId = cleanId.slice(2);
+        else if (cleanId.startsWith("inc") && /^\d+$/.test(cleanId.slice(3))) cleanId = cleanId.slice(3);
+        else if (cleanId.startsWith("i") && /^\d+$/.test(cleanId.slice(1))) cleanId = cleanId.slice(1);
         list = list.filter(
           (i) =>
             i.id.toLowerCase() === id ||
@@ -42,8 +45,11 @@ export function GET(req?: Request): Response {
       }
 
       if (n) {
-        let cleanN = n.replace(/\.(html|json)$/, "");
+        let cleanN = n.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
         cleanN = cleanN.replace(/^(incident|case|inc)[-_]/, "");
+        if (cleanN.startsWith("i-") || cleanN.startsWith("i_")) cleanN = cleanN.slice(2);
+        else if (cleanN.startsWith("inc") && /^\d+$/.test(cleanN.slice(3))) cleanN = cleanN.slice(3);
+        else if (cleanN.startsWith("i") && /^\d+$/.test(cleanN.slice(1))) cleanN = cleanN.slice(1);
         list = list.filter(
           (i) =>
             i.n.toLowerCase() === n ||

@@ -70,6 +70,8 @@ describe("brand", () => {
     expect(badgeByKey("badge_passive")).toEqual(TRUE_BADGES.find((b) => b.key === "passive"));
     expect(badgeByKey("passive.json")).toEqual(TRUE_BADGES.find((b) => b.key === "passive"));
     expect(badgeByKey("badge%2Dpassive")).toEqual(TRUE_BADGES.find((b) => b.key === "passive"));
+    expect(badgeByKey("/passive/")).toEqual(TRUE_BADGES.find((b) => b.key === "passive"));
+    expect(badgeByKey("//badge-passive//")).toEqual(TRUE_BADGES.find((b) => b.key === "passive"));
   });
 });
 
@@ -275,6 +277,8 @@ describe("sources registry", () => {
     expect(sourceById("SRC-OAIAUG")).toBe(S.oaiAug);
     expect(sourceById("oaiAug.json")).toBe(S.oaiAug);
     expect(sourceById("oaiAug.html")).toBe(S.oaiAug);
+    expect(sourceById("/oaiAug/")).toBe(S.oaiAug);
+    expect(sourceById("//src-oaiAug//")).toBe(S.oaiAug);
     expect(sourceById("")).toBeUndefined();
     expect(sourceById("   ")).toBeUndefined();
     expect(sourceById(undefined as unknown as string)).toBeUndefined();
@@ -416,6 +420,24 @@ describe("tiers", () => {
     expect(tierById(true as unknown as string)).toBeUndefined();
   });
 
+  it("tierById normalizes leading-zero ranks (01..04), t- and t_ prefixes, and surrounding slashes", () => {
+    expect(tierById("01")).toBe(tiers[0]);
+    expect(tierById("02")).toBe(tiers[1]);
+    expect(tierById("03")).toBe(tiers[2]);
+    expect(tierById("04")).toBe(tiers[3]);
+    expect(tierById("t-1")).toBe(tiers[0]);
+    expect(tierById("t-2")).toBe(tiers[1]);
+    expect(tierById("t_1")).toBe(tiers[0]);
+    expect(tierById("t_2")).toBe(tiers[1]);
+    expect(tierById("t01")).toBe(tiers[0]);
+    expect(tierById("t02")).toBe(tiers[1]);
+    expect(tierById("tier-01")).toBe(tiers[0]);
+    expect(tierById("tier_01")).toBe(tiers[0]);
+    expect(tierById("/seraphim/")).toBe(tiers[0]);
+    expect(tierById("//t-1//")).toBe(tiers[0]);
+    expect(tierById("/01/")).toBe(tiers[0]);
+  });
+
   it("matrix and helper cover all tiers correctly", () => {
     expect(matrix.length).toBe(8);
     for (const row of matrix) {
@@ -504,6 +526,19 @@ describe("incidents", () => {
     expect(incidentById(true as unknown as string)).toBeUndefined();
   });
 
+  it("incidentById normalizes i- and inc prefixes, single-digit incident numbers, and surrounding slashes", () => {
+    const first = incidents[0];
+    expect(incidentById("i-01")).toBe(first);
+    expect(incidentById("i-1")).toBe(first);
+    expect(incidentById("i_01")).toBe(first);
+    expect(incidentById("i_1")).toBe(first);
+    expect(incidentById("inc01")).toBe(first);
+    expect(incidentById("i1")).toBe(first);
+    expect(incidentById("/01/")).toBe(first);
+    expect(incidentById("/openai-huggingface-2026/")).toBe(first);
+    expect(incidentById("//i-1//")).toBe(first);
+  });
+
   it("scenarios have unique ids, contiguous H-numbering, non-empty sections, and cite only registered sources", () => {
     expect(new Set(scenarios.map((s) => s.id)).size).toBe(scenarios.length);
     expect(scenarios.map((s) => s.n)).toEqual(scenarios.map((_, idx) => `H${idx + 1}`));
@@ -553,6 +588,19 @@ describe("incidents", () => {
     expect(scenarioById(123 as unknown as string)).toBeUndefined();
     expect(scenarioById(true as unknown as string)).toBeUndefined();
   });
+
+  it("scenarioById normalizes single-digit scenario prefixes and surrounding slashes", () => {
+    const first = scenarios[0];
+    expect(scenarioById("scenario_1")).toBe(first);
+    expect(scenarioById("scenario-1")).toBe(first);
+    expect(scenarioById("sc_1")).toBe(first);
+    expect(scenarioById("sc-1")).toBe(first);
+    expect(scenarioById("h_1")).toBe(first);
+    expect(scenarioById("h-1")).toBe(first);
+    expect(scenarioById("/legacy-internal-app/")).toBe(first);
+    expect(scenarioById("/h1/")).toBe(first);
+    expect(scenarioById("//h-1//")).toBe(first);
+  });
 });
 
 describe("case studies / findings", () => {
@@ -597,6 +645,26 @@ describe("case studies / findings", () => {
     expect(findingById(null as unknown as string)).toBeUndefined();
     expect(findingById(123 as unknown as string)).toBeUndefined();
     expect(findingById(true as unknown as string)).toBeUndefined();
+  });
+
+  it("findingById and remediationById normalize cs- and case-study- prefixes and surrounding slashes", () => {
+    expect(findingById("cs-01")?.id).toBe("F-01");
+    expect(findingById("cs-1")?.id).toBe("F-01");
+    expect(findingById("cs_01")?.id).toBe("F-01");
+    expect(findingById("cs_1")?.id).toBe("F-01");
+    expect(findingById("case-study-01")?.id).toBe("F-01");
+    expect(findingById("case_study_01")?.id).toBe("F-01");
+    expect(findingById("/f-01/")?.id).toBe("F-01");
+    expect(findingById("//cs-1//")?.id).toBe("F-01");
+
+    expect(remediationById("cs-01")?.id).toBe("F-01");
+    expect(remediationById("cs-1")?.id).toBe("F-01");
+    expect(remediationById("cs_01")?.id).toBe("F-01");
+    expect(remediationById("cs_1")?.id).toBe("F-01");
+    expect(remediationById("case-study-01")?.id).toBe("F-01");
+    expect(remediationById("case_study_01")?.id).toBe("F-01");
+    expect(remediationById("/f-01/")?.id).toBe("F-01");
+    expect(remediationById("//cs-1//")?.id).toBe("F-01");
   });
 
   it("remediationById handles case-insensitivity, hyphenless form, single-digit and extension forms, and returns undefined for unknown", () => {

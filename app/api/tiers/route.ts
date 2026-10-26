@@ -15,23 +15,26 @@ export function GET(req?: Request): Response {
       const name = parseSearchQuery(url.searchParams, "name");
       const cadence = parseSearchQuery(url.searchParams, "cadence");
       const positioning = parseSearchQuery(url.searchParams, "positioning");
-      const rankParam = url.searchParams.get("rank")?.trim();
+      const rankParam = (url.searchParams.get("rank") ?? url.searchParams.get("tier_rank"))?.trim();
       const rank = rankParam && /^\+?\d+$/.test(rankParam) ? Number(rankParam) : undefined;
       const limit = parseLimit(url.searchParams);
       const offset = parseOffset(url.searchParams, 10000, limit);
       const order = parseSortOrder(url.searchParams);
 
       if (id) {
-        let cleanId = id.replace(/\.(html|json)$/, "");
+        let cleanId = id.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
         if (cleanId.startsWith("tier-") || cleanId.startsWith("tier_")) cleanId = cleanId.slice(5);
         else if (cleanId.startsWith("tier")) cleanId = cleanId.slice(4);
+        else if (cleanId.startsWith("t-") || cleanId.startsWith("t_")) cleanId = cleanId.slice(2);
         else if (cleanId.startsWith("t") && /^\d+$/.test(cleanId.slice(1))) cleanId = cleanId.slice(1);
         if (cleanId.startsWith("+")) cleanId = cleanId.slice(1);
+        const numClean = cleanId.replace(/^0+/, "");
         list = list.filter(
           (t) =>
             t.id.toLowerCase() === id ||
             t.id.toLowerCase() === cleanId ||
-            String(t.rank) === cleanId
+            String(t.rank) === cleanId ||
+            (numClean && String(t.rank) === numClean)
         );
       }
 

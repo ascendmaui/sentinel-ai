@@ -585,10 +585,13 @@ export const incidentById = (id: string): Incident | undefined => {
     // keep raw
   }
   if (!target) return undefined;
-  target = target.replace(/\.(html|json)$/, "");
+  target = target.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
   if (target.startsWith("incident-") || target.startsWith("incident_")) target = target.slice(9);
   else if (target.startsWith("case-") || target.startsWith("case_")) target = target.slice(5);
   else if (target.startsWith("inc-") || target.startsWith("inc_")) target = target.slice(4);
+  else if (target.startsWith("i-") || target.startsWith("i_")) target = target.slice(2);
+  else if (target.startsWith("inc") && /^\d+$/.test(target.slice(3))) target = target.slice(3);
+  else if (target.startsWith("i") && /^\d+$/.test(target.slice(1))) target = target.slice(1);
   return incidents.find(
     (i) =>
       i.id === id ||
@@ -608,7 +611,7 @@ export const scenarioById = (id: string): Scenario | undefined => {
     // keep raw
   }
   if (!target) return undefined;
-  target = target.replace(/\.(html|json)$/, "");
+  target = target.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
   if (target.startsWith("scenario-") || target.startsWith("scenario_")) target = target.slice(9);
   else if (target.startsWith("sc-") || target.startsWith("sc_")) target = target.slice(3);
   if (target.startsWith("h-") || target.startsWith("h_")) target = `h${target.slice(2)}`;

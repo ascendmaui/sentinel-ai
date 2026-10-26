@@ -10,6 +10,7 @@ export function GET(req?: Request): Response {
     try {
       const url = new URL(req.url, "http://localhost");
       const id = parseSearchQuery(url.searchParams, "id") || parseSearchQuery(url.searchParams, "n");
+      const title = parseSearchQuery(url.searchParams, "title");
       const severity = parseSearchQuery(url.searchParams, "severity") || parseSearchQuery(url.searchParams, "sev");
       const status = parseSearchQuery(url.searchParams, "status");
       const q = parseSearchQuery(url.searchParams);
@@ -18,9 +19,11 @@ export function GET(req?: Request): Response {
       const order = parseSortOrder(url.searchParams);
 
       if (id) {
-        let cleanId = id.replace(/\.(html|json)$/, "");
+        let cleanId = id.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
         if (cleanId.startsWith("fix-") || cleanId.startsWith("fix_")) cleanId = cleanId.slice(4);
         else if (cleanId.startsWith("finding-") || cleanId.startsWith("finding_")) cleanId = cleanId.slice(8);
+        else if (cleanId.startsWith("case-study-") || cleanId.startsWith("case_study_")) cleanId = cleanId.slice(11);
+        else if (cleanId.startsWith("cs-") || cleanId.startsWith("cs_")) cleanId = cleanId.slice(3);
         const normalized = cleanId.replace(/[-_]/g, "");
         const numMatch = normalized.match(/^(?:f)?0*(\d+)$/);
         const withF = numMatch ? `f${numMatch[1].padStart(2, "0")}` : normalized;
@@ -30,6 +33,9 @@ export function GET(req?: Request): Response {
             f.id.toLowerCase().replace(/[-_]/g, "") === normalized ||
             f.id.toLowerCase().replace(/[-_]/g, "") === withF
         );
+      }
+      if (title) {
+        list = list.filter((f) => f.title.toLowerCase().includes(title));
       }
       if (severity) {
         list = list.filter((f) => f.severity.toLowerCase() === severity);

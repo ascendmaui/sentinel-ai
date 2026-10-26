@@ -131,12 +131,19 @@ export const tierById = (id: string): Tier | undefined => {
     // keep raw
   }
   if (!target) return undefined;
-  target = target.replace(/\.(html|json)$/, "");
+  target = target.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
   if (target.startsWith("tier-") || target.startsWith("tier_")) target = target.slice(5);
   else if (target.startsWith("tier")) target = target.slice(4);
+  else if (target.startsWith("t-") || target.startsWith("t_")) target = target.slice(2);
   else if (target.startsWith("t") && /^\d+$/.test(target.slice(1))) target = target.slice(1);
   if (target.startsWith("+")) target = target.slice(1);
-  return tiers.find((t) => t.id.toLowerCase() === target || String(t.rank) === target);
+  const numClean = target.replace(/^0+/, "");
+  return tiers.find(
+    (t) =>
+      t.id.toLowerCase() === target ||
+      String(t.rank) === target ||
+      (numClean && String(t.rank) === numClean)
+  );
 };
 export const tierHref = (id: TierId) => `/pricing#${typeof id === "string" ? id.trim().toLowerCase() : ""}`;
 

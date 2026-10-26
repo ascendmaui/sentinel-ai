@@ -355,6 +355,64 @@ describe("GET /api/posts", () => {
     const pageNumRes = postsIndex(req("/api/posts?pageNum=2&max=2"));
     expect(pageNumRes.status).toBe(200);
     expect((await pageNumRes.json()).count).toBe(2);
+
+  });
+
+  it("supports ?title=, ?read_mins= alias, sort order aliases (latest, earliest, sortOrder), page number aliases, and start_at", async () => {
+    const titleRes = postsIndex(req("/api/posts?title=leaves"));
+    expect(titleRes.status).toBe(200);
+    const titleBody = await titleRes.json();
+    expect(titleBody.count).toBe(1);
+    expect(titleBody.posts[0].slug).toBe("when-the-test-subject-leaves-the-test");
+
+    const snakeReadMinsRes = postsIndex(req("/api/posts?read_mins=8"));
+    expect(snakeReadMinsRes.status).toBe(200);
+    expect((await snakeReadMinsRes.json()).count).toBeGreaterThan(0);
+
+    const latestRes = postsIndex(req("/api/posts?order=latest"));
+    expect(latestRes.status).toBe(200);
+
+    const earliestRes = postsIndex(req("/api/posts?order=earliest"));
+    expect(earliestRes.status).toBe(200);
+
+    const sortOrderRes = postsIndex(req("/api/posts?sortOrder=asc"));
+    expect(sortOrderRes.status).toBe(200);
+
+    const pageNumberRes = postsIndex(req("/api/posts?pageNumber=2&limit=2"));
+    expect(pageNumberRes.status).toBe(200);
+    expect((await pageNumberRes.json()).count).toBe(2);
+
+    const pageNumberSnakeRes = postsIndex(req("/api/posts?page_number=2&limit=2"));
+    expect(pageNumberSnakeRes.status).toBe(200);
+    expect((await pageNumberSnakeRes.json()).count).toBe(2);
+
+    const pageNoRes = postsIndex(req("/api/posts?pageNo=2&limit=2"));
+    expect(pageNoRes.status).toBe(200);
+    expect((await pageNoRes.json()).count).toBe(2);
+
+    const pageNoSnakeRes = postsIndex(req("/api/posts?page_no=2&limit=2"));
+    expect(pageNoSnakeRes.status).toBe(200);
+    expect((await pageNoSnakeRes.json()).count).toBe(2);
+
+    const startAtRes = postsIndex(req("/api/posts?start_at=1&limit=2"));
+    expect(startAtRes.status).toBe(200);
+    expect((await startAtRes.json()).count).toBe(2);
+
+    const startAtCamelRes = postsIndex(req("/api/posts?startAt=1&limit=2"));
+    expect(startAtCamelRes.status).toBe(200);
+    expect((await startAtCamelRes.json()).count).toBe(2);
+
+    const termRes = postsIndex(req("/api/posts?term=openai"));
+    expect(termRes.status).toBe(200);
+    expect((await termRes.json()).count).toBeGreaterThan(0);
+
+    const filterRes = postsIndex(req("/api/posts?filter=openai"));
+    expect(filterRes.status).toBe(200);
+    expect((await filterRes.json()).count).toBeGreaterThan(0);
+
+    const findRes = postsIndex(req("/api/posts?find=openai"));
+    expect(findRes.status).toBe(200);
+    expect((await findRes.json()).count).toBeGreaterThan(0);
   });
 });
 
@@ -642,6 +700,40 @@ describe("GET /api/incidents", () => {
     expect((await nCaseShortRes.json()).count).toBe(1);
   });
 
+  it("filters incidents by ?id= and ?n= with i- and inc prefixes and single-digit codes", async () => {
+    const idIPrefixRes = incidentsIndex(req("/api/incidents?id=i-01"));
+    expect(idIPrefixRes.status).toBe(200);
+    expect((await idIPrefixRes.json()).count).toBe(1);
+
+    const idISingleRes = incidentsIndex(req("/api/incidents?id=i-1"));
+    expect(idISingleRes.status).toBe(200);
+    expect((await idISingleRes.json()).count).toBe(1);
+
+    const idI1Res = incidentsIndex(req("/api/incidents?id=i1"));
+    expect(idI1Res.status).toBe(200);
+    expect((await idI1Res.json()).count).toBe(1);
+
+    const idInc01Res = incidentsIndex(req("/api/incidents?id=inc01"));
+    expect(idInc01Res.status).toBe(200);
+    expect((await idInc01Res.json()).count).toBe(1);
+
+    const nIPrefixRes = incidentsIndex(req("/api/incidents?n=i-01"));
+    expect(nIPrefixRes.status).toBe(200);
+    expect((await nIPrefixRes.json()).count).toBe(1);
+
+    const nISingleRes = incidentsIndex(req("/api/incidents?n=i-1"));
+    expect(nISingleRes.status).toBe(200);
+    expect((await nISingleRes.json()).count).toBe(1);
+
+    const nI1Res = incidentsIndex(req("/api/incidents?n=i1"));
+    expect(nI1Res.status).toBe(200);
+    expect((await nI1Res.json()).count).toBe(1);
+
+    const nInc01Res = incidentsIndex(req("/api/incidents?n=inc01"));
+    expect(nInc01Res.status).toBe(200);
+    expect((await nInc01Res.json()).count).toBe(1);
+  });
+
   it("supports order/sort, ref alias, vuln, impact, and page-based pagination", async () => {
     const descRes = incidentsIndex(req("/api/incidents?order=desc"));
     expect(descRes.status).toBe(200);
@@ -746,6 +838,22 @@ describe("GET /api/incidents/[id]", () => {
     const shortPrefixRes = await incidentOne(req("/api/incidents/inc-1"), idCtx("inc-1"));
     expect(shortPrefixRes.status).toBe(200);
     expect((await shortPrefixRes.json()).id).toBe(first.id);
+
+    const iPrefixRes = await incidentOne(req("/api/incidents/i-01"), idCtx("i-01"));
+    expect(iPrefixRes.status).toBe(200);
+    expect((await iPrefixRes.json()).id).toBe(first.id);
+
+    const iSingleRes = await incidentOne(req("/api/incidents/i-1"), idCtx("i-1"));
+    expect(iSingleRes.status).toBe(200);
+    expect((await iSingleRes.json()).id).toBe(first.id);
+
+    const i1Res = await incidentOne(req("/api/incidents/i1"), idCtx("i1"));
+    expect(i1Res.status).toBe(200);
+    expect((await i1Res.json()).id).toBe(first.id);
+
+    const inc01Res = await incidentOne(req("/api/incidents/inc01"), idCtx("inc01"));
+    expect(inc01Res.status).toBe(200);
+    expect((await inc01Res.json()).id).toBe(first.id);
 
     const trimRes = await incidentOne(req(`/api/incidents/${first.id}`), idCtx(`  ${first.id}  `));
     expect(trimRes.status).toBe(200);
@@ -993,6 +1101,26 @@ describe("GET /api/case-studies", () => {
     expect(pageNumRes.status).toBe(200);
     expect((await pageNumRes.json()).count).toBe(2);
   });
+
+  it("supports ?title= and cs- / case-study- id prefixes on /api/case-studies", async () => {
+    const titleRes = caseStudiesIndex(req("/api/case-studies?title=maintenance"));
+    expect(titleRes.status).toBe(200);
+    const titleBody = await titleRes.json();
+    expect(titleBody.count).toBe(1);
+    expect(titleBody.findings[0].id).toBe("F-01");
+
+    const csIdRes = caseStudiesIndex(req("/api/case-studies?id=cs-01"));
+    expect(csIdRes.status).toBe(200);
+    expect((await csIdRes.json()).findings[0].id).toBe("F-01");
+
+    const cs1IdRes = caseStudiesIndex(req("/api/case-studies?id=cs-1"));
+    expect(cs1IdRes.status).toBe(200);
+    expect((await cs1IdRes.json()).findings[0].id).toBe("F-01");
+
+    const caseStudyIdRes = caseStudiesIndex(req("/api/case-studies?id=case-study-01"));
+    expect(caseStudyIdRes.status).toBe(200);
+    expect((await caseStudyIdRes.json()).findings[0].id).toBe("F-01");
+  });
 });
 
 describe("GET /api/case-studies/[id]", () => {
@@ -1068,6 +1196,18 @@ describe("GET /api/case-studies/[id]", () => {
     const htmlRes = await caseStudyOne(req("/api/case-studies/f-01.html"), idCtx("f-01.html"));
     expect(htmlRes.status).toBe(200);
     expect((await htmlRes.json()).id).toBe("F-01");
+
+    const csOneRes = await caseStudyOne(req("/api/case-studies/cs-01"), idCtx("cs-01"));
+    expect(csOneRes.status).toBe(200);
+    expect((await csOneRes.json()).id).toBe("F-01");
+
+    const cs1Res = await caseStudyOne(req("/api/case-studies/cs-1"), idCtx("cs-1"));
+    expect(cs1Res.status).toBe(200);
+    expect((await cs1Res.json()).id).toBe("F-01");
+
+    const caseStudyOneRes = await caseStudyOne(req("/api/case-studies/case-study-01"), idCtx("case-study-01"));
+    expect(caseStudyOneRes.status).toBe(200);
+    expect((await caseStudyOneRes.json()).id).toBe("F-01");
   });
 
   it.each(["F-999", "unknown", "", "   ", "__proto__", "constructor", "toString"])(
@@ -1250,6 +1390,36 @@ describe("GET /api/tiers", () => {
     expect(startRes.status).toBe(200);
     expect((await startRes.json()).count).toBe(2);
   });
+
+  it("supports leading-zero ranks (01), t-1 prefix, and ?tier_rank= alias on /api/tiers", async () => {
+    const tierRankAliasRes = tiersIndex(req("/api/tiers?tier_rank=1"));
+    expect(tierRankAliasRes.status).toBe(200);
+    expect((await tierRankAliasRes.json()).count).toBe(1);
+
+    const idTHyphenRes = tiersIndex(req("/api/tiers?id=t-1"));
+    expect(idTHyphenRes.status).toBe(200);
+    expect((await idTHyphenRes.json()).tiers[0].id).toBe("seraphim");
+
+    const idTUnderscoreRes = tiersIndex(req("/api/tiers?id=t_1"));
+    expect(idTUnderscoreRes.status).toBe(200);
+    expect((await idTUnderscoreRes.json()).tiers[0].id).toBe("seraphim");
+
+    const idZeroRes = tiersIndex(req("/api/tiers?id=01"));
+    expect(idZeroRes.status).toBe(200);
+    expect((await idZeroRes.json()).tiers[0].id).toBe("seraphim");
+
+    const idTierUnderscoreRes = tiersIndex(req("/api/tiers?id=tier_01"));
+    expect(idTierUnderscoreRes.status).toBe(200);
+    expect((await idTierUnderscoreRes.json()).tiers[0].id).toBe("seraphim");
+
+    const tierZeroRes = tiersIndex(req("/api/tiers?tier=01"));
+    expect(tierZeroRes.status).toBe(200);
+    expect((await tierZeroRes.json()).tiers[0].id).toBe("seraphim");
+
+    const tierTHyphenRes = tiersIndex(req("/api/tiers?tier=t-1"));
+    expect(tierTHyphenRes.status).toBe(200);
+    expect((await tierTHyphenRes.json()).tiers[0].id).toBe("seraphim");
+  });
 });
 
 describe("GET /api/tiers/[id]", () => {
@@ -1310,6 +1480,22 @@ describe("GET /api/tiers/[id]", () => {
     const htmlRes = await tierOne(req("/api/tiers/seraphim.html"), idCtx("seraphim.html"));
     expect(htmlRes.status).toBe(200);
     expect((await htmlRes.json()).id).toBe("seraphim");
+
+    const tHyphenRes = await tierOne(req("/api/tiers/t-1"), idCtx("t-1"));
+    expect(tHyphenRes.status).toBe(200);
+    expect((await tHyphenRes.json()).id).toBe("seraphim");
+
+    const tUnderscoreRes = await tierOne(req("/api/tiers/t_1"), idCtx("t_1"));
+    expect(tUnderscoreRes.status).toBe(200);
+    expect((await tUnderscoreRes.json()).id).toBe("seraphim");
+
+    const zeroRankRes = await tierOne(req("/api/tiers/01"), idCtx("01"));
+    expect(zeroRankRes.status).toBe(200);
+    expect((await zeroRankRes.json()).id).toBe("seraphim");
+
+    const tierUnderscoreRes = await tierOne(req("/api/tiers/tier_01"), idCtx("tier_01"));
+    expect(tierUnderscoreRes.status).toBe(200);
+    expect((await tierUnderscoreRes.json()).id).toBe("seraphim");
   });
 
   it.each(["free", "enterprise-plus", "", "   ", "__proto__", "constructor", "toString"])(
@@ -1471,6 +1657,10 @@ describe("HTTP helper utilities", () => {
     expect(parsePage(new URLSearchParams("p=3"))).toBe(3);
     expect(parsePage(new URLSearchParams("pageNum=4"))).toBe(4);
     expect(parsePage(new URLSearchParams("page_num=7"))).toBe(7);
+    expect(parsePage(new URLSearchParams("pageNumber=8"))).toBe(8);
+    expect(parsePage(new URLSearchParams("page_number=9"))).toBe(9);
+    expect(parsePage(new URLSearchParams("pageNo=10"))).toBe(10);
+    expect(parsePage(new URLSearchParams("page_no=11"))).toBe(11);
     expect(parsePage(new URLSearchParams("page=0"))).toBeUndefined();
     expect(parsePage(new URLSearchParams("page=-1"))).toBeUndefined();
     expect(parsePage(new URLSearchParams("page=abc"))).toBeUndefined();
@@ -1487,13 +1677,19 @@ describe("HTTP helper utilities", () => {
     expect(parseSortOrder(new URLSearchParams("order=asc"))).toBe("asc");
     expect(parseSortOrder(new URLSearchParams("order=ascending"))).toBe("asc");
     expect(parseSortOrder(new URLSearchParams("order=oldest"))).toBe("asc");
+    expect(parseSortOrder(new URLSearchParams("order=earliest"))).toBe("asc");
     expect(parseSortOrder(new URLSearchParams("order=first"))).toBe("asc");
     expect(parseSortOrder(new URLSearchParams("order=desc"))).toBe("desc");
     expect(parseSortOrder(new URLSearchParams("order=descending"))).toBe("desc");
     expect(parseSortOrder(new URLSearchParams("order=newest"))).toBe("desc");
+    expect(parseSortOrder(new URLSearchParams("order=latest"))).toBe("desc");
     expect(parseSortOrder(new URLSearchParams("order=last"))).toBe("desc");
     expect(parseSortOrder(new URLSearchParams("order=reverse"))).toBe("desc");
     expect(parseSortOrder(new URLSearchParams("sort=ASC"))).toBe("asc");
+    expect(parseSortOrder(new URLSearchParams("sort_order=desc"))).toBe("desc");
+    expect(parseSortOrder(new URLSearchParams("sortOrder=asc"))).toBe("asc");
+    expect(parseSortOrder(new URLSearchParams("sort_dir=desc"))).toBe("desc");
+    expect(parseSortOrder(new URLSearchParams("sortDir=asc"))).toBe("asc");
     expect(parseSortOrder(new URLSearchParams("dir=desc"))).toBe("desc");
     expect(parseSortOrder(new URLSearchParams("direction=asc"))).toBe("asc");
     expect(parseSortOrder(new URLSearchParams("direction=desc"))).toBe("desc");
@@ -1510,7 +1706,11 @@ describe("HTTP helper utilities", () => {
     expect(parseSearchQuery(new URLSearchParams("query=Seraphim"))).toBe("seraphim");
     expect(parseSearchQuery(new URLSearchParams("search=Seraphim"))).toBe("seraphim");
     expect(parseSearchQuery(new URLSearchParams("keyword=Seraphim"))).toBe("seraphim");
+    expect(parseSearchQuery(new URLSearchParams("term=Seraphim"))).toBe("seraphim");
+    expect(parseSearchQuery(new URLSearchParams("filter=Seraphim"))).toBe("seraphim");
+    expect(parseSearchQuery(new URLSearchParams("find=Seraphim"))).toBe("seraphim");
     expect(parseSearchQuery(new URLSearchParams("q=  Modal  "))).toBe("modal");
+    expect(parseSearchQuery(new URLSearchParams("q=openai%20huggingface"))).toBe("openai huggingface");
     expect(parseSearchQuery(new URLSearchParams("q=   "))).toBeUndefined();
     expect(parseSearchQuery(new URLSearchParams("q="))).toBeUndefined();
     expect(parseSearchQuery(new URLSearchParams(""))).toBeUndefined();
@@ -1527,6 +1727,8 @@ describe("HTTP helper utilities", () => {
     expect(parseOffset(new URLSearchParams("skip=3"))).toBe(3);
     expect(parseOffset(new URLSearchParams("start=4"))).toBe(4);
     expect(parseOffset(new URLSearchParams("from=6"))).toBe(6);
+    expect(parseOffset(new URLSearchParams("start_at=7"))).toBe(7);
+    expect(parseOffset(new URLSearchParams("startAt=8"))).toBe(8);
     expect(parseOffset(new URLSearchParams("offset=0"))).toBe(0);
     expect(parseOffset(new URLSearchParams("skip=0"))).toBe(0);
     expect(parseOffset(new URLSearchParams("offset=%2B4"))).toBe(4);
@@ -1765,6 +1967,16 @@ describe("GET /api/scenarios", () => {
     const startRes = scenariosIndex(req("/api/scenarios?start=1&count=2"));
     expect(startRes.status).toBe(200);
     expect((await startRes.json()).count).toBe(2);
+  });
+
+  it("supports ?title= and ?weakness_class= alias on /api/scenarios", async () => {
+    const titleRes = scenariosIndex(req("/api/scenarios?title=legacy"));
+    expect(titleRes.status).toBe(200);
+    expect((await titleRes.json()).count).toBeGreaterThan(0);
+
+    const weaknessClassRes = scenariosIndex(req("/api/scenarios?weakness_class=credentials"));
+    expect(weaknessClassRes.status).toBe(200);
+    expect((await weaknessClassRes.json()).count).toBeGreaterThan(0);
   });
 });
 

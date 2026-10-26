@@ -12,8 +12,12 @@ export function GET(req?: Request): Response {
       const url = new URL(req.url, "http://localhost");
       const id = parseSearchQuery(url.searchParams, "id");
       const n = parseSearchQuery(url.searchParams, "n");
+      const title = parseSearchQuery(url.searchParams, "title");
       const ref = parseSearchQuery(url.searchParams, "ref") || parseSearchQuery(url.searchParams, "source");
-      const weakness = parseSearchQuery(url.searchParams, "weakness") || parseSearchQuery(url.searchParams, "weaknessClass");
+      const weakness =
+        parseSearchQuery(url.searchParams, "weakness") ||
+        parseSearchQuery(url.searchParams, "weaknessClass") ||
+        parseSearchQuery(url.searchParams, "weakness_class");
       const target = parseSearchQuery(url.searchParams, "target");
       const control = parseSearchQuery(url.searchParams, "control") || parseSearchQuery(url.searchParams, "controls");
       const speed = parseSearchQuery(url.searchParams, "speed");
@@ -61,6 +65,10 @@ export function GET(req?: Request): Response {
               (r) => r.toLowerCase() === ref || (cleanRef && r.toLowerCase() === cleanRef)
             )
         );
+      }
+
+      if (title) {
+        list = list.filter((s) => s.title.toLowerCase().includes(title));
       }
 
       if (weakness) {

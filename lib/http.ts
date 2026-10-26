@@ -96,7 +96,7 @@ export function parseLimit(params: URLSearchParams, max = 100): number | undefin
 }
 
 /**
- * Safely parses an optional integer 1-based page number from URL search parameters (accepts "page", "p", "pageNum", or "page_num").
+ * Safely parses an optional integer 1-based page number from URL search parameters (accepts "page", "p", "pageNum", "page_num", "pageNumber", "page_number", "pageNo", or "page_no").
  * Returns undefined if missing, non-numeric, or <= 0. Bounded by max.
  */
 export function parsePage(params: URLSearchParams, max = 10000): number | undefined {
@@ -107,7 +107,11 @@ export function parsePage(params: URLSearchParams, max = 10000): number | undefi
     params.get("page") ??
     params.get("p") ??
     params.get("pageNum") ??
-    params.get("page_num")
+    params.get("page_num") ??
+    params.get("pageNumber") ??
+    params.get("page_number") ??
+    params.get("pageNo") ??
+    params.get("page_no")
   )?.trim();
   if (!raw || !/^\+?\d+$/.test(raw)) return undefined;
   const num = Number(raw);
@@ -116,7 +120,7 @@ export function parsePage(params: URLSearchParams, max = 10000): number | undefi
 }
 
 /**
- * Safely parses an optional integer offset from URL search parameters (accepts "offset", "skip", "start", or "from").
+ * Safely parses an optional integer offset from URL search parameters (accepts "offset", "skip", "start", "from", "start_at", or "startAt").
  * If neither is present, calculates offset from 1-based "page" / "p" when a page size is available.
  * Returns undefined if missing, non-numeric, or < 0. Bounded by optional max.
  * Only plain base-10 non-negative integers are accepted: partial numerics such as "1e3" or "2.5"
@@ -130,7 +134,9 @@ export function parseOffset(params: URLSearchParams, max = 10000, pageSize?: num
     params.get("offset") ??
     params.get("skip") ??
     params.get("start") ??
-    params.get("from")
+    params.get("from") ??
+    params.get("start_at") ??
+    params.get("startAt")
   )?.trim();
   if (raw) {
     if (!/^\+?\d+$/.test(raw)) return undefined;
@@ -151,38 +157,54 @@ export function parseOffset(params: URLSearchParams, max = 10000, pageSize?: num
 export type SortOrder = "asc" | "desc";
 
 /**
- * Safely parses an optional sort order from URL search parameters (accepts "order", "sort", "dir", "direction", or "orderBy").
- * Returns "asc" for ascending/oldest, "desc" for descending/newest/reverse, or undefined if omitted/unrecognized.
+ * Safely parses an optional sort order from URL search parameters (accepts "order", "sort", "sort_order", "sortOrder", "dir", "direction", "sort_dir", "sortDir", "orderBy", or "order_by").
+ * Returns "asc" for ascending/oldest/earliest/first, "desc" for descending/newest/latest/last/reverse, or undefined if omitted/unrecognized.
  */
 export function parseSortOrder(params: URLSearchParams, paramName = "order"): SortOrder | undefined {
   if (!params || typeof params.get !== "function" || !paramName || typeof paramName !== "string") return undefined;
   const raw = (
     params.get(paramName) ??
     params.get("sort") ??
+    params.get("sort_order") ??
+    params.get("sortOrder") ??
     params.get("dir") ??
     params.get("direction") ??
+    params.get("sort_dir") ??
+    params.get("sortDir") ??
     params.get("orderBy") ??
     params.get("order_by")
   )?.trim().toLowerCase();
   if (!raw) return undefined;
-  if (raw === "asc" || raw === "ascending" || raw === "oldest" || raw === "first") return "asc";
-  if (raw === "desc" || raw === "descending" || raw === "newest" || raw === "last" || raw === "reverse") return "desc";
+  if (raw === "asc" || raw === "ascending" || raw === "oldest" || raw === "earliest" || raw === "first") return "asc";
+  if (raw === "desc" || raw === "descending" || raw === "newest" || raw === "latest" || raw === "last" || raw === "reverse") return "desc";
   return undefined;
 }
 
 /**
  * Safely extracts a trimmed lowercase query string from URL search parameters.
- * When paramName is "q", also accepts "query", "search", or "keyword".
+ * When paramName is "q", also accepts "query", "search", "keyword", "term", "filter", or "find".
  * Returns undefined if missing or containing only whitespace.
  */
 export function parseSearchQuery(params: URLSearchParams, paramName = "q"): string | undefined {
   if (!params || typeof params.get !== "function" || !paramName || typeof paramName !== "string") return undefined;
   let raw = params.get(paramName);
   if (!raw && paramName === "q") {
-    raw = params.get("query") ?? params.get("search") ?? params.get("keyword");
+    raw =
+      params.get("query") ??
+      params.get("search") ??
+      params.get("keyword") ??
+      params.get("term") ??
+      params.get("filter") ??
+      params.get("find");
   }
   if (!raw) return undefined;
-  const trimmed = raw.trim().toLowerCase();
+  let trimmed = raw.trim();
+  try {
+    trimmed = decodeURIComponent(trimmed);
+  } catch {
+    // keep raw
+  }
+  trimmed = trimmed.trim().toLowerCase();
   return trimmed.length > 0 ? trimmed : undefined;
 }
 

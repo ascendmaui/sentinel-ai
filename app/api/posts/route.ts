@@ -11,11 +11,16 @@ export function GET(req?: Request): Response {
     try {
       const url = new URL(req.url, "http://localhost");
       const slug = parseSearchQuery(url.searchParams, "slug") || parseSearchQuery(url.searchParams, "id");
+      const title = parseSearchQuery(url.searchParams, "title");
       const tier = parseSearchQuery(url.searchParams, "tier");
       const source = parseSearchQuery(url.searchParams, "source") || parseSearchQuery(url.searchParams, "ref");
       const year = parseSearchQuery(url.searchParams, "year") || parseSearchQuery(url.searchParams, "date");
       const q = parseSearchQuery(url.searchParams);
-      const readMinsParam = (url.searchParams.get("readMins") ?? url.searchParams.get("mins"))?.trim();
+      const readMinsParam = (
+        url.searchParams.get("readMins") ??
+        url.searchParams.get("mins") ??
+        url.searchParams.get("read_mins")
+      )?.trim();
       const readMins = readMinsParam && /^\+?\d+$/.test(readMinsParam) ? Number(readMinsParam) : undefined;
       const limit = parseLimit(url.searchParams);
       const offset = parseOffset(url.searchParams, 10000, limit);
@@ -46,6 +51,9 @@ export function GET(req?: Request): Response {
               (s) => s.toLowerCase() === source || (cleanSource && s.toLowerCase() === cleanSource)
             )
         );
+      }
+      if (title) {
+        list = list.filter((p) => p.title.toLowerCase().includes(title));
       }
       if (year) {
         list = list.filter((p) => p.date.toLowerCase().includes(year));

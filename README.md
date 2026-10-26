@@ -28,16 +28,16 @@ Everything on the site describes the service as it is today: passive public reco
 All endpoints export HTTP/REST JSON contracts with security headers (`X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, `Permissions-Policy`, `X-DNS-Prefetch-Control: off`), ISO timestamps, and short-lived public caching. Index endpoints support query parameter filtering:
 
 - `GET /api/health`: Service liveness, current environment, timestamp, and commit SHA (zero secrets exposed).
-- `GET /api/posts`: Blog post index and metadata (newest first by default). Supports `?slug=`, `?id=`, `?tier=`, `?source=`, `?ref=`, `?year=`, `?date=`, `?readMins=`, `?q=`, `?order=`, `?sort=`, `?offset=`, `?limit=`, `?take=`, and `?page=`.
+- `GET /api/posts`: Blog post index and metadata (newest first by default). Supports `?slug=`, `?id=`, `?title=`, `?tier=`, `?source=`, `?ref=`, `?year=`, `?date=`, `?readMins=`, `?read_mins=`, `?q=`, `?order=`, `?sort=`, `?offset=`, `?limit=`, `?take=`, and `?page=`.
 - `GET /api/posts/[slug]`: Post detail with resolved primary sources. Supports flexible slashes, case-insensitivity, URL-encoding, and `.json`/`.html` suffixes.
 - `GET /api/incidents`: Documented incident list with source counts, unverified claims, and disclaimer. Supports `?id=`, `?n=`, `?source=`, `?ref=`, `?year=`, `?date=`, `?title=`, `?standing=`, `?kicker=`, `?vuln=`, `?cve=`, `?impact=`, `?q=`, `?order=`, `?sort=`, `?offset=`, `?limit=`, `?take=`, and `?page=`.
-- `GET /api/incidents/[id]`: Incident breakdown with timeline and verified references. Supports lookup by ID, incident number (`01`, `1`, `001`), prefix (`case-01`, `incident-01`, `inc-1`, `case_01`), URL-encoding, and `.json`/`.html` suffixes.
-- `GET /api/scenarios`: Conceptual threat scenarios with speed and control comparisons. Supports `?id=`, `?n=`, `?ref=`, `?source=`, `?weakness=`, `?target=`, `?control=`, `?speed=`, `?approach=`, `?q=`, `?order=`, `?sort=`, `?offset=`, `?limit=`, `?take=`, and `?page=`.
+- `GET /api/incidents/[id]`: Incident breakdown with timeline and verified references. Supports lookup by ID, incident number (`01`, `1`, `001`), prefix (`case-01`, `incident-01`, `inc-1`, `case_01`, `i-01`, `i-1`, `i1`, `inc01`), URL-encoding, and `.json`/`.html` suffixes.
+- `GET /api/scenarios`: Conceptual threat scenarios with speed and control comparisons. Supports `?id=`, `?n=`, `?title=`, `?ref=`, `?source=`, `?weakness=`, `?weakness_class=`, `?target=`, `?control=`, `?speed=`, `?approach=`, `?q=`, `?order=`, `?sort=`, `?offset=`, `?limit=`, `?take=`, and `?page=`.
 - `GET /api/scenarios/[id]`: Scenario details with defender controls and related sources. Supports lookup by ID, scenario number (`H1`, `1`, `h01`), prefix (`scenario-h1`, `scenario_h1`, `sc-1`, `h-1`), URL-encoding, and `.json`/`.html` suffixes.
-- `GET /api/case-studies`: Remediation findings and severity distributions. Supports `?id=`, `?n=`, `?severity=`, `?sev=`, `?status=`, `?q=`, `?order=`, `?sort=`, `?offset=`, `?limit=`, `?take=`, and `?page=`.
-- `GET /api/case-studies/[id]`: Finding details with before/after fixes and remediation verification notes. Supports lookup by ID, single-digit ID (`f-1`, `f1`, `1`, `01`), hyphenless ID (`f01`), prefix (`finding-01`, `finding_01`, `fix-f-01`, `fix-1`), URL-encoding, and `.json`/`.html` suffixes.
-- `GET /api/tiers`: Service tier matrix, comparison details, and engagement terms. Supports `?id=`, `?tier=`, `?name=`, `?cadence=`, `?positioning=`, `?rank=`, `?q=`, `?order=`, `?sort=`, `?offset=`, `?limit=`, `?take=`, and `?page=`.
-- `GET /api/tiers/[id]`: Single tier deliverables, target audience, and exclusions. Supports lookup by ID, rank number (`1`), prefix (`tier-seraphim`, `tier_seraphim`, `tier-1`, `t1`, `+1`), URL-encoding, and `.json`/`.html` suffixes.
+- `GET /api/case-studies`: Remediation findings and severity distributions. Supports `?id=`, `?n=`, `?title=`, `?severity=`, `?sev=`, `?status=`, `?q=`, `?order=`, `?sort=`, `?offset=`, `?limit=`, `?take=`, and `?page=`.
+- `GET /api/case-studies/[id]`: Finding details with before/after fixes and remediation verification notes. Supports lookup by ID, single-digit ID (`f-1`, `f1`, `1`, `01`), hyphenless ID (`f01`), prefix (`finding-01`, `finding_01`, `fix-f-01`, `fix-1`, `cs-01`, `cs-1`, `case-study-01`), URL-encoding, and `.json`/`.html` suffixes.
+- `GET /api/tiers`: Service tier matrix, comparison details, and engagement terms. Supports `?id=`, `?tier=`, `?name=`, `?cadence=`, `?positioning=`, `?rank=`, `?tier_rank=`, `?q=`, `?order=`, `?sort=`, `?offset=`, `?limit=`, `?take=`, and `?page=`.
+- `GET /api/tiers/[id]`: Single tier deliverables, target audience, and exclusions. Supports lookup by ID, rank number (`1`, `01`), prefix (`tier-seraphim`, `tier_seraphim`, `tier-1`, `tier-01`, `tier_01`, `t1`, `t01`, `t-1`, `t_1`, `+1`), URL-encoding, and `.json`/`.html` suffixes.
 - `GET /api/sources`: Authoritative primary and secondary sources registry. Supports `?id=`, `?q=`, `?year=`, `?date=`, `?label=`, `?note=`, `?type=`, `?order=`, `?sort=`, `?offset=`, `?limit=`, `?take=`, and `?page=`.
 - `GET /api/sources/[id]`: Single source record with URL and credibility note. Supports lookup by ID, prefix (`src-oaiAug`, `src_oaiAug`, `source-oaiAug`), URL-encoding, and `.json`/`.html` suffixes.
 - `GET /api/brand`: Brand identity metadata, contact mailto, trust badges, and theme configuration. Supports `?badge=` or `?key=` query filter with prefix and URL-encoding resilience.
@@ -50,7 +50,7 @@ All endpoints export HTTP/REST JSON contracts with security headers (`X-Content-
 
 ## Verification & Testing
 
-- `npm test`: Run 353 unit, component, page, content integrity, route contract, and API integration tests via Vitest across 5 test suites.
+- `npm test`: Run 362 unit, component, page, content integrity, route contract, and API integration tests via Vitest across 5 test suites.
 - `npm run test:contract`: Run API route contract discovery and security header verification tests.
 - `npm run test:integration`: Run API endpoint integration tests.
 - `npm run test:components`: Run UI component tests (icons, emblems, logo mark, trust badges, nav, footer).

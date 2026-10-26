@@ -223,9 +223,11 @@ export const findingById = (id: string): Finding | undefined => {
     // keep raw
   }
   if (!target) return undefined;
-  target = target.replace(/\.(html|json)$/, "");
+  target = target.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
   if (target.startsWith("fix-") || target.startsWith("fix_")) target = target.slice(4);
   else if (target.startsWith("finding-") || target.startsWith("finding_")) target = target.slice(8);
+  else if (target.startsWith("case-study-") || target.startsWith("case_study_")) target = target.slice(11);
+  else if (target.startsWith("cs-") || target.startsWith("cs_")) target = target.slice(3);
   const normalized = target.replace(/[-_]/g, "");
   const numMatch = normalized.match(/^(?:f)?0*(\d+)$/);
   const withF = numMatch ? `f${numMatch[1].padStart(2, "0")}` : normalized;
@@ -246,9 +248,11 @@ export const remediationById = (id: string): Remediation | undefined => {
     // keep raw
   }
   if (!target) return undefined;
-  target = target.replace(/\.(html|json)$/, "");
+  target = target.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
   if (target.startsWith("fix-") || target.startsWith("fix_")) target = target.slice(4);
   else if (target.startsWith("finding-") || target.startsWith("finding_")) target = target.slice(8);
+  else if (target.startsWith("case-study-") || target.startsWith("case_study_")) target = target.slice(11);
+  else if (target.startsWith("cs-") || target.startsWith("cs_")) target = target.slice(3);
   const normalized = target.replace(/[-_]/g, "");
   const numMatch = normalized.match(/^(?:f)?0*(\d+)$/);
   const withF = numMatch ? `f${numMatch[1].padStart(2, "0")}` : normalized;

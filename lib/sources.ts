@@ -33,6 +33,7 @@ export function sourceById(id: string): Source | undefined {
     // keep raw
   }
   if (!trimmed) return undefined;
+  trimmed = trimmed.replace(/^\/+|\/+$/g, "");
   if (Object.prototype.hasOwnProperty.call(S, trimmed)) return S[trimmed];
   let target = trimmed.toLowerCase().replace(/\.(html|json)$/, "");
   if (target.startsWith("source-") || target.startsWith("source_")) target = target.slice(7);

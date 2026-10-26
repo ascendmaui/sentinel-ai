@@ -4,7 +4,9 @@ import { json } from "../../../lib/http";
 export const dynamic = "force-dynamic";
 
 /** Liveness probe. Reports no secrets: only the service name, environment label and public commit SHA. */
-export function GET() {
+export function GET(): Response;
+export function GET(req: Request): Response;
+export function GET(_req?: Request): Response {
   return json({
     status: "ok",
     service: BRAND_NAME,

@@ -92,7 +92,7 @@ export function badgeByKey(key: string): TrustBadge | undefined {
     // keep raw
   }
   if (!target) return undefined;
-  target = target.replace(/\.(html|json)$/, "");
+  target = target.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
   if (target.startsWith("badge-") || target.startsWith("badge_")) target = target.slice(6);
   return TRUE_BADGES.find((b) => b.key.toLowerCase() === target);
 }
