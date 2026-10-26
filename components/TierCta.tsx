@@ -3,7 +3,7 @@ import { tierById, tierHref, type TierId } from "../lib/tiers";
 import { BRAND_EMAIL, BRAND_MAIL } from "../lib/brand";
 
 /** Inline call to action pointing at one tier and the full comparison. */
-export function TierCta({ tier, lead }: { tier: TierId; lead: string }) {
+export function TierCta({ tier, lead }: { tier: TierId | string; lead: string }) {
   const t = tierById(tier);
   if (!t) return null;
   return (

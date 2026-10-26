@@ -159,6 +159,19 @@ describe("TrustBadges component", () => {
       expect(html).not.toContain(badge.note);
     }
   });
+
+  it("renders filtered keys and custom className when provided", () => {
+    const el = TrustBadges({ className: "hero-badges", keys: ["passive", "auth"] });
+    expect(el.props.className).toBe("badges hero-badges");
+    const items = el.props.children;
+    expect(items).toHaveLength(2);
+    expect(items[0].key).toBe("passive");
+    expect(items[1].key).toBe("auth");
+    const html = renderToStaticMarkup(el);
+    expect(html).toContain("Passive recon only");
+    expect(html).toContain("Written client authorization required");
+    expect(html).not.toContain("Private local models");
+  });
 });
 
 describe("TierStrip and TierEmblem components", () => {
@@ -177,6 +190,11 @@ describe("TierStrip and TierEmblem components", () => {
 
   it("normalizes case/whitespace and returns null for unknown or non-string tier id", () => {
     expect(TierEmblem({ id: "  SERAPHIM  " as unknown as TierId })?.type).toBe("svg");
+    expect(TierEmblem({ id: "1" as unknown as TierId })?.type).toBe("svg");
+    expect(TierEmblem({ id: "01" as unknown as TierId })?.type).toBe("svg");
+    expect(TierEmblem({ id: "tier-1" as unknown as TierId })?.type).toBe("svg");
+    expect(TierEmblem({ id: "t1" as unknown as TierId })?.type).toBe("svg");
+    expect(TierEmblem({ id: "t-2" as unknown as TierId })?.type).toBe("svg");
     expect(TierEmblem({ id: "unknown" as unknown as TierId })).toBeNull();
     expect(TierEmblem({ id: null as unknown as TierId })).toBeNull();
   });
@@ -204,6 +222,12 @@ describe("TierStrip and TierEmblem components", () => {
       expect(html).toContain(tier.name);
       expect(html).toContain(tier.positioning);
     }
+
+    const customEl = TierStrip({ activeTier: "cherubim", className: "custom-strip" });
+    expect(customEl.props.className).toBe("tier-strip custom-strip");
+    const customHtml = renderToStaticMarkup(customEl);
+    expect(customHtml).toContain('class="tier-strip custom-strip"');
+    expect(customHtml).toContain('class="tier-strip-active"');
   });
 });
 
@@ -229,6 +253,12 @@ describe("TierCta component", () => {
 
     const upperEl = TierCta({ tier: "  SERAPHIM  " as unknown as TierId, lead: "Normalized." });
     expect(renderToStaticMarkup(upperEl!)).toContain('href="/pricing#seraphim"');
+
+    const rankEl = TierCta({ tier: "1" as unknown as TierId, lead: "Rank." });
+    expect(renderToStaticMarkup(rankEl!)).toContain('href="/pricing#seraphim"');
+
+    const prefixEl = TierCta({ tier: "tier-1" as unknown as TierId, lead: "Prefix." });
+    expect(renderToStaticMarkup(prefixEl!)).toContain('href="/pricing#seraphim"');
   });
 
   it("returns null for an invalid tier", () => {

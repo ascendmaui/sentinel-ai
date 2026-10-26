@@ -1,12 +1,13 @@
-import type { TierId } from "../lib/tiers";
+import { tierById, type TierId } from "../lib/tiers";
 
 /**
  * Rank emblems derived from the seraphim motif. Line art in currentColor so they follow the theme.
  * Seraphim: six wings and a halo. Cherubim: a many-eyed wheel with a pair of wings.
  * Thrones: a wheel within a wheel on a seat. Angels: a single small wing under a halo.
  */
-export function TierEmblem({ id, size = 44 }: { id: TierId; size?: number }) {
+export function TierEmblem({ id, size = 44 }: { id: TierId | string; size?: number }) {
   const key = typeof id === "string" ? id.trim().toLowerCase() : "";
+  const resolved = (tierById(key)?.id ?? key).toLowerCase();
   const common = {
     width: size,
     height: size,
@@ -19,7 +20,7 @@ export function TierEmblem({ id, size = 44 }: { id: TierId; size?: number }) {
     "aria-hidden": true as const,
     className: "tier-emblem",
   };
-  switch (key) {
+  switch (resolved) {
     case "seraphim":
       return (
         <svg {...common}>

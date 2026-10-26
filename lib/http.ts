@@ -85,8 +85,11 @@ export function parseLimit(params: URLSearchParams, max = 100): number | undefin
     params.get("pageSize") ??
     params.get("page_size") ??
     params.get("per_page") ??
+    params.get("perPage") ??
     params.get("size") ??
     params.get("count") ??
+    params.get("page_limit") ??
+    params.get("pageLimit") ??
     params.get("max")
   )?.trim();
   if (!raw || !/^\+?\d+$/.test(raw)) return undefined;
@@ -136,7 +139,9 @@ export function parseOffset(params: URLSearchParams, max = 10000, pageSize?: num
     params.get("start") ??
     params.get("from") ??
     params.get("start_at") ??
-    params.get("startAt")
+    params.get("startAt") ??
+    params.get("start_index") ??
+    params.get("startIndex")
   )?.trim();
   if (raw) {
     if (!/^\+?\d+$/.test(raw)) return undefined;
@@ -195,7 +200,9 @@ export function parseSearchQuery(params: URLSearchParams, paramName = "q"): stri
       params.get("keyword") ??
       params.get("term") ??
       params.get("filter") ??
-      params.get("find");
+      params.get("find") ??
+      params.get("search_query") ??
+      params.get("searchQuery");
   }
   if (!raw) return undefined;
   let trimmed = raw.trim();

@@ -116,7 +116,7 @@ export default function PricingPage() {
                 <th scope="col">What you get</th>
                 {order.map((id) => (
                   <th scope="col" key={id} className={id === "seraphim" ? "cmp-hi" : undefined}>
-                    {tierById(id)!.name}
+                    {tierById(id)?.name ?? id}
                   </th>
                 ))}
               </tr>
@@ -124,7 +124,7 @@ export default function PricingPage() {
                 <th scope="col">Positioning</th>
                 {order.map((id) => (
                   <th scope="col" key={id} className={id === "seraphim" ? "cmp-hi" : undefined} style={{ fontSize: 12.5, fontWeight: 500 }}>
-                    {tierById(id)!.positioning}
+                    {tierById(id)?.positioning ?? ""}
                   </th>
                 ))}
               </tr>

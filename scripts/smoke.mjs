@@ -486,12 +486,36 @@ check(qSrc.count > 0, "GET /api/sources?q=openai filter");
 const srcById = await (await get("/api/sources?id=oaiAug")).json();
 check(srcById.count === 1 && srcById.sources[0].id === "oaiAug", "GET /api/sources?id=oaiAug filter");
 
+const srcByIdUpper = await (await get("/api/sources?id=OAIAUG")).json();
+check(srcByIdUpper.count === 1 && srcByIdUpper.sources[0].id === "oaiAug", "GET /api/sources?id=OAIAUG (case-insensitive filter)");
+
+const srcBySource = await (await get("/api/sources?source=oaiAug")).json();
+check(srcBySource.count === 1 && srcBySource.sources[0].id === "oaiAug", "GET /api/sources?source=oaiAug filter");
+
+const srcByRef = await (await get("/api/sources?ref=oaiAug")).json();
+check(srcByRef.count === 1 && srcByRef.sources[0].id === "oaiAug", "GET /api/sources?ref=oaiAug filter");
+
+const srcBySlug = await (await get("/api/sources?slug=oaiAug")).json();
+check(srcBySlug.count === 1 && srcBySlug.sources[0].id === "oaiAug", "GET /api/sources?slug=oaiAug filter");
+
+const srcByNum = await (await get("/api/sources?n=1")).json();
+check(srcByNum.count === 1 && srcByNum.sources[0].id === "oaiAug", "GET /api/sources?n=1 filter");
+
+const srcTitle = await (await get("/api/sources?title=Hugging")).json();
+check(srcTitle.count > 0, "GET /api/sources?title=Hugging filter");
+
 const srcOne = await get("/api/sources/oaiAug");
 check(srcOne.status === 200 && (await srcOne.json()).id === "oaiAug", "GET /api/sources/oaiAug");
 const srcUpper = await get("/api/sources/OAIAUG");
 check(srcUpper.status === 200 && (await srcUpper.json()).id === "oaiAug", "GET /api/sources/OAIAUG (case-insensitive)");
 const srcPrefix = await get("/api/sources/src-oaiAug");
 check(srcPrefix.status === 200 && (await srcPrefix.json()).id === "oaiAug", "GET /api/sources/src-oaiAug (src- prefix)");
+
+const srcByRank = await get("/api/sources/1");
+check(srcByRank.status === 200 && (await srcByRank.json()).id === "oaiAug", "GET /api/sources/1 (by 1-based index)");
+
+const srcByS1 = await get("/api/sources/s1");
+check(srcByS1.status === 200 && (await srcByS1.json()).id === "oaiAug", "GET /api/sources/s1 (s1 prefix)");
 
 const sourcesPage = await (await get("/api/sources?page=2&limit=2")).json();
 check(sourcesPage.count === 2, "GET /api/sources?page=2&limit=2 (page pagination)");
@@ -525,6 +549,21 @@ check(brandBadgeExt.badge?.key === "passive", "GET /api/brand?badge=passive.json
 
 const brandKeyEncoded = await (await get("/api/brand?key=badge%2Dlocal")).json();
 check(brandKeyEncoded.badge?.key === "local", "GET /api/brand?key=badge%2Dlocal returns badge");
+
+const brandBadgeKey = await (await get("/api/brand?badge_key=passive")).json();
+check(brandBadgeKey.badge?.key === "passive", "GET /api/brand?badge_key=passive returns badge");
+
+const brandBadgeId = await (await get("/api/brand?id=passive")).json();
+check(brandBadgeId.badge?.key === "passive", "GET /api/brand?id=passive returns badge");
+
+const brandBadgeNum = await (await get("/api/brand?badge=1")).json();
+check(brandBadgeNum.badge?.key === "passive", "GET /api/brand?badge=1 returns badge");
+
+const brandBadgeZero = await (await get("/api/brand?badge=01")).json();
+check(brandBadgeZero.badge?.key === "passive", "GET /api/brand?badge=01 returns badge");
+
+const brandBadgeB1 = await (await get("/api/brand?badge=b1")).json();
+check(brandBadgeB1.badge?.key === "passive", "GET /api/brand?badge=b1 returns badge");
 
 // 9. Method Not Allowed on dynamic API endpoints (Next.js dynamic route handlers return 405 for unexported methods)
 const endpoints405 = [

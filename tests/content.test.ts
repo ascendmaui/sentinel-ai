@@ -72,6 +72,16 @@ describe("brand", () => {
     expect(badgeByKey("badge%2Dpassive")).toEqual(TRUE_BADGES.find((b) => b.key === "passive"));
     expect(badgeByKey("/passive/")).toEqual(TRUE_BADGES.find((b) => b.key === "passive"));
     expect(badgeByKey("//badge-passive//")).toEqual(TRUE_BADGES.find((b) => b.key === "passive"));
+    expect(badgeByKey("1")).toEqual(TRUE_BADGES[0]);
+    expect(badgeByKey("01")).toEqual(TRUE_BADGES[0]);
+    expect(badgeByKey("5")).toEqual(TRUE_BADGES[4]);
+    expect(badgeByKey("05")).toEqual(TRUE_BADGES[4]);
+    expect(badgeByKey("6")).toBeUndefined();
+    expect(badgeByKey("0")).toBeUndefined();
+    expect(badgeByKey("b-1")).toEqual(TRUE_BADGES[0]);
+    expect(badgeByKey("b_1")).toEqual(TRUE_BADGES[0]);
+    expect(badgeByKey("b1")).toEqual(TRUE_BADGES[0]);
+    expect(badgeByKey("+1")).toEqual(TRUE_BADGES[0]);
   });
 });
 
@@ -279,6 +289,16 @@ describe("sources registry", () => {
     expect(sourceById("oaiAug.html")).toBe(S.oaiAug);
     expect(sourceById("/oaiAug/")).toBe(S.oaiAug);
     expect(sourceById("//src-oaiAug//")).toBe(S.oaiAug);
+    expect(sourceById("1")).toBe(sources[0]);
+    expect(sourceById("01")).toBe(sources[0]);
+    expect(sourceById("18")).toBe(sources[17]);
+    expect(sourceById("018")).toBe(sources[17]);
+    expect(sourceById("19")).toBeUndefined();
+    expect(sourceById("0")).toBeUndefined();
+    expect(sourceById("s-1")).toBe(sources[0]);
+    expect(sourceById("s_1")).toBe(sources[0]);
+    expect(sourceById("s1")).toBe(sources[0]);
+    expect(sourceById("+1")).toBe(sources[0]);
     expect(sourceById("")).toBeUndefined();
     expect(sourceById("   ")).toBeUndefined();
     expect(sourceById(undefined as unknown as string)).toBeUndefined();
@@ -453,6 +473,11 @@ describe("tiers", () => {
       }
     }
     expect(tierHref("  SERAPHIM  " as unknown as (typeof tiers)[0]["id"])).toBe("/pricing#seraphim");
+    expect(tierHref("1")).toBe("/pricing#seraphim");
+    expect(tierHref("01")).toBe("/pricing#seraphim");
+    expect(tierHref("t-1")).toBe("/pricing#seraphim");
+    expect(tierHref("tier-1")).toBe("/pricing#seraphim");
+    expect(tierHref("tier_02")).toBe("/pricing#cherubim");
     expect(tierHref(null as unknown as (typeof tiers)[0]["id"])).toBe("/pricing#");
   });
 });

@@ -22,7 +22,14 @@ export function GET(req?: Request): Response {
   if (req?.url) {
     try {
       const url = new URL(req.url, "http://localhost");
-      const badgeKey = parseSearchQuery(url.searchParams, "badge") || parseSearchQuery(url.searchParams, "key");
+      const badgeKey =
+        parseSearchQuery(url.searchParams, "badge") ||
+        parseSearchQuery(url.searchParams, "badge_key") ||
+        parseSearchQuery(url.searchParams, "badgeKey") ||
+        parseSearchQuery(url.searchParams, "key") ||
+        parseSearchQuery(url.searchParams, "id") ||
+        parseSearchQuery(url.searchParams, "slug") ||
+        parseSearchQuery(url.searchParams, "n");
       if (badgeKey) {
         badgeMatch = badgeByKey(badgeKey) ?? null;
       }

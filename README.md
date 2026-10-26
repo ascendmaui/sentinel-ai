@@ -38,9 +38,9 @@ All endpoints export HTTP/REST JSON contracts with security headers (`X-Content-
 - `GET /api/case-studies/[id]`: Finding details with before/after fixes and remediation verification notes. Supports lookup by ID, single-digit ID (`f-1`, `f1`, `1`, `01`), hyphenless ID (`f01`), prefix (`finding-01`, `finding_01`, `fix-f-01`, `fix-1`, `cs-01`, `cs-1`, `case-study-01`), URL-encoding, and `.json`/`.html` suffixes.
 - `GET /api/tiers`: Service tier matrix, comparison details, and engagement terms. Supports `?id=`, `?tier=`, `?name=`, `?cadence=`, `?positioning=`, `?rank=`, `?tier_rank=`, `?q=`, `?order=`, `?sort=`, `?offset=`, `?limit=`, `?take=`, and `?page=`.
 - `GET /api/tiers/[id]`: Single tier deliverables, target audience, and exclusions. Supports lookup by ID, rank number (`1`, `01`), prefix (`tier-seraphim`, `tier_seraphim`, `tier-1`, `tier-01`, `tier_01`, `t1`, `t01`, `t-1`, `t_1`, `+1`), URL-encoding, and `.json`/`.html` suffixes.
-- `GET /api/sources`: Authoritative primary and secondary sources registry. Supports `?id=`, `?q=`, `?year=`, `?date=`, `?label=`, `?note=`, `?type=`, `?order=`, `?sort=`, `?offset=`, `?limit=`, `?take=`, and `?page=`.
-- `GET /api/sources/[id]`: Single source record with URL and credibility note. Supports lookup by ID, prefix (`src-oaiAug`, `src_oaiAug`, `source-oaiAug`), URL-encoding, and `.json`/`.html` suffixes.
-- `GET /api/brand`: Brand identity metadata, contact mailto, trust badges, and theme configuration. Supports `?badge=` or `?key=` query filter with prefix and URL-encoding resilience.
+- `GET /api/sources`: Authoritative primary and secondary sources registry. Supports `?id=`, `?source=`, `?ref=`, `?slug=`, `?n=`, `?title=`, `?label=`, `?q=`, `?year=`, `?date=`, `?note=`, `?type=`, `?order=`, `?sort=`, `?offset=`, `?limit=`, `?take=`, and `?page=`.
+- `GET /api/sources/[id]`: Single source record with URL and credibility note. Supports lookup by ID, 1-based index (`1`, `01`), prefix (`src-oaiAug`, `src_oaiAug`, `source-oaiAug`, `s-1`, `s_1`, `s1`), URL-encoding, and `.json`/`.html` suffixes.
+- `GET /api/brand`: Brand identity metadata, contact mailto, trust badges, and theme configuration. Supports `?badge=`, `?badge_key=`, `?key=`, `?id=`, `?slug=`, or `?n=` query filter with numeric (`1`, `01`), prefix (`badge-passive`, `b-1`, `b1`), and URL-encoding resilience.
 
 ## Metadata & Discovery
 
@@ -50,7 +50,7 @@ All endpoints export HTTP/REST JSON contracts with security headers (`X-Content-
 
 ## Verification & Testing
 
-- `npm test`: Run 362 unit, component, page, content integrity, route contract, and API integration tests via Vitest across 5 test suites.
+- `npm test`: Run 363 unit, component, page, content integrity, route contract, and API integration tests via Vitest across 5 test suites.
 - `npm run test:contract`: Run API route contract discovery and security header verification tests.
 - `npm run test:integration`: Run API endpoint integration tests.
 - `npm run test:components`: Run UI component tests (icons, emblems, logo mark, trust badges, nav, footer).

@@ -1609,6 +1609,9 @@ describe("HTTP helper utilities", () => {
     expect(parseLimit(new URLSearchParams("per_page=5"))).toBe(5);
     expect(parseLimit(new URLSearchParams("size=5"))).toBe(5);
     expect(parseLimit(new URLSearchParams("count=5"))).toBe(5);
+    expect(parseLimit(new URLSearchParams("perPage=5"))).toBe(5);
+    expect(parseLimit(new URLSearchParams("page_limit=5"))).toBe(5);
+    expect(parseLimit(new URLSearchParams("pageLimit=5"))).toBe(5);
     expect(parseLimit(new URLSearchParams("max=5"))).toBe(5);
     expect(parseLimit(new URLSearchParams("take=0"))).toBeUndefined();
     expect(parseLimit(new URLSearchParams("take=-10"))).toBeUndefined();
@@ -1709,6 +1712,8 @@ describe("HTTP helper utilities", () => {
     expect(parseSearchQuery(new URLSearchParams("term=Seraphim"))).toBe("seraphim");
     expect(parseSearchQuery(new URLSearchParams("filter=Seraphim"))).toBe("seraphim");
     expect(parseSearchQuery(new URLSearchParams("find=Seraphim"))).toBe("seraphim");
+    expect(parseSearchQuery(new URLSearchParams("search_query=Seraphim"))).toBe("seraphim");
+    expect(parseSearchQuery(new URLSearchParams("searchQuery=Seraphim"))).toBe("seraphim");
     expect(parseSearchQuery(new URLSearchParams("q=  Modal  "))).toBe("modal");
     expect(parseSearchQuery(new URLSearchParams("q=openai%20huggingface"))).toBe("openai huggingface");
     expect(parseSearchQuery(new URLSearchParams("q=   "))).toBeUndefined();
@@ -1729,6 +1734,8 @@ describe("HTTP helper utilities", () => {
     expect(parseOffset(new URLSearchParams("from=6"))).toBe(6);
     expect(parseOffset(new URLSearchParams("start_at=7"))).toBe(7);
     expect(parseOffset(new URLSearchParams("startAt=8"))).toBe(8);
+    expect(parseOffset(new URLSearchParams("start_index=9"))).toBe(9);
+    expect(parseOffset(new URLSearchParams("startIndex=10"))).toBe(10);
     expect(parseOffset(new URLSearchParams("offset=0"))).toBe(0);
     expect(parseOffset(new URLSearchParams("skip=0"))).toBe(0);
     expect(parseOffset(new URLSearchParams("offset=%2B4"))).toBe(4);
@@ -2181,6 +2188,46 @@ describe("GET /api/sources", () => {
     expect(idBody.count).toBe(1);
     expect(idBody.sources[0].id).toBe("oaiAug");
 
+    const upperIdRes = sourcesIndex(req("/api/sources?id=OAIAUG"));
+    expect(upperIdRes.status).toBe(200);
+    expect((await upperIdRes.json()).count).toBe(1);
+
+    const sourceAliasRes = sourcesIndex(req("/api/sources?source=oaiAug"));
+    expect(sourceAliasRes.status).toBe(200);
+    expect((await sourceAliasRes.json()).count).toBe(1);
+
+    const refAliasRes = sourcesIndex(req("/api/sources?ref=oaiAug"));
+    expect(refAliasRes.status).toBe(200);
+    expect((await refAliasRes.json()).count).toBe(1);
+
+    const slugAliasRes = sourcesIndex(req("/api/sources?slug=oaiAug"));
+    expect(slugAliasRes.status).toBe(200);
+    expect((await slugAliasRes.json()).count).toBe(1);
+
+    const numIndexRes = sourcesIndex(req("/api/sources?id=1"));
+    expect(numIndexRes.status).toBe(200);
+    expect((await numIndexRes.json()).sources[0].id).toBe("oaiAug");
+
+    const zeroIndexRes = sourcesIndex(req("/api/sources?id=01"));
+    expect(zeroIndexRes.status).toBe(200);
+    expect((await zeroIndexRes.json()).sources[0].id).toBe("oaiAug");
+
+    const sIndexRes = sourcesIndex(req("/api/sources?id=s1"));
+    expect(sIndexRes.status).toBe(200);
+    expect((await sIndexRes.json()).sources[0].id).toBe("oaiAug");
+
+    const sHyphenRes = sourcesIndex(req("/api/sources?id=s-1"));
+    expect(sHyphenRes.status).toBe(200);
+    expect((await sHyphenRes.json()).sources[0].id).toBe("oaiAug");
+
+    const nAliasRes = sourcesIndex(req("/api/sources?n=1"));
+    expect(nAliasRes.status).toBe(200);
+    expect((await nAliasRes.json()).sources[0].id).toBe("oaiAug");
+
+    const titleRes = sourcesIndex(req("/api/sources?title=Hugging"));
+    expect(titleRes.status).toBe(200);
+    expect((await titleRes.json()).count).toBeGreaterThan(0);
+
     const srcPrefixRes = sourcesIndex(req("/api/sources?id=src-oaiAug"));
     expect(srcPrefixRes.status).toBe(200);
     expect((await srcPrefixRes.json()).count).toBe(1);
@@ -2235,6 +2282,14 @@ describe("GET /api/sources/[id]", () => {
     const encodedRes = await sourceOne(req("/api/sources/oai%41ug"), idCtx("oai%41ug"));
     expect(encodedRes.status).toBe(200);
     expect((await encodedRes.json()).id).toBe("oaiAug");
+
+    const numRes = await sourceOne(req("/api/sources/1"), idCtx("1"));
+    expect(numRes.status).toBe(200);
+    expect((await numRes.json()).id).toBe("oaiAug");
+
+    const s1Res = await sourceOne(req("/api/sources/s1"), idCtx("s1"));
+    expect(s1Res.status).toBe(200);
+    expect((await s1Res.json()).id).toBe("oaiAug");
   });
   it("returns each source by ID", async () => {
     for (const src of sources) {
@@ -2340,6 +2395,42 @@ describe("GET /api/brand", () => {
     const keyRes = brandEndpoint(req("/api/brand?key=local"));
     expect(keyRes.status).toBe(200);
     expect((await keyRes.json()).badge.key).toBe("local");
+
+    const badgeKeyAliasRes = brandEndpoint(req("/api/brand?badge_key=passive"));
+    expect(badgeKeyAliasRes.status).toBe(200);
+    expect((await badgeKeyAliasRes.json()).badge.key).toBe("passive");
+
+    const badgeKeyCamelRes = brandEndpoint(req("/api/brand?badgeKey=passive"));
+    expect(badgeKeyCamelRes.status).toBe(200);
+    expect((await badgeKeyCamelRes.json()).badge.key).toBe("passive");
+
+    const idBadgeRes = brandEndpoint(req("/api/brand?id=passive"));
+    expect(idBadgeRes.status).toBe(200);
+    expect((await idBadgeRes.json()).badge.key).toBe("passive");
+
+    const slugBadgeRes = brandEndpoint(req("/api/brand?slug=passive"));
+    expect(slugBadgeRes.status).toBe(200);
+    expect((await slugBadgeRes.json()).badge.key).toBe("passive");
+
+    const numBadgeRes = brandEndpoint(req("/api/brand?badge=1"));
+    expect(numBadgeRes.status).toBe(200);
+    expect((await numBadgeRes.json()).badge.key).toBe("passive");
+
+    const zeroBadgeRes = brandEndpoint(req("/api/brand?badge=01"));
+    expect(zeroBadgeRes.status).toBe(200);
+    expect((await zeroBadgeRes.json()).badge.key).toBe("passive");
+
+    const b1BadgeRes = brandEndpoint(req("/api/brand?badge=b1"));
+    expect(b1BadgeRes.status).toBe(200);
+    expect((await b1BadgeRes.json()).badge.key).toBe("passive");
+
+    const bHyphenBadgeRes = brandEndpoint(req("/api/brand?badge=b-1"));
+    expect(bHyphenBadgeRes.status).toBe(200);
+    expect((await bHyphenBadgeRes.json()).badge.key).toBe("passive");
+
+    const nBadgeRes = brandEndpoint(req("/api/brand?n=1"));
+    expect(nBadgeRes.status).toBe(200);
+    expect((await nBadgeRes.json()).badge.key).toBe("passive");
 
     const unknownBadgeRes = brandEndpoint(req("/api/brand?badge=nonexistent"));
     expect(unknownBadgeRes.status).toBe(200);

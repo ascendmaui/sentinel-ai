@@ -94,6 +94,14 @@ export function badgeByKey(key: string): TrustBadge | undefined {
   if (!target) return undefined;
   target = target.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
   if (target.startsWith("badge-") || target.startsWith("badge_")) target = target.slice(6);
+  else if (target.startsWith("b-") || target.startsWith("b_")) target = target.slice(2);
+  else if (target.startsWith("b") && /^\d+$/.test(target.slice(1))) target = target.slice(1);
+  if (target.startsWith("+")) target = target.slice(1);
+  const numClean = target.replace(/^0+/, "");
+  const num = parseInt(numClean || target, 10);
+  if (!Number.isNaN(num) && num >= 1 && num <= TRUE_BADGES.length && String(num) === (numClean || target)) {
+    return TRUE_BADGES[num - 1];
+  }
   return TRUE_BADGES.find((b) => b.key.toLowerCase() === target);
 }
 
