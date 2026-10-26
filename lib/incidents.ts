@@ -578,27 +578,35 @@ export const INCIDENTS_DISCLAIMER = `This page is analysis based on public repor
 
 export const incidentById = (id: string): Incident | undefined => {
   if (!id || typeof id !== "string") return undefined;
-  const target = id.trim().toLowerCase();
+  let target = id.trim().toLowerCase();
   if (!target) return undefined;
+  if (target.startsWith("incident-")) target = target.slice(9);
+  else if (target.startsWith("case-")) target = target.slice(5);
+  else if (target.startsWith("inc-")) target = target.slice(4);
   return incidents.find(
     (i) =>
       i.id === id ||
       i.id.toLowerCase() === target ||
       i.n.toLowerCase() === target ||
-      i.n.toLowerCase() === target.padStart(2, "0")
+      i.n.toLowerCase() === target.padStart(2, "0") ||
+      (target.replace(/^0+/, "") && i.n.replace(/^0+/, "") === target.replace(/^0+/, ""))
   );
 };
 
 export const scenarioById = (id: string): Scenario | undefined => {
   if (!id || typeof id !== "string") return undefined;
-  const target = id.trim().toLowerCase();
+  let target = id.trim().toLowerCase();
   if (!target) return undefined;
+  if (target.startsWith("scenario-")) target = target.slice(9);
+  else if (target.startsWith("sc-")) target = target.slice(3);
+  if (target.startsWith("h-")) target = `h${target.slice(2)}`;
+  target = target.replace(/^h0*(\d+)$/, "h$1").replace(/^0*(\d+)$/, "$1");
   return scenarios.find(
     (s) =>
       s.id === id ||
       s.id.toLowerCase() === target ||
       s.n.toLowerCase() === target ||
-      s.n.toLowerCase() === `h${target}`
+      s.n.toLowerCase() === (target.startsWith("h") ? target : `h${target}`)
   );
 };
 

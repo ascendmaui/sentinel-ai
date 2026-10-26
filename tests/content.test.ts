@@ -259,10 +259,13 @@ describe("sources registry", () => {
     }
   });
 
-  it("sourceById handles exact, case-insensitive, and invalid lookups", () => {
+  it("sourceById handles exact, case-insensitive, prefix patterns, and invalid lookups", () => {
     expect(sourceById("oaiAug")).toBe(S.oaiAug);
     expect(sourceById("OAIAUG")).toBe(S.oaiAug);
     expect(sourceById("  oaiAug  ")).toBe(S.oaiAug);
+    expect(sourceById("src-oaiAug")).toBe(S.oaiAug);
+    expect(sourceById("source-oaiAug")).toBe(S.oaiAug);
+    expect(sourceById("SRC-OAIAUG")).toBe(S.oaiAug);
     expect(sourceById("")).toBeUndefined();
     expect(sourceById("   ")).toBeUndefined();
     expect(sourceById(undefined as unknown as string)).toBeUndefined();
@@ -371,9 +374,12 @@ describe("tiers", () => {
     }
   });
 
-  it("tierById handles case-insensitivity, rank numbers, and returns undefined for unknown", () => {
+  it("tierById handles case-insensitivity, rank numbers, prefixes, and returns undefined for unknown", () => {
     expect(tierById("SERAPHIM")).toBeDefined();
     expect(tierById("  seraphim  ")).toBeDefined();
+    expect(tierById("tier-seraphim")).toBe(tiers[0]);
+    expect(tierById("tier-1")).toBe(tiers[0]);
+    expect(tierById("+1")).toBe(tiers[0]);
     expect(tierById("1")).toBe(tiers[0]);
     expect(tierById(" 1 ")).toBe(tiers[0]);
     expect(tierById("4")).toBe(tiers[3]);
@@ -445,13 +451,18 @@ describe("incidents", () => {
     }
   });
 
-  it("incidentById handles case-insensitivity, incident numbering, and returns undefined for unknown", () => {
+  it("incidentById handles case-insensitivity, incident numbering, prefixes, and returns undefined for unknown", () => {
     const first = incidents[0];
     expect(incidentById(first.id.toUpperCase())).toBe(first);
     expect(incidentById(`  ${first.id}  `)).toBe(first);
     expect(incidentById("01")).toBe(first);
     expect(incidentById("1")).toBe(first);
     expect(incidentById(" 01 ")).toBe(first);
+    expect(incidentById("incident-01")).toBe(first);
+    expect(incidentById("case-01")).toBe(first);
+    expect(incidentById("inc-01")).toBe(first);
+    expect(incidentById("case-1")).toBe(first);
+    expect(incidentById("inc-1")).toBe(first);
     expect(incidentById("99")).toBeUndefined();
     expect(incidentById("unknown-incident")).toBeUndefined();
     expect(incidentById("constructor")).toBeUndefined();
@@ -482,7 +493,7 @@ describe("incidents", () => {
     }
   });
 
-  it("scenarioById handles exact, case-insensitive, scenario numbering, and invalid lookups", () => {
+  it("scenarioById handles exact, case-insensitive, scenario numbering, prefixes, and invalid lookups", () => {
     const first = scenarios[0];
     expect(scenarioById(first.id)).toBe(first);
     expect(scenarioById(first.id.toUpperCase())).toBe(first);
@@ -491,6 +502,11 @@ describe("incidents", () => {
     expect(scenarioById("H1")).toBe(first);
     expect(scenarioById("1")).toBe(first);
     expect(scenarioById(" h1 ")).toBe(first);
+    expect(scenarioById("scenario-h1")).toBe(first);
+    expect(scenarioById("sc-1")).toBe(first);
+    expect(scenarioById("h-1")).toBe(first);
+    expect(scenarioById("h01")).toBe(first);
+    expect(scenarioById("SC-H1")).toBe(first);
     expect(scenarioById("h99")).toBeUndefined();
     expect(scenarioById("unknown-scenario")).toBeUndefined();
     expect(scenarioById("constructor")).toBeUndefined();

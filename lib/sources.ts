@@ -29,6 +29,8 @@ export function sourceById(id: string): Source | undefined {
   const trimmed = id.trim();
   if (!trimmed) return undefined;
   if (Object.prototype.hasOwnProperty.call(S, trimmed)) return S[trimmed];
-  const target = trimmed.toLowerCase();
+  let target = trimmed.toLowerCase();
+  if (target.startsWith("source-")) target = target.slice(7);
+  else if (target.startsWith("src-")) target = target.slice(4);
   return sources.find((s) => s.id.toLowerCase() === target);
 }
