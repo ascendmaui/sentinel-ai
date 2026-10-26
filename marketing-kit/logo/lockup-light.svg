@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="850" height="240" viewBox="0 0 850 240" role="img" aria-labelledby="title">
+<title id="title">Seraphim Scan lockup</title>
+<defs>
+<linearGradient id="lockuplight-gold" x1="0.2" y1="0" x2="0.8" y2="1"><stop offset="0" stop-color="#FFF0C8"/><stop offset="0.42" stop-color="#F2B544"/><stop offset="1" stop-color="#A86A14"/></linearGradient>
+<linearGradient id="lockuplight-bronze" x1="0.2" y1="0" x2="0.8" y2="1"><stop offset="0" stop-color="#D99A2B"/><stop offset="0.5" stop-color="#B7791F"/><stop offset="1" stop-color="#7A4A0C"/></linearGradient>
+<radialGradient id="lockuplight-core"><stop offset="0" stop-color="#FFFFFF"/><stop offset="0.55" stop-color="#FFE9B8"/><stop offset="1" stop-color="#F2B544"/></radialGradient>
+</defs><style type="text/css"><![CDATA[
+@font-face { font-family: "Bricolage Grotesque"; src: url("../fonts/BricolageGrotesque-Bold.ttf") format("truetype"); font-weight: 700; font-style: normal; }
+@font-face { font-family: "Bricolage Grotesque"; src: url("../fonts/BricolageGrotesque-SemiBold.ttf") format("truetype"); font-weight: 600; font-style: normal; }
+@font-face { font-family: Inter; src: url("../fonts/Inter-Regular.ttf") format("truetype"); font-weight: 400; font-style: normal; }
+@font-face { font-family: Inter; src: url("../fonts/Inter-Medium.ttf") format("truetype"); font-weight: 500; font-style: normal; }
+@font-face { font-family: Inter; src: url("../fonts/Inter-SemiBold.ttf") format("truetype"); font-weight: 600; font-style: normal; }
+@font-face { font-family: "JetBrains Mono"; src: url("../fonts/JetBrainsMono-Medium.ttf") format("truetype"); font-weight: 500; font-style: normal; }
+]]></style><g transform="translate(16.00 10.00) scale(0.214844)"><path d="M570.6 373.9 L777.9 196.1 L795.6 273.6 L647.9 448.6Z" fill="url(#lockuplight-bronze)"/><path d="M453.4 373.9 L246.1 196.1 L228.4 273.6 L376.1 448.6Z" fill="url(#lockuplight-bronze)"/><path d="M644.6 449.3 L885.1 436.5 L854.6 495.4 L656.7 535.8Z" fill="url(#lockuplight-bronze)"/><path d="M379.4 449.3 L138.9 436.5 L169.4 495.4 L367.3 535.8Z" fill="url(#lockuplight-bronze)"/><path d="M652.2 546.6 L799.7 644.0 L754.3 669.4 L619.0 608.9Z" fill="url(#lockuplight-bronze)"/><path d="M371.8 546.6 L224.3 644.0 L269.7 669.4 L405.0 608.9Z" fill="url(#lockuplight-bronze)"/><path d="M384 512a128 128 0 1 0 256 0a128 128 0 1 0-256 0ZM432 512a80 80 0 1 1 160 0a80 80 0 1 1-160 0Z" fill="url(#lockuplight-bronze)" fill-rule="evenodd"/><rect x="416" y="502" width="192" height="20" rx="10" fill="url(#lockuplight-bronze)"/><circle cx="512" cy="512" r="36" fill="url(#lockuplight-bronze)"/></g><text x="264.0" y="146.9" fill="#0F1018" font-family="Bricolage Grotesque" font-size="84" font-weight="700" letter-spacing="-2.100" text-anchor="start">Seraphim</text><text x="667.8" y="141.8" fill="#8A5A0B" font-family="Bricolage Grotesque" font-size="42.0" font-weight="700" letter-spacing="14.280" text-anchor="start">SCAN</text>
+</svg>
