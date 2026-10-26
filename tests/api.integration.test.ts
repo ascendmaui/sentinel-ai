@@ -244,6 +244,30 @@ describe("GET /api/posts", () => {
     expect(srcQRes.status).toBe(200);
     expect((await srcQRes.json()).count).toBeGreaterThan(0);
   });
+
+  it("filters posts by slug or id parameter", async () => {
+    const slugRes = postsIndex(req("/api/posts?slug=when-the-test-subject-leaves-the-test"));
+    expect(slugRes.status).toBe(200);
+    const slugBody = await slugRes.json();
+    expect(slugBody.count).toBe(1);
+    expect(slugBody.posts[0].slug).toBe("when-the-test-subject-leaves-the-test");
+
+    const upperSlugRes = postsIndex(req("/api/posts?slug=WHEN-THE-TEST-SUBJECT-LEAVES-THE-TEST"));
+    expect(upperSlugRes.status).toBe(200);
+    expect((await upperSlugRes.json()).count).toBe(1);
+
+    const slashSlugRes = postsIndex(req("/api/posts?slug=/when-the-test-subject-leaves-the-test/"));
+    expect(slashSlugRes.status).toBe(200);
+    expect((await slashSlugRes.json()).count).toBe(1);
+
+    const idRes = postsIndex(req("/api/posts?id=when-the-test-subject-leaves-the-test"));
+    expect(idRes.status).toBe(200);
+    expect((await idRes.json()).count).toBe(1);
+
+    const noneRes = postsIndex(req("/api/posts?slug=nonexistent-slug"));
+    expect(noneRes.status).toBe(200);
+    expect((await noneRes.json()).count).toBe(0);
+  });
 });
 
 describe("GET /api/posts/[slug]", () => {
@@ -462,6 +486,50 @@ describe("GET /api/incidents", () => {
     expect(skipRes.status).toBe(200);
     expect((await skipRes.json()).count).toBe(incidents.length - 1);
   });
+
+  it("filters incidents by id or n parameter with prefix and number flexibility", async () => {
+    const idRes = incidentsIndex(req("/api/incidents?id=openai-huggingface-2026"));
+    expect(idRes.status).toBe(200);
+    const idBody = await idRes.json();
+    expect(idBody.count).toBe(1);
+    expect(idBody.incidents[0].id).toBe("openai-huggingface-2026");
+
+    const idNumRes = incidentsIndex(req("/api/incidents?id=01"));
+    expect(idNumRes.status).toBe(200);
+    expect((await idNumRes.json()).count).toBe(1);
+
+    const idDigitRes = incidentsIndex(req("/api/incidents?id=1"));
+    expect(idDigitRes.status).toBe(200);
+    expect((await idDigitRes.json()).count).toBe(1);
+
+    const idCaseRes = incidentsIndex(req("/api/incidents?id=case-01"));
+    expect(idCaseRes.status).toBe(200);
+    expect((await idCaseRes.json()).count).toBe(1);
+
+    const idIncRes = incidentsIndex(req("/api/incidents?id=incident-01"));
+    expect(idIncRes.status).toBe(200);
+    expect((await idIncRes.json()).count).toBe(1);
+
+    const idShortIncRes = incidentsIndex(req("/api/incidents?id=inc-1"));
+    expect(idShortIncRes.status).toBe(200);
+    expect((await idShortIncRes.json()).count).toBe(1);
+
+    const nRes = incidentsIndex(req("/api/incidents?n=01"));
+    expect(nRes.status).toBe(200);
+    expect((await nRes.json()).count).toBe(1);
+
+    const nDigitRes = incidentsIndex(req("/api/incidents?n=1"));
+    expect(nDigitRes.status).toBe(200);
+    expect((await nDigitRes.json()).count).toBe(1);
+
+    const nCaseRes = incidentsIndex(req("/api/incidents?n=case-01"));
+    expect(nCaseRes.status).toBe(200);
+    expect((await nCaseRes.json()).count).toBe(1);
+
+    const noneRes = incidentsIndex(req("/api/incidents?id=nonexistent-incident"));
+    expect(noneRes.status).toBe(200);
+    expect((await noneRes.json()).count).toBe(0);
+  });
 });
 
 describe("GET /api/incidents/[id]", () => {
@@ -490,6 +558,18 @@ describe("GET /api/incidents/[id]", () => {
     const singleNumRes = await incidentOne(req("/api/incidents/1"), idCtx("1"));
     expect(singleNumRes.status).toBe(200);
     expect((await singleNumRes.json()).id).toBe(first.id);
+
+    const prefixRes = await incidentOne(req("/api/incidents/case-01"), idCtx("case-01"));
+    expect(prefixRes.status).toBe(200);
+    expect((await prefixRes.json()).id).toBe(first.id);
+
+    const incPrefixRes = await incidentOne(req("/api/incidents/incident-01"), idCtx("incident-01"));
+    expect(incPrefixRes.status).toBe(200);
+    expect((await incPrefixRes.json()).id).toBe(first.id);
+
+    const shortPrefixRes = await incidentOne(req("/api/incidents/inc-1"), idCtx("inc-1"));
+    expect(shortPrefixRes.status).toBe(200);
+    expect((await shortPrefixRes.json()).id).toBe(first.id);
 
     const trimRes = await incidentOne(req(`/api/incidents/${first.id}`), idCtx(`  ${first.id}  `));
     expect(trimRes.status).toBe(200);
@@ -635,6 +715,18 @@ describe("GET /api/case-studies", () => {
     const fixPrefixRes = caseStudiesIndex(req("/api/case-studies?id=fix-f-01"));
     expect(fixPrefixRes.status).toBe(200);
     expect((await fixPrefixRes.json()).findings[0].id).toBe("F-01");
+
+    const nRes = caseStudiesIndex(req("/api/case-studies?n=F-01"));
+    expect(nRes.status).toBe(200);
+    expect((await nRes.json()).findings[0].id).toBe("F-01");
+
+    const nDigitRes = caseStudiesIndex(req("/api/case-studies?n=1"));
+    expect(nDigitRes.status).toBe(200);
+    expect((await nDigitRes.json()).findings[0].id).toBe("F-01");
+
+    const nPadRes = caseStudiesIndex(req("/api/case-studies?n=01"));
+    expect(nPadRes.status).toBe(200);
+    expect((await nPadRes.json()).findings[0].id).toBe("F-01");
 
     const offRes = caseStudiesIndex(req("/api/case-studies?offset=2&limit=3"));
     expect(offRes.status).toBe(200);
@@ -796,6 +888,32 @@ describe("GET /api/tiers", () => {
     const offBody = await offRes.json();
     expect(offBody.count).toBe(2);
     expect(offBody.totalCount).toBe(tiers.length);
+
+    const idRes = tiersIndex(req("/api/tiers?id=seraphim"));
+    expect(idRes.status).toBe(200);
+    const idBody = await idRes.json();
+    expect(idBody.count).toBe(1);
+    expect(idBody.tiers[0].id).toBe("seraphim");
+
+    const prefixRes = tiersIndex(req("/api/tiers?id=tier-seraphim"));
+    expect(prefixRes.status).toBe(200);
+    expect((await prefixRes.json()).count).toBe(1);
+
+    const idRankRes = tiersIndex(req("/api/tiers?id=1"));
+    expect(idRankRes.status).toBe(200);
+    expect((await idRankRes.json()).count).toBe(1);
+
+    const idRankPrefixRes = tiersIndex(req("/api/tiers?id=tier-1"));
+    expect(idRankPrefixRes.status).toBe(200);
+    expect((await idRankPrefixRes.json()).count).toBe(1);
+
+    const idPlusRankRes = tiersIndex(req("/api/tiers?id=%2B1"));
+    expect(idPlusRankRes.status).toBe(200);
+    expect((await idPlusRankRes.json()).count).toBe(1);
+
+    const noneIdRes = tiersIndex(req("/api/tiers?id=nonexistent"));
+    expect(noneIdRes.status).toBe(200);
+    expect((await noneIdRes.json()).count).toBe(0);
   });
 });
 
@@ -824,6 +942,18 @@ describe("GET /api/tiers/[id]", () => {
     const trimRes = await tierOne(req("/api/tiers/seraphim"), idCtx("  seraphim  "));
     expect(trimRes.status).toBe(200);
     expect((await trimRes.json()).id).toBe("seraphim");
+
+    const prefixRes = await tierOne(req("/api/tiers/tier-seraphim"), idCtx("tier-seraphim"));
+    expect(prefixRes.status).toBe(200);
+    expect((await prefixRes.json()).id).toBe("seraphim");
+
+    const tierRankRes = await tierOne(req("/api/tiers/tier-1"), idCtx("tier-1"));
+    expect(tierRankRes.status).toBe(200);
+    expect((await tierRankRes.json()).id).toBe("seraphim");
+
+    const plusRankRes = await tierOne(req("/api/tiers/+1"), idCtx("+1"));
+    expect(plusRankRes.status).toBe(200);
+    expect((await plusRankRes.json()).id).toBe("seraphim");
   });
 
   it.each(["free", "enterprise-plus", "", "   ", "__proto__", "constructor", "toString"])(
@@ -905,10 +1035,28 @@ describe("HTTP helper utilities", () => {
     const undefRes = json(undefined);
     expect(undefRes.status).toBe(200);
     expect(await undefRes.json()).toBeNull();
+
+    // Safely handles non-serializable objects (BigInt or circular) by returning 500 response
+    const circularObj: Record<string, unknown> = {};
+    circularObj.self = circularObj;
+    const circRes = json(circularObj);
+    expect(circRes.status).toBe(500);
+    expect(circRes.headers.get("cache-control")).toBe("no-store");
+    expect(circRes.headers.get("x-frame-options")).toBe("DENY");
+    expect(await circRes.json()).toEqual({ error: "internal_error", message: "Serialization failed" });
+
+    const bigIntRes = json({ n: BigInt(123) });
+    expect(bigIntRes.status).toBe(500);
+    expect(await bigIntRes.json()).toEqual({ error: "internal_error", message: "Serialization failed" });
   });
 
   it("parseLimit handles valid, invalid, negative, and capped limits", () => {
     expect(parseLimit(new URLSearchParams("limit=5"))).toBe(5);
+    expect(parseLimit(new URLSearchParams("take=5"))).toBe(5);
+    expect(parseLimit(new URLSearchParams("take=0"))).toBeUndefined();
+    expect(parseLimit(new URLSearchParams("take=-10"))).toBeUndefined();
+    expect(parseLimit(new URLSearchParams("take=250"), 100)).toBe(100);
+    expect(parseLimit(new URLSearchParams("limit=3&take=10"))).toBe(3);
     expect(parseLimit(new URLSearchParams("limit=0"))).toBeUndefined();
     expect(parseLimit(new URLSearchParams("limit=%2B0"))).toBeUndefined();
     expect(parseLimit(new URLSearchParams("limit=%2B"))).toBeUndefined();
@@ -1099,6 +1247,48 @@ describe("GET /api/scenarios", () => {
     expect(offBody.count).toBe(2);
     expect(offBody.totalCount).toBe(scenarios.length);
   });
+
+  it("filters scenarios by id or n parameter with prefix and code flexibility", async () => {
+    const idRes = scenariosIndex(req("/api/scenarios?id=onprem-domain"));
+    expect(idRes.status).toBe(200);
+    const idBody = await idRes.json();
+    expect(idBody.count).toBe(1);
+    expect(idBody.scenarios[0].id).toBe("onprem-domain");
+
+    const idCodeRes = scenariosIndex(req("/api/scenarios?id=h3"));
+    expect(idCodeRes.status).toBe(200);
+    expect((await idCodeRes.json()).count).toBe(1);
+
+    const idNumRes = scenariosIndex(req("/api/scenarios?id=3"));
+    expect(idNumRes.status).toBe(200);
+    expect((await idNumRes.json()).count).toBe(1);
+
+    const idScRes = scenariosIndex(req("/api/scenarios?id=sc-3"));
+    expect(idScRes.status).toBe(200);
+    expect((await idScRes.json()).count).toBe(1);
+
+    const idPrefixRes = scenariosIndex(req("/api/scenarios?id=scenario-h3"));
+    expect(idPrefixRes.status).toBe(200);
+    expect((await idPrefixRes.json()).count).toBe(1);
+
+    const nRes = scenariosIndex(req("/api/scenarios?n=h1"));
+    expect(nRes.status).toBe(200);
+    const nBody = await nRes.json();
+    expect(nBody.count).toBe(1);
+    expect(nBody.scenarios[0].id).toBe("legacy-internal-app");
+
+    const nDigitRes = scenariosIndex(req("/api/scenarios?n=1"));
+    expect(nDigitRes.status).toBe(200);
+    expect((await nDigitRes.json()).count).toBe(1);
+
+    const nPrefixRes = scenariosIndex(req("/api/scenarios?n=sc-1"));
+    expect(nPrefixRes.status).toBe(200);
+    expect((await nPrefixRes.json()).count).toBe(1);
+
+    const noneRes = scenariosIndex(req("/api/scenarios?id=nonexistent-scenario"));
+    expect(noneRes.status).toBe(200);
+    expect((await noneRes.json()).count).toBe(0);
+  });
 });
 
 describe("GET /api/scenarios/[id]", () => {
@@ -1137,6 +1327,18 @@ describe("GET /api/scenarios/[id]", () => {
     const trimRes = await scenarioOne(req(`/api/scenarios/${first.id}`), idCtx(`  ${first.id}  `));
     expect(trimRes.status).toBe(200);
     expect((await trimRes.json()).id).toBe(first.id);
+
+    const scPrefixRes = await scenarioOne(req("/api/scenarios/scenario-h1"), idCtx("scenario-h1"));
+    expect(scPrefixRes.status).toBe(200);
+    expect((await scPrefixRes.json()).id).toBe(first.id);
+
+    const scShortRes = await scenarioOne(req("/api/scenarios/sc-1"), idCtx("sc-1"));
+    expect(scShortRes.status).toBe(200);
+    expect((await scShortRes.json()).id).toBe(first.id);
+
+    const scHyphenRes = await scenarioOne(req("/api/scenarios/h-1"), idCtx("h-1"));
+    expect(scHyphenRes.status).toBe(200);
+    expect((await scHyphenRes.json()).id).toBe(first.id);
   });
 
   it.each(["nonexistent-scenario", "", "   ", "../etc/passwd", "__proto__", "constructor", "toString"])(
@@ -1266,6 +1468,24 @@ describe("GET /api/sources", () => {
     const offBody = await offRes.json();
     expect(offBody.count).toBe(3);
     expect(offBody.totalCount).toBe(sources.length);
+
+    const idRes = sourcesIndex(req("/api/sources?id=oaiAug"));
+    expect(idRes.status).toBe(200);
+    const idBody = await idRes.json();
+    expect(idBody.count).toBe(1);
+    expect(idBody.sources[0].id).toBe("oaiAug");
+
+    const srcPrefixRes = sourcesIndex(req("/api/sources?id=src-oaiAug"));
+    expect(srcPrefixRes.status).toBe(200);
+    expect((await srcPrefixRes.json()).count).toBe(1);
+
+    const sourcePrefixRes = sourcesIndex(req("/api/sources?id=source-oaiAug"));
+    expect(sourcePrefixRes.status).toBe(200);
+    expect((await sourcePrefixRes.json()).count).toBe(1);
+
+    const noneRes = sourcesIndex(req("/api/sources?id=nonexistent-source"));
+    expect(noneRes.status).toBe(200);
+    expect((await noneRes.json()).count).toBe(0);
   });
 });
 
@@ -1290,6 +1510,14 @@ describe("GET /api/sources/[id]", () => {
     const trimRes = await sourceOne(req(`/api/sources/${first.id}`), idCtx(`  ${first.id}  `));
     expect(trimRes.status).toBe(200);
     expect((await trimRes.json()).id).toBe(first.id);
+
+    const srcPrefixRes = await sourceOne(req("/api/sources/src-oaiAug"), idCtx("src-oaiAug"));
+    expect(srcPrefixRes.status).toBe(200);
+    expect((await srcPrefixRes.json()).id).toBe(first.id);
+
+    const sourcePrefixRes = await sourceOne(req("/api/sources/source-oaiAug"), idCtx("source-oaiAug"));
+    expect(sourcePrefixRes.status).toBe(200);
+    expect((await sourcePrefixRes.json()).id).toBe(first.id);
   });
 
   it.each(["nonexistent-source", "", "   ", "../etc/passwd", "__proto__", "constructor", "toString"])(

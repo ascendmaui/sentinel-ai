@@ -1,7 +1,7 @@
 import { json, parseLimit, parseOffset, parseSearchQuery, PUBLIC_CACHE } from "../../../lib/http";
 import { tiers, tierHref, matrix, helper, ENGAGEMENT_TERMS } from "../../../lib/tiers";
 
-/** Service tiers index as JSON: all four engagement tiers and comparison matrix. Supports ?cadence=, ?positioning=, ?rank=, ?q=, ?offset=, and ?limit=. */
+/** Service tiers index as JSON: all four engagement tiers and comparison matrix. Supports ?id=, ?cadence=, ?positioning=, ?rank=, ?q=, ?offset=, and ?limit=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -11,12 +11,25 @@ export function GET(req?: Request): Response {
     try {
       const url = new URL(req.url, "http://localhost");
       const q = parseSearchQuery(url.searchParams);
+      const id = parseSearchQuery(url.searchParams, "id");
       const cadence = parseSearchQuery(url.searchParams, "cadence");
       const positioning = parseSearchQuery(url.searchParams, "positioning");
       const rankParam = url.searchParams.get("rank")?.trim();
-      const rank = rankParam && /^\d+$/.test(rankParam) ? Number(rankParam) : undefined;
+      const rank = rankParam && /^\+?\d+$/.test(rankParam) ? Number(rankParam) : undefined;
       const offset = parseOffset(url.searchParams);
       const limit = parseLimit(url.searchParams);
+
+      if (id) {
+        let cleanId = id;
+        if (cleanId.startsWith("tier-")) cleanId = cleanId.slice(5);
+        if (cleanId.startsWith("+")) cleanId = cleanId.slice(1);
+        list = list.filter(
+          (t) =>
+            t.id.toLowerCase() === id ||
+            t.id.toLowerCase() === cleanId ||
+            String(t.rank) === cleanId
+        );
+      }
 
       if (cadence) {
         list = list.filter((t) => t.cadence.toLowerCase().includes(cadence));

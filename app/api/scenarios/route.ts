@@ -1,7 +1,7 @@
 import { json, parseLimit, parseOffset, parseSearchQuery, PUBLIC_CACHE } from "../../../lib/http";
 import { scenarios } from "../../../lib/incidents";
 
-/** Hypothetical scenarios index as JSON. Lists conceptual threat models and controls. Supports ?ref=, ?weakness=, ?target=, ?q=, ?offset=, and ?limit=. */
+/** Hypothetical scenarios index as JSON. Lists conceptual threat models and controls. Supports ?id=, ?n=, ?ref=, ?weakness=, ?target=, ?q=, ?offset=, and ?limit=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -10,12 +10,44 @@ export function GET(req?: Request): Response {
   if (req?.url) {
     try {
       const url = new URL(req.url, "http://localhost");
+      const id = parseSearchQuery(url.searchParams, "id");
+      const n = parseSearchQuery(url.searchParams, "n");
       const ref = parseSearchQuery(url.searchParams, "ref");
       const weakness = parseSearchQuery(url.searchParams, "weakness") || parseSearchQuery(url.searchParams, "weaknessClass");
       const target = parseSearchQuery(url.searchParams, "target");
       const q = parseSearchQuery(url.searchParams);
       const offset = parseOffset(url.searchParams);
       const limit = parseLimit(url.searchParams);
+
+      if (id) {
+        let cleanId = id;
+        if (cleanId.startsWith("scenario-")) cleanId = cleanId.slice(9);
+        else if (cleanId.startsWith("sc-")) cleanId = cleanId.slice(3);
+        if (cleanId.startsWith("h-")) cleanId = `h${cleanId.slice(2)}`;
+        const normalized = cleanId.startsWith("h") ? cleanId : `h${cleanId}`;
+        list = list.filter(
+          (s) =>
+            s.id.toLowerCase() === id ||
+            s.id.toLowerCase() === cleanId ||
+            s.n.toLowerCase() === id ||
+            s.n.toLowerCase() === cleanId ||
+            s.n.toLowerCase() === normalized
+        );
+      }
+
+      if (n) {
+        let cleanN = n;
+        if (cleanN.startsWith("scenario-")) cleanN = cleanN.slice(9);
+        else if (cleanN.startsWith("sc-")) cleanN = cleanN.slice(3);
+        if (cleanN.startsWith("h-")) cleanN = `h${cleanN.slice(2)}`;
+        const normalized = cleanN.startsWith("h") ? cleanN : `h${cleanN}`;
+        list = list.filter(
+          (s) =>
+            s.n.toLowerCase() === n ||
+            s.n.toLowerCase() === cleanN ||
+            s.n.toLowerCase() === normalized
+        );
+      }
 
       if (ref) {
         list = list.filter((s) => s.refs.some((r) => r.toLowerCase() === ref));

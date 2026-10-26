@@ -1,7 +1,7 @@
 import { json, parseLimit, parseOffset, parseSearchQuery, PUBLIC_CACHE } from "../../../lib/http";
 import { findings, remediation, severityCounts } from "../../../lib/caseStudies";
 
-/** Remediation findings and case studies index as JSON. Supports optional ?id=, ?severity=, ?status=, ?q=, ?offset=, and ?limit= filters. */
+/** Remediation findings and case studies index as JSON. Supports optional ?id=, ?n=, ?severity=, ?status=, ?q=, ?offset=, and ?limit= filters. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -9,7 +9,7 @@ export function GET(req?: Request): Response {
   if (req?.url) {
     try {
       const url = new URL(req.url, "http://localhost");
-      const id = parseSearchQuery(url.searchParams, "id");
+      const id = parseSearchQuery(url.searchParams, "id") || parseSearchQuery(url.searchParams, "n");
       const severity = parseSearchQuery(url.searchParams, "severity");
       const status = parseSearchQuery(url.searchParams, "status");
       const q = parseSearchQuery(url.searchParams);

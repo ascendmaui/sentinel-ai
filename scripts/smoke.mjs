@@ -66,6 +66,15 @@ check(sourcePosts.count > 0, "GET /api/posts?source=oaiAug filter");
 const limitedPosts = await (await get("/api/posts?limit=2")).json();
 check(limitedPosts.count === 2 && limitedPosts.posts.length === 2 && limitedPosts.totalCount === posts.posts.length, "GET /api/posts?limit=2");
 
+const takePosts = await (await get("/api/posts?take=2")).json();
+check(takePosts.count === 2 && takePosts.posts.length === 2 && takePosts.totalCount === posts.posts.length, "GET /api/posts?take=2 (take alias)");
+
+const slugPosts = await (await get("/api/posts?slug=when-the-test-subject-leaves-the-test")).json();
+check(slugPosts.count === 1 && slugPosts.posts[0].slug === "when-the-test-subject-leaves-the-test", "GET /api/posts?slug=... filter");
+
+const idPosts = await (await get("/api/posts?id=when-the-test-subject-leaves-the-test")).json();
+check(idPosts.count === 1 && idPosts.posts[0].slug === "when-the-test-subject-leaves-the-test", "GET /api/posts?id=... filter");
+
 const offsetPosts = await (await get("/api/posts?offset=1&limit=2")).json();
 check(offsetPosts.count === 2 && offsetPosts.posts.length === 2 && offsetPosts.totalCount === posts.posts.length, "GET /api/posts?offset=1&limit=2");
 
@@ -122,6 +131,12 @@ check(standingIncs.count > 0, "GET /api/incidents?standing=documented filter");
 const kickerIncs = await (await get("/api/incidents?kicker=landmark")).json();
 check(kickerIncs.count === 1 && kickerIncs.incidents[0].id === "openai-huggingface-2026", "GET /api/incidents?kicker=landmark filter");
 
+const idIncFilter = await (await get("/api/incidents?id=openai-huggingface-2026")).json();
+check(idIncFilter.count === 1 && idIncFilter.incidents[0].id === "openai-huggingface-2026", "GET /api/incidents?id=... filter");
+
+const nIncFilter = await (await get("/api/incidents?n=01")).json();
+check(nIncFilter.count === 1 && nIncFilter.incidents[0].id === "openai-huggingface-2026", "GET /api/incidents?n=01 filter");
+
 const qIncsStatus = await (await get("/api/incidents?q=verified")).json();
 check(qIncsStatus.count > 0, "GET /api/incidents?q=verified statusLabel search");
 
@@ -136,6 +151,10 @@ const numInc = await get("/api/incidents/01");
 check(numInc.status === 200 && (await numInc.json()).id === "openai-huggingface-2026", "GET /api/incidents/01 (by number)");
 const singleNumInc = await get("/api/incidents/1");
 check(singleNumInc.status === 200 && (await singleNumInc.json()).id === "openai-huggingface-2026", "GET /api/incidents/1 (by single digit)");
+const casePrefixInc = await get("/api/incidents/case-01");
+check(casePrefixInc.status === 200 && (await casePrefixInc.json()).id === "openai-huggingface-2026", "GET /api/incidents/case-01 (case- prefix)");
+const incPrefixInc = await get("/api/incidents/inc-1");
+check(incPrefixInc.status === 200 && (await incPrefixInc.json()).id === "openai-huggingface-2026", "GET /api/incidents/inc-1 (inc- prefix)");
 const missingInc = await get("/api/incidents/does-not-exist");
 check(missingInc.status === 404 && (await missingInc.json()).error === "not_found", "unknown incident -> JSON 404");
 check(missingInc.headers.get("cache-control") === "no-store", "404 unknown incident cache-control is no-store");
@@ -163,6 +182,9 @@ check(qCsStatus.count > 0, "GET /api/case-studies?q=fixed status search");
 
 const csById = await (await get("/api/case-studies?id=F-01")).json();
 check(csById.count === 1 && csById.findings[0].id === "F-01", "GET /api/case-studies?id=F-01 filter");
+
+const csByN = await (await get("/api/case-studies?n=F-01")).json();
+check(csByN.count === 1 && csByN.findings[0].id === "F-01", "GET /api/case-studies?n=F-01 filter");
 
 const csOne = await get("/api/case-studies/f-01");
 const csOneBody = await csOne.json();
@@ -204,12 +226,19 @@ check(qTiersCadence.count > 0 && qTiersCadence.tiers.some(t => t.cadence.toLower
 const cadTiers = await (await get("/api/tiers?cadence=recurring")).json();
 check(cadTiers.count === 1 && cadTiers.tiers[0].id === "cherubim", "GET /api/tiers?cadence=recurring filter");
 
+const tiersById = await (await get("/api/tiers?id=seraphim")).json();
+check(tiersById.count === 1 && tiersById.tiers[0].id === "seraphim", "GET /api/tiers?id=seraphim filter");
+
 const tierOne = await get("/api/tiers/seraphim");
 check(tierOne.status === 200 && (await tierOne.json()).name === "Seraphim", "GET /api/tiers/seraphim");
 const tierUpper = await get("/api/tiers/SERAPHIM");
 check(tierUpper.status === 200 && (await tierUpper.json()).name === "Seraphim", "GET /api/tiers/SERAPHIM (case-insensitive)");
 const tierByRank = await get("/api/tiers/1");
 check(tierByRank.status === 200 && (await tierByRank.json()).id === "seraphim", "GET /api/tiers/1 (by rank)");
+const tierPrefix = await get("/api/tiers/tier-seraphim");
+check(tierPrefix.status === 200 && (await tierPrefix.json()).id === "seraphim", "GET /api/tiers/tier-seraphim (tier- prefix)");
+const tierRankPlus = await get("/api/tiers/+1");
+check(tierRankPlus.status === 200 && (await tierRankPlus.json()).id === "seraphim", "GET /api/tiers/+1 (+rank)");
 
 const headTierOne = await get("/api/tiers/seraphim", { method: "HEAD" });
 check(headTierOne.status === 200, "HEAD /api/tiers/seraphim -> 200");
@@ -249,6 +278,14 @@ const scUpper = await get("/api/scenarios/LEGACY-INTERNAL-APP");
 check(scUpper.status === 200 && (await scUpper.json()).id === "legacy-internal-app", "GET /api/scenarios/LEGACY-INTERNAL-APP (case-insensitive)");
 const scByNum = await get("/api/scenarios/h1");
 check(scByNum.status === 200 && (await scByNum.json()).id === "legacy-internal-app", "GET /api/scenarios/h1 (by scenario number)");
+const scById = await (await get("/api/scenarios?id=onprem-domain")).json();
+check(scById.count === 1 && scById.scenarios[0].id === "onprem-domain", "GET /api/scenarios?id=onprem-domain filter");
+const scByN = await (await get("/api/scenarios?n=h1")).json();
+check(scByN.count === 1 && scByN.scenarios[0].id === "legacy-internal-app", "GET /api/scenarios?n=h1 filter");
+const scPrefix = await get("/api/scenarios/scenario-h1");
+check(scPrefix.status === 200 && (await scPrefix.json()).id === "legacy-internal-app", "GET /api/scenarios/scenario-h1 (scenario- prefix)");
+const scHyphen = await get("/api/scenarios/h-1");
+check(scHyphen.status === 200 && (await scHyphen.json()).id === "legacy-internal-app", "GET /api/scenarios/h-1 (hyphenated code)");
 
 const headScOne = await get("/api/scenarios/legacy-internal-app", { method: "HEAD" });
 check(headScOne.status === 200, "HEAD /api/scenarios/legacy-internal-app -> 200");
@@ -279,10 +316,15 @@ check(limitedSrc.count === 2 && limitedSrc.sources.length === 2, "GET /api/sourc
 const qSrc = await (await get("/api/sources?q=openai")).json();
 check(qSrc.count > 0, "GET /api/sources?q=openai filter");
 
+const srcById = await (await get("/api/sources?id=oaiAug")).json();
+check(srcById.count === 1 && srcById.sources[0].id === "oaiAug", "GET /api/sources?id=oaiAug filter");
+
 const srcOne = await get("/api/sources/oaiAug");
 check(srcOne.status === 200 && (await srcOne.json()).id === "oaiAug", "GET /api/sources/oaiAug");
 const srcUpper = await get("/api/sources/OAIAUG");
 check(srcUpper.status === 200 && (await srcUpper.json()).id === "oaiAug", "GET /api/sources/OAIAUG (case-insensitive)");
+const srcPrefix = await get("/api/sources/src-oaiAug");
+check(srcPrefix.status === 200 && (await srcPrefix.json()).id === "oaiAug", "GET /api/sources/src-oaiAug (src- prefix)");
 
 const headSrcOne = await get("/api/sources/oaiAug", { method: "HEAD" });
 check(headSrcOne.status === 200, "HEAD /api/sources/oaiAug -> 200");

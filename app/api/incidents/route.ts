@@ -1,7 +1,7 @@
 import { json, parseLimit, parseOffset, parseSearchQuery, PUBLIC_CACHE } from "../../../lib/http";
 import { incidents, scenarios, unverified, INCIDENTS_DISCLAIMER } from "../../../lib/incidents";
 
-/** Incident case studies index as JSON. Lists incidents, summaries, counts, and disclaimer. Supports ?source=, ?year=, ?standing=, ?kicker=, ?q=, ?offset=, and ?limit=. */
+/** Incident case studies index as JSON. Lists incidents, summaries, counts, and disclaimer. Supports ?id=, ?n=, ?source=, ?year=, ?standing=, ?kicker=, ?q=, ?offset=, and ?limit=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -11,12 +11,40 @@ export function GET(req?: Request): Response {
     try {
       const url = new URL(req.url, "http://localhost");
       const q = parseSearchQuery(url.searchParams);
+      const id = parseSearchQuery(url.searchParams, "id");
+      const n = parseSearchQuery(url.searchParams, "n");
       const source = parseSearchQuery(url.searchParams, "source");
       const year = parseSearchQuery(url.searchParams, "year");
       const standing = parseSearchQuery(url.searchParams, "standing");
       const kicker = parseSearchQuery(url.searchParams, "kicker");
       const offset = parseOffset(url.searchParams);
       const limit = parseLimit(url.searchParams);
+
+      if (id) {
+        let cleanId = id;
+        if (cleanId.startsWith("incident-")) cleanId = cleanId.slice(9);
+        else if (cleanId.startsWith("case-")) cleanId = cleanId.slice(5);
+        else if (cleanId.startsWith("inc-")) cleanId = cleanId.slice(4);
+        list = list.filter(
+          (i) =>
+            i.id.toLowerCase() === id ||
+            i.id.toLowerCase() === cleanId ||
+            i.n.toLowerCase() === id ||
+            i.n.toLowerCase() === cleanId ||
+            i.n.toLowerCase() === cleanId.padStart(2, "0")
+        );
+      }
+
+      if (n) {
+        let cleanN = n;
+        if (cleanN.startsWith("case-") || cleanN.startsWith("inc-")) cleanN = cleanN.replace(/^(case|inc)-/, "");
+        list = list.filter(
+          (i) =>
+            i.n.toLowerCase() === n ||
+            i.n.toLowerCase() === cleanN ||
+            i.n.toLowerCase() === cleanN.padStart(2, "0")
+        );
+      }
 
       if (source) {
         list = list.filter((i) => i.sources.some((s) => s.toLowerCase() === source));

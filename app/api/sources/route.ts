@@ -1,7 +1,7 @@
 import { json, parseLimit, parseOffset, parseSearchQuery, PUBLIC_CACHE } from "../../../lib/http";
 import { sources } from "../../../lib/sources";
 
-/** Authoritative sources index as JSON. Lists verified research references. Supports ?q=, ?year=, ?note=, ?type=, ?offset=, and ?limit=. */
+/** Authoritative sources index as JSON. Lists verified research references. Supports ?id=, ?q=, ?year=, ?note=, ?type=, ?offset=, and ?limit=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -10,11 +10,19 @@ export function GET(req?: Request): Response {
   if (req?.url) {
     try {
       const url = new URL(req.url, "http://localhost");
+      const id = parseSearchQuery(url.searchParams, "id");
       const q = parseSearchQuery(url.searchParams);
       const year = parseSearchQuery(url.searchParams, "year");
       const note = parseSearchQuery(url.searchParams, "note") || parseSearchQuery(url.searchParams, "type");
       const offset = parseOffset(url.searchParams);
       const limit = parseLimit(url.searchParams);
+
+      if (id) {
+        let cleanId = id;
+        if (cleanId.startsWith("source-")) cleanId = cleanId.slice(7);
+        else if (cleanId.startsWith("src-")) cleanId = cleanId.slice(4);
+        list = list.filter((s) => s.id.toLowerCase() === id || s.id.toLowerCase() === cleanId);
+      }
 
       if (year) {
         list = list.filter((s) => s.date.toLowerCase().includes(year));

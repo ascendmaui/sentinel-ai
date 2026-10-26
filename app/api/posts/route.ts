@@ -1,7 +1,7 @@
 import { json, parseLimit, parseOffset, parseSearchQuery, PUBLIC_CACHE } from "../../../lib/http";
 import { posts, postWords } from "../../../lib/posts";
 
-/** Blog index as JSON: post metadata only (no body). Newest first. Supports ?tier=, ?source=, ?year=, ?q=, ?offset=, and ?limit=. */
+/** Blog index as JSON: post metadata only (no body). Newest first. Supports ?slug=, ?id=, ?tier=, ?source=, ?year=, ?q=, ?offset=, and ?limit=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -10,12 +10,18 @@ export function GET(req?: Request): Response {
   if (req?.url) {
     try {
       const url = new URL(req.url, "http://localhost");
+      const slug = parseSearchQuery(url.searchParams, "slug") || parseSearchQuery(url.searchParams, "id");
       const tier = parseSearchQuery(url.searchParams, "tier");
       const source = parseSearchQuery(url.searchParams, "source");
       const year = parseSearchQuery(url.searchParams, "year");
       const q = parseSearchQuery(url.searchParams);
       const offset = parseOffset(url.searchParams);
       const limit = parseLimit(url.searchParams);
+
+      if (slug) {
+        const cleanSlug = slug.replace(/^\/+|\/+$/g, "");
+        list = list.filter((p) => p.slug.toLowerCase() === slug || p.slug.toLowerCase() === cleanSlug);
+      }
 
       if (tier) {
         list = list.filter((p) => p.tier.toLowerCase() === tier);
