@@ -1,7 +1,7 @@
 import { json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
 import { tiers, tierHref, matrix, helper, ENGAGEMENT_TERMS } from "../../../lib/tiers";
 
-/** Service tiers index as JSON: all four engagement tiers and comparison matrix. Supports ?id=, ?cadence=, ?positioning=, ?rank=, ?q=, ?order=, ?offset=, ?limit=, and ?page=. */
+/** Service tiers index as JSON: all four engagement tiers and comparison matrix. Supports ?id=, ?tier=, ?name=, ?cadence=, ?positioning=, ?rank=, ?q=, ?order=, ?offset=, ?limit=, and ?page=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -11,7 +11,8 @@ export function GET(req?: Request): Response {
     try {
       const url = new URL(req.url, "http://localhost");
       const q = parseSearchQuery(url.searchParams);
-      const id = parseSearchQuery(url.searchParams, "id");
+      const id = parseSearchQuery(url.searchParams, "id") || parseSearchQuery(url.searchParams, "tier");
+      const name = parseSearchQuery(url.searchParams, "name");
       const cadence = parseSearchQuery(url.searchParams, "cadence");
       const positioning = parseSearchQuery(url.searchParams, "positioning");
       const rankParam = url.searchParams.get("rank")?.trim();
@@ -22,7 +23,9 @@ export function GET(req?: Request): Response {
 
       if (id) {
         let cleanId = id.replace(/\.(html|json)$/, "");
-        if (cleanId.startsWith("tier-")) cleanId = cleanId.slice(5);
+        if (cleanId.startsWith("tier-") || cleanId.startsWith("tier_")) cleanId = cleanId.slice(5);
+        else if (cleanId.startsWith("tier")) cleanId = cleanId.slice(4);
+        else if (cleanId.startsWith("t") && /^\d+$/.test(cleanId.slice(1))) cleanId = cleanId.slice(1);
         if (cleanId.startsWith("+")) cleanId = cleanId.slice(1);
         list = list.filter(
           (t) =>
@@ -30,6 +33,10 @@ export function GET(req?: Request): Response {
             t.id.toLowerCase() === cleanId ||
             String(t.rank) === cleanId
         );
+      }
+
+      if (name) {
+        list = list.filter((t) => t.name.toLowerCase().includes(name));
       }
 
       if (cadence) {

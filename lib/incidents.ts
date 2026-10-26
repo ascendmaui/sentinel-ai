@@ -579,11 +579,16 @@ export const INCIDENTS_DISCLAIMER = `This page is analysis based on public repor
 export const incidentById = (id: string): Incident | undefined => {
   if (!id || typeof id !== "string") return undefined;
   let target = id.trim().toLowerCase();
+  try {
+    target = decodeURIComponent(target);
+  } catch {
+    // keep raw
+  }
   if (!target) return undefined;
   target = target.replace(/\.(html|json)$/, "");
-  if (target.startsWith("incident-")) target = target.slice(9);
-  else if (target.startsWith("case-")) target = target.slice(5);
-  else if (target.startsWith("inc-")) target = target.slice(4);
+  if (target.startsWith("incident-") || target.startsWith("incident_")) target = target.slice(9);
+  else if (target.startsWith("case-") || target.startsWith("case_")) target = target.slice(5);
+  else if (target.startsWith("inc-") || target.startsWith("inc_")) target = target.slice(4);
   return incidents.find(
     (i) =>
       i.id === id ||
@@ -597,11 +602,16 @@ export const incidentById = (id: string): Incident | undefined => {
 export const scenarioById = (id: string): Scenario | undefined => {
   if (!id || typeof id !== "string") return undefined;
   let target = id.trim().toLowerCase();
+  try {
+    target = decodeURIComponent(target);
+  } catch {
+    // keep raw
+  }
   if (!target) return undefined;
   target = target.replace(/\.(html|json)$/, "");
-  if (target.startsWith("scenario-")) target = target.slice(9);
-  else if (target.startsWith("sc-")) target = target.slice(3);
-  if (target.startsWith("h-")) target = `h${target.slice(2)}`;
+  if (target.startsWith("scenario-") || target.startsWith("scenario_")) target = target.slice(9);
+  else if (target.startsWith("sc-") || target.startsWith("sc_")) target = target.slice(3);
+  if (target.startsWith("h-") || target.startsWith("h_")) target = `h${target.slice(2)}`;
   target = target.replace(/^h0*(\d+)$/, "h$1").replace(/^0*(\d+)$/, "$1");
   return scenarios.find(
     (s) =>

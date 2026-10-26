@@ -1,7 +1,7 @@
 import { json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
 import { posts, postWords } from "../../../lib/posts";
 
-/** Blog index as JSON: post metadata only (no body). Newest first by default. Supports ?slug=, ?id=, ?tier=, ?source=, ?ref=, ?year=, ?q=, ?order=, ?offset=, ?limit=, and ?page=. */
+/** Blog index as JSON: post metadata only (no body). Newest first by default. Supports ?slug=, ?id=, ?tier=, ?source=, ?ref=, ?year=, ?date=, ?readMins=, ?q=, ?order=, ?offset=, ?limit=, and ?page=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -13,8 +13,10 @@ export function GET(req?: Request): Response {
       const slug = parseSearchQuery(url.searchParams, "slug") || parseSearchQuery(url.searchParams, "id");
       const tier = parseSearchQuery(url.searchParams, "tier");
       const source = parseSearchQuery(url.searchParams, "source") || parseSearchQuery(url.searchParams, "ref");
-      const year = parseSearchQuery(url.searchParams, "year");
+      const year = parseSearchQuery(url.searchParams, "year") || parseSearchQuery(url.searchParams, "date");
       const q = parseSearchQuery(url.searchParams);
+      const readMinsParam = (url.searchParams.get("readMins") ?? url.searchParams.get("mins"))?.trim();
+      const readMins = readMinsParam && /^\+?\d+$/.test(readMinsParam) ? Number(readMinsParam) : undefined;
       const limit = parseLimit(url.searchParams);
       const offset = parseOffset(url.searchParams, 10000, limit);
       const order = parseSortOrder(url.searchParams);
@@ -31,13 +33,25 @@ export function GET(req?: Request): Response {
       }
 
       if (tier) {
-        list = list.filter((p) => p.tier.toLowerCase() === tier);
+        const cleanTier = tier.replace(/^(tier[-_]|\+)/, "");
+        list = list.filter(
+          (p) => p.tier.toLowerCase() === tier || (cleanTier && p.tier.toLowerCase() === cleanTier)
+        );
       }
       if (source) {
-        list = list.filter((p) => p.sources.some((s) => s.toLowerCase() === source));
+        const cleanSource = source.replace(/^(source|src)[-_]/, "").replace(/\.(html|json)$/, "");
+        list = list.filter(
+          (p) =>
+            p.sources.some(
+              (s) => s.toLowerCase() === source || (cleanSource && s.toLowerCase() === cleanSource)
+            )
+        );
       }
       if (year) {
         list = list.filter((p) => p.date.toLowerCase().includes(year));
+      }
+      if (readMins !== undefined) {
+        list = list.filter((p) => p.readMins === readMins);
       }
       if (q) {
         list = list.filter(

@@ -309,9 +309,63 @@ describe("GET /api/posts", () => {
     expect(htmlRes.status).toBe(200);
     expect((await htmlRes.json()).slug).toBe("when-the-test-subject-leaves-the-test");
   });
+
+  it("supports readMins, date alias, prefix-cleaned tier/source, query alias, direction sort, count limit, and start offset", async () => {
+    const minsRes = postsIndex(req("/api/posts?readMins=8"));
+    expect(minsRes.status).toBe(200);
+    const minsBody = await minsRes.json();
+    expect(minsBody.count).toBeGreaterThan(0);
+    expect(minsBody.posts.every((p: { readMins: number }) => p.readMins === 8)).toBe(true);
+
+    const minsAliasRes = postsIndex(req("/api/posts?mins=7"));
+    expect(minsAliasRes.status).toBe(200);
+    expect((await minsAliasRes.json()).count).toBeGreaterThan(0);
+
+    const dateRes = postsIndex(req("/api/posts?date=2026-09-29"));
+    expect(dateRes.status).toBe(200);
+    expect((await dateRes.json()).count).toBeGreaterThan(0);
+
+    const tierPrefixRes = postsIndex(req("/api/posts?tier=tier-seraphim"));
+    expect(tierPrefixRes.status).toBe(200);
+    expect((await tierPrefixRes.json()).count).toBeGreaterThan(0);
+
+    const plusTierRes = postsIndex(req("/api/posts?tier=+seraphim"));
+    expect(plusTierRes.status).toBe(200);
+    expect((await plusTierRes.json()).count).toBeGreaterThan(0);
+
+    const srcPrefixRes = postsIndex(req("/api/posts?source=src-oaiAug"));
+    expect(srcPrefixRes.status).toBe(200);
+    expect((await srcPrefixRes.json()).count).toBeGreaterThan(0);
+
+    const qAliasRes = postsIndex(req("/api/posts?query=openai"));
+    expect(qAliasRes.status).toBe(200);
+    expect((await qAliasRes.json()).count).toBeGreaterThan(0);
+
+    const dirRes = postsIndex(req("/api/posts?direction=asc"));
+    expect(dirRes.status).toBe(200);
+
+    const countRes = postsIndex(req("/api/posts?count=2"));
+    expect(countRes.status).toBe(200);
+    expect((await countRes.json()).count).toBe(2);
+
+    const startRes = postsIndex(req("/api/posts?start=1&count=2"));
+    expect(startRes.status).toBe(200);
+    expect((await startRes.json()).count).toBe(2);
+
+    const pageNumRes = postsIndex(req("/api/posts?pageNum=2&max=2"));
+    expect(pageNumRes.status).toBe(200);
+    expect((await pageNumRes.json()).count).toBe(2);
+  });
 });
 
 describe("GET /api/posts/[slug]", () => {
+  it("resolves URL-encoded post slugs safely", async () => {
+    const targetSlug = "when-the-test-subject-leaves-the-test";
+    const encoded = encodeURIComponent(targetSlug);
+    const res = await postOne(req(`/api/posts/${encoded}`), slugCtx(encoded));
+    expect(res.status).toBe(200);
+    expect((await res.json()).slug).toBe(targetSlug);
+  });
   it("returns every known post with resolved source records", async () => {
     for (const p of posts) {
       const res = await postOne(req(`/api/posts/${p.slug}`), slugCtx(p.slug));
@@ -612,9 +666,49 @@ describe("GET /api/incidents", () => {
     expect(page2Body.count).toBe(2);
     expect(page2Body.incidents[0].id).toBe(incidents[2].id);
   });
+
+  it("supports date alias, title filter, cve alias, prefix-cleaned source, count limit, and start offset", async () => {
+    const dateRes = incidentsIndex(req("/api/incidents?date=2026"));
+    expect(dateRes.status).toBe(200);
+    expect((await dateRes.json()).count).toBeGreaterThan(0);
+
+    const titleRes = incidentsIndex(req("/api/incidents?title=OpenAI"));
+    expect(titleRes.status).toBe(200);
+    expect((await titleRes.json()).count).toBeGreaterThan(0);
+
+    const cveRes = incidentsIndex(req("/api/incidents?cve=token"));
+    expect(cveRes.status).toBe(200);
+    expect((await cveRes.json()).count).toBeGreaterThan(0);
+
+    const srcPrefixRes = incidentsIndex(req("/api/incidents?source=src-oaiAug"));
+    expect(srcPrefixRes.status).toBe(200);
+    expect((await srcPrefixRes.json()).count).toBeGreaterThan(0);
+
+    const dirRes = incidentsIndex(req("/api/incidents?direction=desc"));
+    expect(dirRes.status).toBe(200);
+
+    const countRes = incidentsIndex(req("/api/incidents?count=2"));
+    expect(countRes.status).toBe(200);
+    expect((await countRes.json()).count).toBe(2);
+
+    const startRes = incidentsIndex(req("/api/incidents?start=2&count=2"));
+    expect(startRes.status).toBe(200);
+    expect((await startRes.json()).count).toBe(2);
+
+    const pageNumRes = incidentsIndex(req("/api/incidents?pageNum=2&max=2"));
+    expect(pageNumRes.status).toBe(200);
+    expect((await pageNumRes.json()).count).toBe(2);
+  });
 });
 
 describe("GET /api/incidents/[id]", () => {
+  it("resolves URL-encoded incident ids safely", async () => {
+    const targetId = "openai-huggingface-2026";
+    const encoded = encodeURIComponent(targetId);
+    const res = await incidentOne(req(`/api/incidents/${encoded}`), idCtx(encoded));
+    expect(res.status).toBe(200);
+    expect((await res.json()).id).toBe(targetId);
+  });
   it("returns every known incident with resolved sources and timeline", async () => {
     for (const inc of incidents) {
       const res = await incidentOne(req(`/api/incidents/${inc.id}`), idCtx(inc.id));
@@ -869,9 +963,52 @@ describe("GET /api/case-studies", () => {
     expect(page2Body.count).toBe(2);
     expect(page2Body.findings[0].id).toBe(findings[2].id);
   });
+
+  it("supports sev alias, finding/fix prefixes, count limit, and start offset", async () => {
+    const sevRes = caseStudiesIndex(req("/api/case-studies?sev=high"));
+    expect(sevRes.status).toBe(200);
+    expect((await sevRes.json()).count).toBeGreaterThan(0);
+
+    const findingRes = caseStudiesIndex(req("/api/case-studies?id=finding-01"));
+    expect(findingRes.status).toBe(200);
+    expect((await findingRes.json()).findings[0].id).toBe("F-01");
+
+    const findingUnderscoreRes = caseStudiesIndex(req("/api/case-studies?id=finding_01"));
+    expect(findingUnderscoreRes.status).toBe(200);
+    expect((await findingUnderscoreRes.json()).findings[0].id).toBe("F-01");
+
+    const fixUnderscoreRes = caseStudiesIndex(req("/api/case-studies?id=fix_01"));
+    expect(fixUnderscoreRes.status).toBe(200);
+    expect((await fixUnderscoreRes.json()).findings[0].id).toBe("F-01");
+
+    const countRes = caseStudiesIndex(req("/api/case-studies?count=3"));
+    expect(countRes.status).toBe(200);
+    expect((await countRes.json()).count).toBe(3);
+
+    const startRes = caseStudiesIndex(req("/api/case-studies?start=2&count=2"));
+    expect(startRes.status).toBe(200);
+    expect((await startRes.json()).count).toBe(2);
+
+    const pageNumRes = caseStudiesIndex(req("/api/case-studies?pageNum=2&max=2"));
+    expect(pageNumRes.status).toBe(200);
+    expect((await pageNumRes.json()).count).toBe(2);
+  });
 });
 
 describe("GET /api/case-studies/[id]", () => {
+  it("resolves finding with finding- prefix, underscores, and URL-encoding", async () => {
+    const findingPrefixRes = await caseStudyOne(req("/api/case-studies/finding-01"), idCtx("finding-01"));
+    expect(findingPrefixRes.status).toBe(200);
+    expect((await findingPrefixRes.json()).id).toBe("F-01");
+
+    const fixUnderRes = await caseStudyOne(req("/api/case-studies/fix_01"), idCtx("fix_01"));
+    expect(fixUnderRes.status).toBe(200);
+    expect((await fixUnderRes.json()).id).toBe("F-01");
+
+    const encodedRes = await caseStudyOne(req("/api/case-studies/f%2D01"), idCtx("f%2D01"));
+    expect(encodedRes.status).toBe(200);
+    expect((await encodedRes.json()).id).toBe("F-01");
+  });
   it("returns every finding by ID with before/after details", async () => {
     for (const f of findings) {
       const res = await caseStudyOne(req(`/api/case-studies/${f.id}`), idCtx(f.id));
@@ -1087,9 +1224,48 @@ describe("GET /api/tiers", () => {
     expect(page2Body.count).toBe(2);
     expect(page2Body.tiers[0].id).toBe(tiers[2].id);
   });
+
+  it("supports tier alias, name filter, tier1 and t1 rank aliases, count limit, and start offset", async () => {
+    const tierAliasRes = tiersIndex(req("/api/tiers?tier=seraphim"));
+    expect(tierAliasRes.status).toBe(200);
+    expect((await tierAliasRes.json()).count).toBe(1);
+
+    const nameRes = tiersIndex(req("/api/tiers?name=Seraphim"));
+    expect(nameRes.status).toBe(200);
+    expect((await nameRes.json()).count).toBe(1);
+
+    const t1Res = tiersIndex(req("/api/tiers?id=t1"));
+    expect(t1Res.status).toBe(200);
+    expect((await t1Res.json()).tiers[0].id).toBe("seraphim");
+
+    const tier1Res = tiersIndex(req("/api/tiers?id=tier1"));
+    expect(tier1Res.status).toBe(200);
+    expect((await tier1Res.json()).tiers[0].id).toBe("seraphim");
+
+    const countRes = tiersIndex(req("/api/tiers?count=2"));
+    expect(countRes.status).toBe(200);
+    expect((await countRes.json()).count).toBe(2);
+
+    const startRes = tiersIndex(req("/api/tiers?start=2&count=2"));
+    expect(startRes.status).toBe(200);
+    expect((await startRes.json()).count).toBe(2);
+  });
 });
 
 describe("GET /api/tiers/[id]", () => {
+  it("resolves tier by t<N>, tier<N>, and URL-encoding", async () => {
+    const t1Res = await tierOne(req("/api/tiers/t1"), idCtx("t1"));
+    expect(t1Res.status).toBe(200);
+    expect((await t1Res.json()).id).toBe("seraphim");
+
+    const tier1Res = await tierOne(req("/api/tiers/tier1"), idCtx("tier1"));
+    expect(tier1Res.status).toBe(200);
+    expect((await tier1Res.json()).id).toBe("seraphim");
+
+    const encodedRes = await tierOne(req("/api/tiers/tier%2Dseraphim"), idCtx("tier%2Dseraphim"));
+    expect(encodedRes.status).toBe(200);
+    expect((await encodedRes.json()).id).toBe("seraphim");
+  });
   it("returns each tier with included items and fit criteria", async () => {
     for (const t of tiers) {
       const res = await tierOne(req(`/api/tiers/${t.id}`), idCtx(t.id));
@@ -1216,6 +1392,15 @@ describe("HTTP helper utilities", () => {
     expect(undefRes.status).toBe(200);
     expect(await undefRes.json()).toBeNull();
 
+    // Safely handles functions and symbols by serializing to null instead of omitting body
+    const fnRes = json(() => {});
+    expect(fnRes.status).toBe(200);
+    expect(await fnRes.json()).toBeNull();
+
+    const symRes = json(Symbol("test"));
+    expect(symRes.status).toBe(200);
+    expect(await symRes.json()).toBeNull();
+
     // Safely handles non-serializable objects (BigInt or circular) by returning 500 response
     const circularObj: Record<string, unknown> = {};
     circularObj.self = circularObj;
@@ -1230,13 +1415,15 @@ describe("HTTP helper utilities", () => {
     expect(await bigIntRes.json()).toEqual({ error: "internal_error", message: "Serialization failed" });
   });
 
-  it("parseLimit handles valid, aliases (take, pageSize, page_size, per_page, size), invalid, negative, and capped limits", () => {
+  it("parseLimit handles valid, aliases (take, pageSize, page_size, per_page, size, count, max), invalid, negative, and capped limits", () => {
     expect(parseLimit(new URLSearchParams("limit=5"))).toBe(5);
     expect(parseLimit(new URLSearchParams("take=5"))).toBe(5);
     expect(parseLimit(new URLSearchParams("pageSize=5"))).toBe(5);
     expect(parseLimit(new URLSearchParams("page_size=5"))).toBe(5);
     expect(parseLimit(new URLSearchParams("per_page=5"))).toBe(5);
     expect(parseLimit(new URLSearchParams("size=5"))).toBe(5);
+    expect(parseLimit(new URLSearchParams("count=5"))).toBe(5);
+    expect(parseLimit(new URLSearchParams("max=5"))).toBe(5);
     expect(parseLimit(new URLSearchParams("take=0"))).toBeUndefined();
     expect(parseLimit(new URLSearchParams("take=-10"))).toBeUndefined();
     expect(parseLimit(new URLSearchParams("take=250"), 100)).toBe(100);
@@ -1278,10 +1465,12 @@ describe("HTTP helper utilities", () => {
     expect(parseLimit(new URLSearchParams("limit=5"), 3.9)).toBe(3);
   });
 
-  it("parsePage handles valid, p alias, non-numeric, zero, and capped pages", () => {
+  it("parsePage handles valid, p alias, pageNum, page_num, non-numeric, zero, and capped pages", () => {
     expect(parsePage(new URLSearchParams("page=1"))).toBe(1);
     expect(parsePage(new URLSearchParams("page=5"))).toBe(5);
     expect(parsePage(new URLSearchParams("p=3"))).toBe(3);
+    expect(parsePage(new URLSearchParams("pageNum=4"))).toBe(4);
+    expect(parsePage(new URLSearchParams("page_num=7"))).toBe(7);
     expect(parsePage(new URLSearchParams("page=0"))).toBeUndefined();
     expect(parsePage(new URLSearchParams("page=-1"))).toBeUndefined();
     expect(parsePage(new URLSearchParams("page=abc"))).toBeUndefined();
@@ -1303,8 +1492,13 @@ describe("HTTP helper utilities", () => {
     expect(parseSortOrder(new URLSearchParams("order=descending"))).toBe("desc");
     expect(parseSortOrder(new URLSearchParams("order=newest"))).toBe("desc");
     expect(parseSortOrder(new URLSearchParams("order=last"))).toBe("desc");
+    expect(parseSortOrder(new URLSearchParams("order=reverse"))).toBe("desc");
     expect(parseSortOrder(new URLSearchParams("sort=ASC"))).toBe("asc");
     expect(parseSortOrder(new URLSearchParams("dir=desc"))).toBe("desc");
+    expect(parseSortOrder(new URLSearchParams("direction=asc"))).toBe("asc");
+    expect(parseSortOrder(new URLSearchParams("direction=desc"))).toBe("desc");
+    expect(parseSortOrder(new URLSearchParams("orderBy=asc"))).toBe("asc");
+    expect(parseSortOrder(new URLSearchParams("order_by=desc"))).toBe("desc");
     expect(parseSortOrder(new URLSearchParams("order=custom"), "order")).toBeUndefined();
     expect(parseSortOrder(new URLSearchParams(""))).toBeUndefined();
     expect(parseSortOrder(undefined as unknown as URLSearchParams)).toBeUndefined();
@@ -1313,6 +1507,9 @@ describe("HTTP helper utilities", () => {
 
   it("parseSearchQuery handles valid, whitespace, and custom param keys", () => {
     expect(parseSearchQuery(new URLSearchParams("q=Seraphim"))).toBe("seraphim");
+    expect(parseSearchQuery(new URLSearchParams("query=Seraphim"))).toBe("seraphim");
+    expect(parseSearchQuery(new URLSearchParams("search=Seraphim"))).toBe("seraphim");
+    expect(parseSearchQuery(new URLSearchParams("keyword=Seraphim"))).toBe("seraphim");
     expect(parseSearchQuery(new URLSearchParams("q=  Modal  "))).toBe("modal");
     expect(parseSearchQuery(new URLSearchParams("q=   "))).toBeUndefined();
     expect(parseSearchQuery(new URLSearchParams("q="))).toBeUndefined();
@@ -1328,6 +1525,8 @@ describe("HTTP helper utilities", () => {
   it("parseOffset handles valid, skip alias, page-based calculation, negative, invalid, and capped offsets", () => {
     expect(parseOffset(new URLSearchParams("offset=5"))).toBe(5);
     expect(parseOffset(new URLSearchParams("skip=3"))).toBe(3);
+    expect(parseOffset(new URLSearchParams("start=4"))).toBe(4);
+    expect(parseOffset(new URLSearchParams("from=6"))).toBe(6);
     expect(parseOffset(new URLSearchParams("offset=0"))).toBe(0);
     expect(parseOffset(new URLSearchParams("skip=0"))).toBe(0);
     expect(parseOffset(new URLSearchParams("offset=%2B4"))).toBe(4);
@@ -1545,9 +1744,40 @@ describe("GET /api/scenarios", () => {
     expect(page2Body.count).toBe(2);
     expect(page2Body.scenarios[0].id).toBe(scenarios[2].id);
   });
+
+  it("supports speed, approach, prefix-cleaned ref, count limit, and start offset", async () => {
+    const speedRes = scenariosIndex(req("/api/scenarios?speed=minutes"));
+    expect(speedRes.status).toBe(200);
+    expect((await speedRes.json()).count).toBeGreaterThan(0);
+
+    const approachRes = scenariosIndex(req("/api/scenarios?approach=adversary"));
+    expect(approachRes.status).toBe(200);
+    expect((await approachRes.json()).count).toBeGreaterThan(0);
+
+    const refPrefixRes = scenariosIndex(req("/api/scenarios?ref=src-cs26"));
+    expect(refPrefixRes.status).toBe(200);
+    expect((await refPrefixRes.json()).count).toBeGreaterThan(0);
+
+    const countRes = scenariosIndex(req("/api/scenarios?count=2"));
+    expect(countRes.status).toBe(200);
+    expect((await countRes.json()).count).toBe(2);
+
+    const startRes = scenariosIndex(req("/api/scenarios?start=1&count=2"));
+    expect(startRes.status).toBe(200);
+    expect((await startRes.json()).count).toBe(2);
+  });
 });
 
 describe("GET /api/scenarios/[id]", () => {
+  it("resolves scenarios with underscore prefixes and URL-encoding", async () => {
+    const underRes = await scenarioOne(req("/api/scenarios/scenario_h1"), idCtx("scenario_h1"));
+    expect(underRes.status).toBe(200);
+    expect((await underRes.json()).id).toBe("legacy-internal-app");
+
+    const encodedRes = await scenarioOne(req("/api/scenarios/legacy%2Dinternal%2Dapp"), idCtx("legacy%2Dinternal%2Dapp"));
+    expect(encodedRes.status).toBe(200);
+    expect((await encodedRes.json()).id).toBe("legacy-internal-app");
+  });
   it("returns each scenario with resolved source references", async () => {
     for (const sc of scenarios) {
       const res = await scenarioOne(req(`/api/scenarios/${sc.id}`), idCtx(sc.id));
@@ -1764,9 +1994,36 @@ describe("GET /api/sources", () => {
     expect(page2Body.count).toBe(3);
     expect(page2Body.sources[0].id).toBe(sources[3].id);
   });
+
+  it("supports date alias, label filter, count limit, and start offset", async () => {
+    const dateRes = sourcesIndex(req("/api/sources?date=2026"));
+    expect(dateRes.status).toBe(200);
+    expect((await dateRes.json()).count).toBeGreaterThan(0);
+
+    const labelRes = sourcesIndex(req("/api/sources?label=CrowdStrike"));
+    expect(labelRes.status).toBe(200);
+    expect((await labelRes.json()).count).toBeGreaterThan(0);
+
+    const countRes = sourcesIndex(req("/api/sources?count=2"));
+    expect(countRes.status).toBe(200);
+    expect((await countRes.json()).count).toBe(2);
+
+    const startRes = sourcesIndex(req("/api/sources?start=2&count=2"));
+    expect(startRes.status).toBe(200);
+    expect((await startRes.json()).count).toBe(2);
+  });
 });
 
 describe("GET /api/sources/[id]", () => {
+  it("resolves sources with underscore prefix and URL-encoding", async () => {
+    const underRes = await sourceOne(req("/api/sources/src_oaiAug"), idCtx("src_oaiAug"));
+    expect(underRes.status).toBe(200);
+    expect((await underRes.json()).id).toBe("oaiAug");
+
+    const encodedRes = await sourceOne(req("/api/sources/oai%41ug"), idCtx("oai%41ug"));
+    expect(encodedRes.status).toBe(200);
+    expect((await encodedRes.json()).id).toBe("oaiAug");
+  });
   it("returns each source by ID", async () => {
     for (const src of sources) {
       const res = await sourceOne(req(`/api/sources/${src.id}`), idCtx(src.id));
@@ -1855,6 +2112,18 @@ describe("GET /api/brand", () => {
     expect(badgeRes.status).toBe(200);
     const badgeBody = await badgeRes.json();
     expect(badgeBody.badge).toEqual({ key: "passive", label: "Passive recon only", note: "Public information, no probing" });
+
+    const badgePrefixRes = brandEndpoint(req("/api/brand?badge=badge-passive"));
+    expect(badgePrefixRes.status).toBe(200);
+    expect((await badgePrefixRes.json()).badge.key).toBe("passive");
+
+    const badgeExtRes = brandEndpoint(req("/api/brand?badge=passive.json"));
+    expect(badgeExtRes.status).toBe(200);
+    expect((await badgeExtRes.json()).badge.key).toBe("passive");
+
+    const encodedBadgeRes = brandEndpoint(req("/api/brand?key=badge%2Dlocal"));
+    expect(encodedBadgeRes.status).toBe(200);
+    expect((await encodedBadgeRes.json()).badge.key).toBe("local");
 
     const keyRes = brandEndpoint(req("/api/brand?key=local"));
     expect(keyRes.status).toBe(200);

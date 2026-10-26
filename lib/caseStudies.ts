@@ -217,34 +217,46 @@ export const remediation: Remediation[] = [
 export const findingById = (id: string): Finding | undefined => {
   if (!id || typeof id !== "string") return undefined;
   let target = id.trim().toLowerCase();
+  try {
+    target = decodeURIComponent(target);
+  } catch {
+    // keep raw
+  }
   if (!target) return undefined;
   target = target.replace(/\.(html|json)$/, "");
-  if (target.startsWith("fix-")) target = target.slice(4);
-  const normalized = target.replace(/-/g, "");
+  if (target.startsWith("fix-") || target.startsWith("fix_")) target = target.slice(4);
+  else if (target.startsWith("finding-") || target.startsWith("finding_")) target = target.slice(8);
+  const normalized = target.replace(/[-_]/g, "");
   const numMatch = normalized.match(/^(?:f)?0*(\d+)$/);
   const withF = numMatch ? `f${numMatch[1].padStart(2, "0")}` : normalized;
   return findings.find(
     (f) =>
       f.id.toLowerCase() === target ||
-      f.id.toLowerCase().replace(/-/g, "") === normalized ||
-      f.id.toLowerCase().replace(/-/g, "") === withF
+      f.id.toLowerCase().replace(/[-_]/g, "") === normalized ||
+      f.id.toLowerCase().replace(/[-_]/g, "") === withF
   );
 };
 
 export const remediationById = (id: string): Remediation | undefined => {
   if (!id || typeof id !== "string") return undefined;
   let target = id.trim().toLowerCase();
+  try {
+    target = decodeURIComponent(target);
+  } catch {
+    // keep raw
+  }
   if (!target) return undefined;
   target = target.replace(/\.(html|json)$/, "");
-  if (target.startsWith("fix-")) target = target.slice(4);
-  const normalized = target.replace(/-/g, "");
+  if (target.startsWith("fix-") || target.startsWith("fix_")) target = target.slice(4);
+  else if (target.startsWith("finding-") || target.startsWith("finding_")) target = target.slice(8);
+  const normalized = target.replace(/[-_]/g, "");
   const numMatch = normalized.match(/^(?:f)?0*(\d+)$/);
   const withF = numMatch ? `f${numMatch[1].padStart(2, "0")}` : normalized;
   return remediation.find(
     (r) =>
       r.id.toLowerCase() === target ||
-      r.id.toLowerCase().replace(/-/g, "") === normalized ||
-      r.id.toLowerCase().replace(/-/g, "") === withF
+      r.id.toLowerCase().replace(/[-_]/g, "") === normalized ||
+      r.id.toLowerCase().replace(/[-_]/g, "") === withF
   );
 };
 

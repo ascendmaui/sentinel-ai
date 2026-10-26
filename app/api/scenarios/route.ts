@@ -1,7 +1,7 @@
 import { json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
 import { scenarios } from "../../../lib/incidents";
 
-/** Hypothetical scenarios index as JSON. Lists conceptual threat models and controls. Supports ?id=, ?n=, ?ref=, ?source=, ?weakness=, ?target=, ?control=, ?q=, ?order=, ?offset=, ?limit=, and ?page=. */
+/** Hypothetical scenarios index as JSON. Lists conceptual threat models and controls. Supports ?id=, ?n=, ?ref=, ?source=, ?weakness=, ?target=, ?control=, ?speed=, ?approach=, ?q=, ?order=, ?offset=, ?limit=, and ?page=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -16,6 +16,8 @@ export function GET(req?: Request): Response {
       const weakness = parseSearchQuery(url.searchParams, "weakness") || parseSearchQuery(url.searchParams, "weaknessClass");
       const target = parseSearchQuery(url.searchParams, "target");
       const control = parseSearchQuery(url.searchParams, "control") || parseSearchQuery(url.searchParams, "controls");
+      const speed = parseSearchQuery(url.searchParams, "speed");
+      const approach = parseSearchQuery(url.searchParams, "approach");
       const q = parseSearchQuery(url.searchParams);
       const limit = parseLimit(url.searchParams);
       const offset = parseOffset(url.searchParams, 10000, limit);
@@ -23,9 +25,8 @@ export function GET(req?: Request): Response {
 
       if (id) {
         let cleanId = id.replace(/\.(html|json)$/, "");
-        if (cleanId.startsWith("scenario-")) cleanId = cleanId.slice(9);
-        else if (cleanId.startsWith("sc-")) cleanId = cleanId.slice(3);
-        if (cleanId.startsWith("h-")) cleanId = `h${cleanId.slice(2)}`;
+        cleanId = cleanId.replace(/^(scenario|sc)[-_]/, "");
+        if (cleanId.startsWith("h-") || cleanId.startsWith("h_")) cleanId = `h${cleanId.slice(2)}`;
         cleanId = cleanId.replace(/^h0*(\d+)$/, "h$1").replace(/^0*(\d+)$/, "$1");
         const normalized = cleanId.startsWith("h") ? cleanId : `h${cleanId}`;
         list = list.filter(
@@ -40,9 +41,8 @@ export function GET(req?: Request): Response {
 
       if (n) {
         let cleanN = n.replace(/\.(html|json)$/, "");
-        if (cleanN.startsWith("scenario-")) cleanN = cleanN.slice(9);
-        else if (cleanN.startsWith("sc-")) cleanN = cleanN.slice(3);
-        if (cleanN.startsWith("h-")) cleanN = `h${cleanN.slice(2)}`;
+        cleanN = cleanN.replace(/^(scenario|sc)[-_]/, "");
+        if (cleanN.startsWith("h-") || cleanN.startsWith("h_")) cleanN = `h${cleanN.slice(2)}`;
         cleanN = cleanN.replace(/^h0*(\d+)$/, "h$1").replace(/^0*(\d+)$/, "$1");
         const normalized = cleanN.startsWith("h") ? cleanN : `h${cleanN}`;
         list = list.filter(
@@ -54,7 +54,13 @@ export function GET(req?: Request): Response {
       }
 
       if (ref) {
-        list = list.filter((s) => s.refs.some((r) => r.toLowerCase() === ref));
+        const cleanRef = ref.replace(/^(source|src)[-_]/, "").replace(/\.(html|json)$/, "");
+        list = list.filter(
+          (s) =>
+            s.refs.some(
+              (r) => r.toLowerCase() === ref || (cleanRef && r.toLowerCase() === cleanRef)
+            )
+        );
       }
 
       if (weakness) {
@@ -67,6 +73,14 @@ export function GET(req?: Request): Response {
 
       if (control) {
         list = list.filter((s) => s.controls.some((c) => c.toLowerCase().includes(control)));
+      }
+
+      if (speed) {
+        list = list.filter((s) => s.speed.toLowerCase().includes(speed));
+      }
+
+      if (approach) {
+        list = list.filter((s) => s.approach.toLowerCase().includes(approach));
       }
 
       if (q) {

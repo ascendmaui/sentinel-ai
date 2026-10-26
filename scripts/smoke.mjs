@@ -90,6 +90,15 @@ check(ascPosts.count === posts.posts.length && ascPosts.posts[0].date <= ascPost
 const refPosts = await (await get("/api/posts?ref=oaiAug")).json();
 check(refPosts.count > 0, "GET /api/posts?ref=oaiAug (ref alias)");
 
+const datePosts = await (await get("/api/posts?date=2026-09-29")).json();
+check(datePosts.count > 0, "GET /api/posts?date=2026-09-29 filter");
+
+const minsPosts = await (await get("/api/posts?readMins=8")).json();
+check(minsPosts.count > 0 && minsPosts.posts.every(p => p.readMins === 8), "GET /api/posts?readMins=8 filter");
+
+const tierPrefixPosts = await (await get("/api/posts?tier=tier-seraphim")).json();
+check(tierPrefixPosts.count > 0, "GET /api/posts?tier=tier-seraphim prefix filter");
+
 for (const p of posts.posts) {
   const r = await get(`/api/posts/${p.slug}`);
   const b = await r.json();
@@ -160,6 +169,15 @@ check(refIncs.count > 0, "GET /api/incidents?ref=oaiAug (ref alias)");
 const vulnIncs = await (await get("/api/incidents?vuln=token-refresh")).json();
 check(vulnIncs.count > 0, "GET /api/incidents?vuln=token-refresh filter");
 
+const titleIncs = await (await get("/api/incidents?title=OpenAI")).json();
+check(titleIncs.count > 0, "GET /api/incidents?title=OpenAI filter");
+
+const cveIncs = await (await get("/api/incidents?cve=token")).json();
+check(cveIncs.count > 0, "GET /api/incidents?cve=token filter");
+
+const incEncoded = await get("/api/incidents/openai%2Dhuggingface%2D2026");
+check(incEncoded.status === 200, "GET /api/incidents/openai%2Dhuggingface%2D2026 -> 200");
+
 for (const inc of incs.incidents) {
   const r = await get(`/api/incidents/${inc.id}`);
   const b = await r.json();
@@ -192,6 +210,15 @@ const cs = await csRes.json();
 check(Array.isArray(cs.findings) && cs.count === cs.findings.length && cs.count > 0, "GET /api/case-studies shape");
 const csCrit = await (await get("/api/case-studies?severity=Critical")).json();
 check(Array.isArray(csCrit.findings) && csCrit.findings.every(f => f.severity === "Critical"), "GET /api/case-studies?severity=Critical filter");
+
+const csSevHigh = await (await get("/api/case-studies?sev=High")).json();
+check(Array.isArray(csSevHigh.findings) && csSevHigh.findings.every(f => f.severity === "High"), "GET /api/case-studies?sev=High filter");
+
+const csFindingPrefix = await (await get("/api/case-studies?id=finding-01")).json();
+check(csFindingPrefix.count === 1 && csFindingPrefix.findings[0].id === "F-01", "GET /api/case-studies?id=finding-01 filter");
+
+const csEncoded = await get("/api/case-studies/f%2D01");
+check(csEncoded.status === 200 && (await csEncoded.json()).id === "F-01", "GET /api/case-studies/f%2D01 -> 200");
 
 const limitedCs = await (await get("/api/case-studies?limit=2")).json();
 check(limitedCs.count === 2 && limitedCs.findings.length === 2, "GET /api/case-studies?limit=2");
@@ -262,6 +289,12 @@ check(cadTiers.count === 1 && cadTiers.tiers[0].id === "cherubim", "GET /api/tie
 const tiersById = await (await get("/api/tiers?id=seraphim")).json();
 check(tiersById.count === 1 && tiersById.tiers[0].id === "seraphim", "GET /api/tiers?id=seraphim filter");
 
+const tierAlias = await (await get("/api/tiers?tier=seraphim")).json();
+check(tierAlias.count === 1 && tierAlias.tiers[0].id === "seraphim", "GET /api/tiers?tier=seraphim filter");
+
+const tierNameFilter = await (await get("/api/tiers?name=Seraphim")).json();
+check(tierNameFilter.count === 1 && tierNameFilter.tiers[0].id === "seraphim", "GET /api/tiers?name=Seraphim filter");
+
 const tierOne = await get("/api/tiers/seraphim");
 check(tierOne.status === 200 && (await tierOne.json()).name === "Seraphim", "GET /api/tiers/seraphim");
 const tierUpper = await get("/api/tiers/SERAPHIM");
@@ -272,6 +305,10 @@ const tierPrefix = await get("/api/tiers/tier-seraphim");
 check(tierPrefix.status === 200 && (await tierPrefix.json()).id === "seraphim", "GET /api/tiers/tier-seraphim (tier- prefix)");
 const tierRankPlus = await get("/api/tiers/+1");
 check(tierRankPlus.status === 200 && (await tierRankPlus.json()).id === "seraphim", "GET /api/tiers/+1 (+rank)");
+const t1Tier = await get("/api/tiers/t1");
+check(t1Tier.status === 200 && (await t1Tier.json()).id === "seraphim", "GET /api/tiers/t1 -> 200");
+const tierEncoded = await get("/api/tiers/tier%2Dseraphim");
+check(tierEncoded.status === 200 && (await tierEncoded.json()).id === "seraphim", "GET /api/tiers/tier%2Dseraphim -> 200");
 
 const tiersPage = await (await get("/api/tiers?page=2&limit=2")).json();
 check(tiersPage.count === 2, "GET /api/tiers?page=2&limit=2 (page pagination)");
@@ -325,6 +362,15 @@ check(scPrefix.status === 200 && (await scPrefix.json()).id === "legacy-internal
 const scHyphen = await get("/api/scenarios/h-1");
 check(scHyphen.status === 200 && (await scHyphen.json()).id === "legacy-internal-app", "GET /api/scenarios/h-1 (hyphenated code)");
 
+const scSpeed = await (await get("/api/scenarios?speed=minutes")).json();
+check(scSpeed.count > 0, "GET /api/scenarios?speed=minutes filter");
+
+const scApproach = await (await get("/api/scenarios?approach=adversary")).json();
+check(scApproach.count > 0, "GET /api/scenarios?approach=adversary filter");
+
+const scEncoded = await get("/api/scenarios/legacy%2Dinternal%2Dapp");
+check(scEncoded.status === 200 && (await scEncoded.json()).id === "legacy-internal-app", "GET /api/scenarios/legacy%2Dinternal%2Dapp -> 200");
+
 const scSrc = await (await get("/api/scenarios?source=cs26")).json();
 check(scSrc.count > 0, "GET /api/scenarios?source=cs26 (source alias for ref)");
 const scCtrl = await (await get("/api/scenarios?control=proxy")).json();
@@ -353,6 +399,12 @@ const srcRes = await srcHttpRes.json();
 check(Array.isArray(srcRes.sources) && srcRes.count > 0, "GET /api/sources shape");
 const srcFiltered = await (await get("/api/sources?year=2026")).json();
 check(srcFiltered.count > 0 && srcFiltered.sources.every(s => s.date.includes("2026")), "GET /api/sources?year=2026 filter");
+
+const dateSrc = await (await get("/api/sources?date=2026")).json();
+check(dateSrc.count > 0, "GET /api/sources?date=2026 filter");
+
+const labelSrc = await (await get("/api/sources?label=CrowdStrike")).json();
+check(labelSrc.count > 0, "GET /api/sources?label=CrowdStrike filter");
 
 const primSrc = await (await get("/api/sources?type=primary")).json();
 check(primSrc.count > 0, "GET /api/sources?type=primary filter");
@@ -396,6 +448,15 @@ checkSecurityHeaders(brandRes, "GET /api/brand");
 
 const brandBadge = await (await get("/api/brand?badge=passive")).json();
 check(brandBadge.badge?.key === "passive", "GET /api/brand?badge=passive returns badge");
+
+const brandBadgePrefix = await (await get("/api/brand?badge=badge-passive")).json();
+check(brandBadgePrefix.badge?.key === "passive", "GET /api/brand?badge=badge-passive returns badge");
+
+const brandBadgeExt = await (await get("/api/brand?badge=passive.json")).json();
+check(brandBadgeExt.badge?.key === "passive", "GET /api/brand?badge=passive.json returns badge");
+
+const brandKeyEncoded = await (await get("/api/brand?key=badge%2Dlocal")).json();
+check(brandKeyEncoded.badge?.key === "local", "GET /api/brand?key=badge%2Dlocal returns badge");
 
 // 9. Method Not Allowed on dynamic API endpoints (Next.js dynamic route handlers return 405 for unexported methods)
 const endpoints405 = [

@@ -1,7 +1,7 @@
 import { json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
 import { findings, remediation, severityCounts } from "../../../lib/caseStudies";
 
-/** Remediation findings and case studies index as JSON. Supports optional ?id=, ?n=, ?severity=, ?status=, ?q=, ?order=, ?offset=, ?limit=, and ?page= filters. */
+/** Remediation findings and case studies index as JSON. Supports optional ?id=, ?n=, ?severity=, ?sev=, ?status=, ?q=, ?order=, ?offset=, ?limit=, and ?page= filters. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -10,7 +10,7 @@ export function GET(req?: Request): Response {
     try {
       const url = new URL(req.url, "http://localhost");
       const id = parseSearchQuery(url.searchParams, "id") || parseSearchQuery(url.searchParams, "n");
-      const severity = parseSearchQuery(url.searchParams, "severity");
+      const severity = parseSearchQuery(url.searchParams, "severity") || parseSearchQuery(url.searchParams, "sev");
       const status = parseSearchQuery(url.searchParams, "status");
       const q = parseSearchQuery(url.searchParams);
       const limit = parseLimit(url.searchParams);
@@ -19,15 +19,16 @@ export function GET(req?: Request): Response {
 
       if (id) {
         let cleanId = id.replace(/\.(html|json)$/, "");
-        if (cleanId.startsWith("fix-")) cleanId = cleanId.slice(4);
-        const normalized = cleanId.replace(/-/g, "");
+        if (cleanId.startsWith("fix-") || cleanId.startsWith("fix_")) cleanId = cleanId.slice(4);
+        else if (cleanId.startsWith("finding-") || cleanId.startsWith("finding_")) cleanId = cleanId.slice(8);
+        const normalized = cleanId.replace(/[-_]/g, "");
         const numMatch = normalized.match(/^(?:f)?0*(\d+)$/);
         const withF = numMatch ? `f${numMatch[1].padStart(2, "0")}` : normalized;
         list = list.filter(
           (f) =>
             f.id.toLowerCase() === cleanId ||
-            f.id.toLowerCase().replace(/-/g, "") === normalized ||
-            f.id.toLowerCase().replace(/-/g, "") === withF
+            f.id.toLowerCase().replace(/[-_]/g, "") === normalized ||
+            f.id.toLowerCase().replace(/[-_]/g, "") === withF
         );
       }
       if (severity) {

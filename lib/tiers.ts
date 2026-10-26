@@ -125,9 +125,16 @@ export const tiers: Tier[] = [
 export const tierById = (id: string): Tier | undefined => {
   if (!id || typeof id !== "string") return undefined;
   let target = id.trim().toLowerCase();
+  try {
+    target = decodeURIComponent(target);
+  } catch {
+    // keep raw
+  }
   if (!target) return undefined;
   target = target.replace(/\.(html|json)$/, "");
-  if (target.startsWith("tier-")) target = target.slice(5);
+  if (target.startsWith("tier-") || target.startsWith("tier_")) target = target.slice(5);
+  else if (target.startsWith("tier")) target = target.slice(4);
+  else if (target.startsWith("t") && /^\d+$/.test(target.slice(1))) target = target.slice(1);
   if (target.startsWith("+")) target = target.slice(1);
   return tiers.find((t) => t.id.toLowerCase() === target || String(t.rank) === target);
 };

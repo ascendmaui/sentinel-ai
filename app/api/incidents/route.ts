@@ -1,7 +1,7 @@
 import { json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
 import { incidents, scenarios, unverified, INCIDENTS_DISCLAIMER } from "../../../lib/incidents";
 
-/** Incident case studies index as JSON. Lists incidents, summaries, counts, and disclaimer. Supports ?id=, ?n=, ?source=, ?ref=, ?year=, ?standing=, ?kicker=, ?vuln=, ?impact=, ?q=, ?order=, ?offset=, ?limit=, and ?page=. */
+/** Incident case studies index as JSON. Lists incidents, summaries, counts, and disclaimer. Supports ?id=, ?n=, ?source=, ?ref=, ?year=, ?date=, ?title=, ?standing=, ?kicker=, ?vuln=, ?cve=, ?impact=, ?q=, ?order=, ?offset=, ?limit=, and ?page=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -14,10 +14,14 @@ export function GET(req?: Request): Response {
       const id = parseSearchQuery(url.searchParams, "id");
       const n = parseSearchQuery(url.searchParams, "n");
       const source = parseSearchQuery(url.searchParams, "source") || parseSearchQuery(url.searchParams, "ref");
-      const year = parseSearchQuery(url.searchParams, "year");
+      const year = parseSearchQuery(url.searchParams, "year") || parseSearchQuery(url.searchParams, "date");
+      const title = parseSearchQuery(url.searchParams, "title");
       const standing = parseSearchQuery(url.searchParams, "standing");
       const kicker = parseSearchQuery(url.searchParams, "kicker");
-      const vuln = parseSearchQuery(url.searchParams, "vuln") || parseSearchQuery(url.searchParams, "vulnerability");
+      const vuln =
+        parseSearchQuery(url.searchParams, "vuln") ||
+        parseSearchQuery(url.searchParams, "vulnerability") ||
+        parseSearchQuery(url.searchParams, "cve");
       const impact = parseSearchQuery(url.searchParams, "impact");
       const limit = parseLimit(url.searchParams);
       const offset = parseOffset(url.searchParams, 10000, limit);
@@ -25,9 +29,7 @@ export function GET(req?: Request): Response {
 
       if (id) {
         let cleanId = id.replace(/\.(html|json)$/, "");
-        if (cleanId.startsWith("incident-")) cleanId = cleanId.slice(9);
-        else if (cleanId.startsWith("case-")) cleanId = cleanId.slice(5);
-        else if (cleanId.startsWith("inc-")) cleanId = cleanId.slice(4);
+        cleanId = cleanId.replace(/^(incident|case|inc)[-_]/, "");
         list = list.filter(
           (i) =>
             i.id.toLowerCase() === id ||
@@ -41,9 +43,7 @@ export function GET(req?: Request): Response {
 
       if (n) {
         let cleanN = n.replace(/\.(html|json)$/, "");
-        if (cleanN.startsWith("incident-") || cleanN.startsWith("case-") || cleanN.startsWith("inc-")) {
-          cleanN = cleanN.replace(/^(incident|case|inc)-/, "");
-        }
+        cleanN = cleanN.replace(/^(incident|case|inc)[-_]/, "");
         list = list.filter(
           (i) =>
             i.n.toLowerCase() === n ||
@@ -54,11 +54,21 @@ export function GET(req?: Request): Response {
       }
 
       if (source) {
-        list = list.filter((i) => i.sources.some((s) => s.toLowerCase() === source));
+        const cleanSource = source.replace(/^(source|src)[-_]/, "").replace(/\.(html|json)$/, "");
+        list = list.filter(
+          (i) =>
+            i.sources.some(
+              (s) => s.toLowerCase() === source || (cleanSource && s.toLowerCase() === cleanSource)
+            )
+        );
       }
 
       if (year) {
         list = list.filter((i) => i.date.toLowerCase().includes(year));
+      }
+
+      if (title) {
+        list = list.filter((i) => i.title.toLowerCase().includes(title));
       }
 
       if (standing) {

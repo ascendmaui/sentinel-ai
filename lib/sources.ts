@@ -26,11 +26,16 @@ export const sources: Source[] = Object.values(S);
 
 export function sourceById(id: string): Source | undefined {
   if (!id || typeof id !== "string") return undefined;
-  const trimmed = id.trim();
+  let trimmed = id.trim();
+  try {
+    trimmed = decodeURIComponent(trimmed);
+  } catch {
+    // keep raw
+  }
   if (!trimmed) return undefined;
   if (Object.prototype.hasOwnProperty.call(S, trimmed)) return S[trimmed];
   let target = trimmed.toLowerCase().replace(/\.(html|json)$/, "");
-  if (target.startsWith("source-")) target = target.slice(7);
-  else if (target.startsWith("src-")) target = target.slice(4);
+  if (target.startsWith("source-") || target.startsWith("source_")) target = target.slice(7);
+  else if (target.startsWith("src-") || target.startsWith("src_")) target = target.slice(4);
   return sources.find((s) => s.id.toLowerCase() === target);
 }

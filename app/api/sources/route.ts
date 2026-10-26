@@ -1,7 +1,7 @@
 import { json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
 import { sources } from "../../../lib/sources";
 
-/** Authoritative sources index as JSON. Lists verified research references. Supports ?id=, ?q=, ?year=, ?note=, ?type=, ?order=, ?offset=, ?limit=, and ?page=. */
+/** Authoritative sources index as JSON. Lists verified research references. Supports ?id=, ?q=, ?year=, ?date=, ?label=, ?note=, ?type=, ?order=, ?offset=, ?limit=, and ?page=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -12,7 +12,8 @@ export function GET(req?: Request): Response {
       const url = new URL(req.url, "http://localhost");
       const id = parseSearchQuery(url.searchParams, "id");
       const q = parseSearchQuery(url.searchParams);
-      const year = parseSearchQuery(url.searchParams, "year");
+      const year = parseSearchQuery(url.searchParams, "year") || parseSearchQuery(url.searchParams, "date");
+      const label = parseSearchQuery(url.searchParams, "label");
       const note = parseSearchQuery(url.searchParams, "note") || parseSearchQuery(url.searchParams, "type");
       const limit = parseLimit(url.searchParams);
       const offset = parseOffset(url.searchParams, 10000, limit);
@@ -20,13 +21,15 @@ export function GET(req?: Request): Response {
 
       if (id) {
         let cleanId = id.replace(/\.(html|json)$/, "");
-        if (cleanId.startsWith("source-")) cleanId = cleanId.slice(7);
-        else if (cleanId.startsWith("src-")) cleanId = cleanId.slice(4);
+        cleanId = cleanId.replace(/^(source|src)[-_]/, "");
         list = list.filter((s) => s.id.toLowerCase() === id || s.id.toLowerCase() === cleanId);
       }
 
       if (year) {
         list = list.filter((s) => s.date.toLowerCase().includes(year));
+      }
+      if (label) {
+        list = list.filter((s) => s.label.toLowerCase().includes(label));
       }
       if (note) {
         list = list.filter((s) => s.note && s.note.toLowerCase().includes(note));
