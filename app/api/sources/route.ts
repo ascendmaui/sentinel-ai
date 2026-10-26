@@ -1,7 +1,7 @@
-import { json, parseLimit, parseOffset, parseSearchQuery, PUBLIC_CACHE } from "../../../lib/http";
+import { json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
 import { sources } from "../../../lib/sources";
 
-/** Authoritative sources index as JSON. Lists verified research references. Supports ?id=, ?q=, ?year=, ?note=, ?type=, ?offset=, and ?limit=. */
+/** Authoritative sources index as JSON. Lists verified research references. Supports ?id=, ?q=, ?year=, ?note=, ?type=, ?order=, ?offset=, ?limit=, and ?page=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -14,11 +14,12 @@ export function GET(req?: Request): Response {
       const q = parseSearchQuery(url.searchParams);
       const year = parseSearchQuery(url.searchParams, "year");
       const note = parseSearchQuery(url.searchParams, "note") || parseSearchQuery(url.searchParams, "type");
-      const offset = parseOffset(url.searchParams);
       const limit = parseLimit(url.searchParams);
+      const offset = parseOffset(url.searchParams, 10000, limit);
+      const order = parseSortOrder(url.searchParams);
 
       if (id) {
-        let cleanId = id;
+        let cleanId = id.replace(/\.(html|json)$/, "");
         if (cleanId.startsWith("source-")) cleanId = cleanId.slice(7);
         else if (cleanId.startsWith("src-")) cleanId = cleanId.slice(4);
         list = list.filter((s) => s.id.toLowerCase() === id || s.id.toLowerCase() === cleanId);
@@ -39,6 +40,10 @@ export function GET(req?: Request): Response {
             s.date.toLowerCase().includes(q) ||
             (s.note && s.note.toLowerCase().includes(q))
         );
+      }
+
+      if (order === "desc") {
+        list = [...list].reverse();
       }
 
       if (offset && offset > 0) {

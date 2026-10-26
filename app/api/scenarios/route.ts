@@ -1,7 +1,7 @@
-import { json, parseLimit, parseOffset, parseSearchQuery, PUBLIC_CACHE } from "../../../lib/http";
+import { json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
 import { scenarios } from "../../../lib/incidents";
 
-/** Hypothetical scenarios index as JSON. Lists conceptual threat models and controls. Supports ?id=, ?n=, ?ref=, ?weakness=, ?target=, ?q=, ?offset=, and ?limit=. */
+/** Hypothetical scenarios index as JSON. Lists conceptual threat models and controls. Supports ?id=, ?n=, ?ref=, ?source=, ?weakness=, ?target=, ?control=, ?q=, ?order=, ?offset=, ?limit=, and ?page=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -12,18 +12,21 @@ export function GET(req?: Request): Response {
       const url = new URL(req.url, "http://localhost");
       const id = parseSearchQuery(url.searchParams, "id");
       const n = parseSearchQuery(url.searchParams, "n");
-      const ref = parseSearchQuery(url.searchParams, "ref");
+      const ref = parseSearchQuery(url.searchParams, "ref") || parseSearchQuery(url.searchParams, "source");
       const weakness = parseSearchQuery(url.searchParams, "weakness") || parseSearchQuery(url.searchParams, "weaknessClass");
       const target = parseSearchQuery(url.searchParams, "target");
+      const control = parseSearchQuery(url.searchParams, "control") || parseSearchQuery(url.searchParams, "controls");
       const q = parseSearchQuery(url.searchParams);
-      const offset = parseOffset(url.searchParams);
       const limit = parseLimit(url.searchParams);
+      const offset = parseOffset(url.searchParams, 10000, limit);
+      const order = parseSortOrder(url.searchParams);
 
       if (id) {
-        let cleanId = id;
+        let cleanId = id.replace(/\.(html|json)$/, "");
         if (cleanId.startsWith("scenario-")) cleanId = cleanId.slice(9);
         else if (cleanId.startsWith("sc-")) cleanId = cleanId.slice(3);
         if (cleanId.startsWith("h-")) cleanId = `h${cleanId.slice(2)}`;
+        cleanId = cleanId.replace(/^h0*(\d+)$/, "h$1").replace(/^0*(\d+)$/, "$1");
         const normalized = cleanId.startsWith("h") ? cleanId : `h${cleanId}`;
         list = list.filter(
           (s) =>
@@ -36,10 +39,11 @@ export function GET(req?: Request): Response {
       }
 
       if (n) {
-        let cleanN = n;
+        let cleanN = n.replace(/\.(html|json)$/, "");
         if (cleanN.startsWith("scenario-")) cleanN = cleanN.slice(9);
         else if (cleanN.startsWith("sc-")) cleanN = cleanN.slice(3);
         if (cleanN.startsWith("h-")) cleanN = `h${cleanN.slice(2)}`;
+        cleanN = cleanN.replace(/^h0*(\d+)$/, "h$1").replace(/^0*(\d+)$/, "$1");
         const normalized = cleanN.startsWith("h") ? cleanN : `h${cleanN}`;
         list = list.filter(
           (s) =>
@@ -61,6 +65,10 @@ export function GET(req?: Request): Response {
         list = list.filter((s) => s.target.toLowerCase().includes(target));
       }
 
+      if (control) {
+        list = list.filter((s) => s.controls.some((c) => c.toLowerCase().includes(control)));
+      }
+
       if (q) {
         list = list.filter(
           (s) =>
@@ -75,6 +83,10 @@ export function GET(req?: Request): Response {
             s.seraphim.some((sp) => sp.toLowerCase().includes(q)) ||
             s.refs.some((r) => r.toLowerCase().includes(q))
         );
+      }
+
+      if (order === "desc") {
+        list = [...list].reverse();
       }
 
       if (offset && offset > 0) {

@@ -580,6 +580,7 @@ export const incidentById = (id: string): Incident | undefined => {
   if (!id || typeof id !== "string") return undefined;
   let target = id.trim().toLowerCase();
   if (!target) return undefined;
+  target = target.replace(/\.(html|json)$/, "");
   if (target.startsWith("incident-")) target = target.slice(9);
   else if (target.startsWith("case-")) target = target.slice(5);
   else if (target.startsWith("inc-")) target = target.slice(4);
@@ -597,6 +598,7 @@ export const scenarioById = (id: string): Scenario | undefined => {
   if (!id || typeof id !== "string") return undefined;
   let target = id.trim().toLowerCase();
   if (!target) return undefined;
+  target = target.replace(/\.(html|json)$/, "");
   if (target.startsWith("scenario-")) target = target.slice(9);
   else if (target.startsWith("sc-")) target = target.slice(3);
   if (target.startsWith("h-")) target = `h${target.slice(2)}`;

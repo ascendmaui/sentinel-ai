@@ -28,19 +28,19 @@ Everything on the site describes the service as it is today: passive public reco
 All endpoints export HTTP/REST JSON contracts with security headers (`X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, `Permissions-Policy`, `X-DNS-Prefetch-Control: off`), ISO timestamps, and short-lived public caching. Index endpoints support query parameter filtering:
 
 - `GET /api/health`: Service liveness, current environment, timestamp, and commit SHA (zero secrets exposed).
-- `GET /api/posts`: Blog post index and metadata (newest first). Supports `?slug=`, `?id=`, `?tier=`, `?source=`, `?year=`, `?q=`, `?offset=`, `?limit=`, and `?take=`.
-- `GET /api/posts/[slug]`: Post detail with resolved primary sources. Supports flexible slashes and case-insensitivity.
-- `GET /api/incidents`: Documented incident list with source counts, unverified claims, and disclaimer. Supports `?id=`, `?n=`, `?source=`, `?year=`, `?standing=`, `?kicker=`, `?q=`, `?offset=`, `?limit=`, and `?take=`.
-- `GET /api/incidents/[id]`: Incident breakdown with timeline and verified references. Supports lookup by ID, incident number (`01`, `1`), or prefix (`case-01`, `incident-01`, `inc-1`).
-- `GET /api/scenarios`: Conceptual threat scenarios with speed and control comparisons. Supports `?id=`, `?n=`, `?ref=`, `?weakness=`, `?target=`, `?q=`, `?offset=`, `?limit=`, and `?take=`.
-- `GET /api/scenarios/[id]`: Scenario details with defender controls and related sources. Supports lookup by ID, scenario number (`H1`, `1`), or prefix (`scenario-h1`, `sc-1`, `h-1`).
-- `GET /api/case-studies`: Remediation findings and severity distributions. Supports `?id=`, `?n=`, `?severity=`, `?status=`, `?q=`, `?offset=`, `?limit=`, and `?take=`.
-- `GET /api/case-studies/[id]`: Finding details with before/after fixes and remediation verification notes. Supports lookup by ID, hyphenless ID (`f01`), or `fix-` prefix (`fix-f-01`).
-- `GET /api/tiers`: Service tier matrix, comparison details, and engagement terms. Supports `?id=`, `?cadence=`, `?positioning=`, `?rank=`, `?q=`, `?offset=`, `?limit=`, and `?take=`.
-- `GET /api/tiers/[id]`: Single tier deliverables, target audience, and exclusions. Supports lookup by ID, rank number (`1`), or prefix (`tier-seraphim`, `tier-1`, `+1`).
-- `GET /api/sources`: Authoritative primary and secondary sources registry. Supports `?id=`, `?q=`, `?year=`, `?note=`, `?type=`, `?offset=`, `?limit=`, and `?take=`.
-- `GET /api/sources/[id]`: Single source record with URL and credibility note. Supports lookup by ID or prefix (`src-oaiAug`, `source-oaiAug`).
-- `GET /api/brand`: Brand identity metadata, contact mailto, trust badges, and theme configuration.
+- `GET /api/posts`: Blog post index and metadata (newest first by default). Supports `?slug=`, `?id=`, `?tier=`, `?source=`, `?ref=`, `?year=`, `?q=`, `?order=`, `?sort=`, `?offset=`, `?limit=`, `?take=`, and `?page=`.
+- `GET /api/posts/[slug]`: Post detail with resolved primary sources. Supports flexible slashes, case-insensitivity, and `.json`/`.html` suffixes.
+- `GET /api/incidents`: Documented incident list with source counts, unverified claims, and disclaimer. Supports `?id=`, `?n=`, `?source=`, `?ref=`, `?year=`, `?standing=`, `?kicker=`, `?vuln=`, `?impact=`, `?q=`, `?order=`, `?sort=`, `?offset=`, `?limit=`, `?take=`, and `?page=`.
+- `GET /api/incidents/[id]`: Incident breakdown with timeline and verified references. Supports lookup by ID, incident number (`01`, `1`, `001`), prefix (`case-01`, `incident-01`, `inc-1`), and `.json`/`.html` suffixes.
+- `GET /api/scenarios`: Conceptual threat scenarios with speed and control comparisons. Supports `?id=`, `?n=`, `?ref=`, `?source=`, `?weakness=`, `?target=`, `?control=`, `?q=`, `?order=`, `?sort=`, `?offset=`, `?limit=`, `?take=`, and `?page=`.
+- `GET /api/scenarios/[id]`: Scenario details with defender controls and related sources. Supports lookup by ID, scenario number (`H1`, `1`, `h01`), prefix (`scenario-h1`, `sc-1`, `h-1`), and `.json`/`.html` suffixes.
+- `GET /api/case-studies`: Remediation findings and severity distributions. Supports `?id=`, `?n=`, `?severity=`, `?status=`, `?q=`, `?order=`, `?sort=`, `?offset=`, `?limit=`, `?take=`, and `?page=`.
+- `GET /api/case-studies/[id]`: Finding details with before/after fixes and remediation verification notes. Supports lookup by ID, single-digit ID (`f-1`, `f1`, `1`, `01`), hyphenless ID (`f01`), `fix-` prefix (`fix-f-01`, `fix-f-1`, `fix-1`), and `.json`/`.html` suffixes.
+- `GET /api/tiers`: Service tier matrix, comparison details, and engagement terms. Supports `?id=`, `?cadence=`, `?positioning=`, `?rank=`, `?q=`, `?order=`, `?sort=`, `?offset=`, `?limit=`, `?take=`, and `?page=`.
+- `GET /api/tiers/[id]`: Single tier deliverables, target audience, and exclusions. Supports lookup by ID, rank number (`1`), prefix (`tier-seraphim`, `tier-1`, `+1`), and `.json`/`.html` suffixes.
+- `GET /api/sources`: Authoritative primary and secondary sources registry. Supports `?id=`, `?q=`, `?year=`, `?note=`, `?type=`, `?order=`, `?sort=`, `?offset=`, `?limit=`, `?take=`, and `?page=`.
+- `GET /api/sources/[id]`: Single source record with URL and credibility note. Supports lookup by ID, prefix (`src-oaiAug`, `source-oaiAug`), and `.json`/`.html` suffixes.
+- `GET /api/brand`: Brand identity metadata, contact mailto, trust badges, and theme configuration. Supports `?badge=` or `?key=` query filter.
 
 ## Metadata & Discovery
 
@@ -50,7 +50,7 @@ All endpoints export HTTP/REST JSON contracts with security headers (`X-Content-
 
 ## Verification & Testing
 
-- `npm test`: Run 333 unit, component, page, content integrity, route contract, and API integration tests via Vitest across 5 test suites.
+- `npm test`: Run 341 unit, component, page, content integrity, route contract, and API integration tests via Vitest across 5 test suites.
 - `npm run test:contract`: Run API route contract discovery and security header verification tests.
 - `npm run test:integration`: Run API endpoint integration tests.
 - `npm run test:components`: Run UI component tests (icons, emblems, logo mark, trust badges, nav, footer).

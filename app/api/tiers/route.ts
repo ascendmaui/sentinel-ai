@@ -1,7 +1,7 @@
-import { json, parseLimit, parseOffset, parseSearchQuery, PUBLIC_CACHE } from "../../../lib/http";
+import { json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
 import { tiers, tierHref, matrix, helper, ENGAGEMENT_TERMS } from "../../../lib/tiers";
 
-/** Service tiers index as JSON: all four engagement tiers and comparison matrix. Supports ?id=, ?cadence=, ?positioning=, ?rank=, ?q=, ?offset=, and ?limit=. */
+/** Service tiers index as JSON: all four engagement tiers and comparison matrix. Supports ?id=, ?cadence=, ?positioning=, ?rank=, ?q=, ?order=, ?offset=, ?limit=, and ?page=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -16,11 +16,12 @@ export function GET(req?: Request): Response {
       const positioning = parseSearchQuery(url.searchParams, "positioning");
       const rankParam = url.searchParams.get("rank")?.trim();
       const rank = rankParam && /^\+?\d+$/.test(rankParam) ? Number(rankParam) : undefined;
-      const offset = parseOffset(url.searchParams);
       const limit = parseLimit(url.searchParams);
+      const offset = parseOffset(url.searchParams, 10000, limit);
+      const order = parseSortOrder(url.searchParams);
 
       if (id) {
-        let cleanId = id;
+        let cleanId = id.replace(/\.(html|json)$/, "");
         if (cleanId.startsWith("tier-")) cleanId = cleanId.slice(5);
         if (cleanId.startsWith("+")) cleanId = cleanId.slice(1);
         list = list.filter(
@@ -57,6 +58,10 @@ export function GET(req?: Request): Response {
             t.included.some((item) => item.toLowerCase().includes(q)) ||
             t.notIncluded.some((item) => item.toLowerCase().includes(q))
         );
+      }
+
+      if (order === "desc") {
+        list = [...list].reverse();
       }
 
       if (offset && offset > 0) {

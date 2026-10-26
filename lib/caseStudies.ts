@@ -218,11 +218,11 @@ export const findingById = (id: string): Finding | undefined => {
   if (!id || typeof id !== "string") return undefined;
   let target = id.trim().toLowerCase();
   if (!target) return undefined;
+  target = target.replace(/\.(html|json)$/, "");
   if (target.startsWith("fix-")) target = target.slice(4);
   const normalized = target.replace(/-/g, "");
-  const withF = normalized.startsWith("f")
-    ? normalized
-    : `f${normalized.length === 1 ? `0${normalized}` : normalized}`;
+  const numMatch = normalized.match(/^(?:f)?0*(\d+)$/);
+  const withF = numMatch ? `f${numMatch[1].padStart(2, "0")}` : normalized;
   return findings.find(
     (f) =>
       f.id.toLowerCase() === target ||
@@ -235,11 +235,11 @@ export const remediationById = (id: string): Remediation | undefined => {
   if (!id || typeof id !== "string") return undefined;
   let target = id.trim().toLowerCase();
   if (!target) return undefined;
+  target = target.replace(/\.(html|json)$/, "");
   if (target.startsWith("fix-")) target = target.slice(4);
   const normalized = target.replace(/-/g, "");
-  const withF = normalized.startsWith("f")
-    ? normalized
-    : `f${normalized.length === 1 ? `0${normalized}` : normalized}`;
+  const numMatch = normalized.match(/^(?:f)?0*(\d+)$/);
+  const withF = numMatch ? `f${numMatch[1].padStart(2, "0")}` : normalized;
   return remediation.find(
     (r) =>
       r.id.toLowerCase() === target ||

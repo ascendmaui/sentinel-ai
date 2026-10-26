@@ -81,6 +81,15 @@ check(offsetPosts.count === 2 && offsetPosts.posts.length === 2 && offsetPosts.t
 const badLimitPosts = await (await get("/api/posts?limit=0")).json();
 check(badLimitPosts.count === posts.posts.length, "GET /api/posts?limit=0 ignores invalid limit");
 
+const pagePosts = await (await get("/api/posts?page=2&limit=2")).json();
+check(pagePosts.count === 2 && pagePosts.posts.length === 2, "GET /api/posts?page=2&limit=2 (page pagination)");
+
+const ascPosts = await (await get("/api/posts?order=asc")).json();
+check(ascPosts.count === posts.posts.length && ascPosts.posts[0].date <= ascPosts.posts[ascPosts.posts.length - 1].date, "GET /api/posts?order=asc");
+
+const refPosts = await (await get("/api/posts?ref=oaiAug")).json();
+check(refPosts.count > 0, "GET /api/posts?ref=oaiAug (ref alias)");
+
 for (const p of posts.posts) {
   const r = await get(`/api/posts/${p.slug}`);
   const b = await r.json();
@@ -88,6 +97,8 @@ for (const p of posts.posts) {
 }
 const upperPost = await get(`/api/posts/${posts.posts[0].slug.toUpperCase()}`);
 check(upperPost.status === 200, `GET /api/posts/${posts.posts[0].slug.toUpperCase()} (case-insensitive)`);
+const jsonPost = await get(`/api/posts/${posts.posts[0].slug}.json`);
+check(jsonPost.status === 200, `GET /api/posts/${posts.posts[0].slug}.json -> 200`);
 const missingPost = await get("/api/posts/does-not-exist");
 check(missingPost.status === 404 && (await missingPost.json()).error === "not_found", "unknown post -> JSON 404");
 check(missingPost.headers.get("cache-control") === "no-store", "404 unknown post cache-control is no-store");
@@ -140,6 +151,15 @@ check(nIncFilter.count === 1 && nIncFilter.incidents[0].id === "openai-huggingfa
 const qIncsStatus = await (await get("/api/incidents?q=verified")).json();
 check(qIncsStatus.count > 0, "GET /api/incidents?q=verified statusLabel search");
 
+const pageIncs = await (await get("/api/incidents?page=2&limit=2")).json();
+check(pageIncs.count === 2, "GET /api/incidents?page=2&limit=2 (page pagination)");
+
+const refIncs = await (await get("/api/incidents?ref=oaiAug")).json();
+check(refIncs.count > 0, "GET /api/incidents?ref=oaiAug (ref alias)");
+
+const vulnIncs = await (await get("/api/incidents?vuln=token-refresh")).json();
+check(vulnIncs.count > 0, "GET /api/incidents?vuln=token-refresh filter");
+
 for (const inc of incs.incidents) {
   const r = await get(`/api/incidents/${inc.id}`);
   const b = await r.json();
@@ -155,6 +175,8 @@ const casePrefixInc = await get("/api/incidents/case-01");
 check(casePrefixInc.status === 200 && (await casePrefixInc.json()).id === "openai-huggingface-2026", "GET /api/incidents/case-01 (case- prefix)");
 const incPrefixInc = await get("/api/incidents/inc-1");
 check(incPrefixInc.status === 200 && (await incPrefixInc.json()).id === "openai-huggingface-2026", "GET /api/incidents/inc-1 (inc- prefix)");
+const jsonInc = await get(`/api/incidents/${incs.incidents[0].id}.json`);
+check(jsonInc.status === 200 && (await jsonInc.json()).id === incs.incidents[0].id, "GET /api/incidents/[id].json -> 200");
 const missingInc = await get("/api/incidents/does-not-exist");
 check(missingInc.status === 404 && (await missingInc.json()).error === "not_found", "unknown incident -> JSON 404");
 check(missingInc.headers.get("cache-control") === "no-store", "404 unknown incident cache-control is no-store");
@@ -195,6 +217,17 @@ const csHyphenless = await get("/api/case-studies/f01");
 check(csHyphenless.status === 200 && (await csHyphenless.json()).id === "F-01", "GET /api/case-studies/f01 (hyphenless)");
 const csFixPrefix = await get("/api/case-studies/fix-f-01");
 check(csFixPrefix.status === 200 && (await csFixPrefix.json()).id === "F-01", "GET /api/case-studies/fix-f-01 (fix- prefix)");
+
+const csF1 = await get("/api/case-studies/f-1");
+check(csF1.status === 200 && (await csF1.json()).id === "F-01", "GET /api/case-studies/f-1 (single digit with hyphen)");
+const csF1NoHyphen = await get("/api/case-studies/f1");
+check(csF1NoHyphen.status === 200 && (await csF1NoHyphen.json()).id === "F-01", "GET /api/case-studies/f1 (single digit no hyphen)");
+const csFixF1 = await get("/api/case-studies/fix-f-1");
+check(csFixF1.status === 200 && (await csFixF1.json()).id === "F-01", "GET /api/case-studies/fix-f-1 (fix- prefix single digit)");
+const csPage = await (await get("/api/case-studies?page=2&limit=2")).json();
+check(csPage.count === 2, "GET /api/case-studies?page=2&limit=2 (page pagination)");
+const jsonCs = await get("/api/case-studies/f-01.json");
+check(jsonCs.status === 200 && (await jsonCs.json()).id === "F-01", "GET /api/case-studies/f-01.json -> 200");
 
 const headCsOne = await get("/api/case-studies/f-01", { method: "HEAD" });
 check(headCsOne.status === 200, "HEAD /api/case-studies/f-01 -> 200");
@@ -239,6 +272,11 @@ const tierPrefix = await get("/api/tiers/tier-seraphim");
 check(tierPrefix.status === 200 && (await tierPrefix.json()).id === "seraphim", "GET /api/tiers/tier-seraphim (tier- prefix)");
 const tierRankPlus = await get("/api/tiers/+1");
 check(tierRankPlus.status === 200 && (await tierRankPlus.json()).id === "seraphim", "GET /api/tiers/+1 (+rank)");
+
+const tiersPage = await (await get("/api/tiers?page=2&limit=2")).json();
+check(tiersPage.count === 2, "GET /api/tiers?page=2&limit=2 (page pagination)");
+const jsonTier = await get("/api/tiers/seraphim.json");
+check(jsonTier.status === 200 && (await jsonTier.json()).id === "seraphim", "GET /api/tiers/seraphim.json -> 200");
 
 const headTierOne = await get("/api/tiers/seraphim", { method: "HEAD" });
 check(headTierOne.status === 200, "HEAD /api/tiers/seraphim -> 200");
@@ -287,6 +325,15 @@ check(scPrefix.status === 200 && (await scPrefix.json()).id === "legacy-internal
 const scHyphen = await get("/api/scenarios/h-1");
 check(scHyphen.status === 200 && (await scHyphen.json()).id === "legacy-internal-app", "GET /api/scenarios/h-1 (hyphenated code)");
 
+const scSrc = await (await get("/api/scenarios?source=cs26")).json();
+check(scSrc.count > 0, "GET /api/scenarios?source=cs26 (source alias for ref)");
+const scCtrl = await (await get("/api/scenarios?control=proxy")).json();
+check(scCtrl.count > 0, "GET /api/scenarios?control=proxy filter");
+const scPage = await (await get("/api/scenarios?page=2&limit=2")).json();
+check(scPage.count === 2, "GET /api/scenarios?page=2&limit=2 (page pagination)");
+const jsonSc = await get(`/api/scenarios/legacy-internal-app.json`);
+check(jsonSc.status === 200, "GET /api/scenarios/[id].json -> 200");
+
 const headScOne = await get("/api/scenarios/legacy-internal-app", { method: "HEAD" });
 check(headScOne.status === 200, "HEAD /api/scenarios/legacy-internal-app -> 200");
 checkSecurityHeaders(headScOne, "HEAD /api/scenarios/legacy-internal-app");
@@ -326,6 +373,11 @@ check(srcUpper.status === 200 && (await srcUpper.json()).id === "oaiAug", "GET /
 const srcPrefix = await get("/api/sources/src-oaiAug");
 check(srcPrefix.status === 200 && (await srcPrefix.json()).id === "oaiAug", "GET /api/sources/src-oaiAug (src- prefix)");
 
+const sourcesPage = await (await get("/api/sources?page=2&limit=2")).json();
+check(sourcesPage.count === 2, "GET /api/sources?page=2&limit=2 (page pagination)");
+const jsonSource = await get("/api/sources/oaiAug.json");
+check(jsonSource.status === 200 && (await jsonSource.json()).id === "oaiAug", "GET /api/sources/oaiAug.json -> 200");
+
 const headSrcOne = await get("/api/sources/oaiAug", { method: "HEAD" });
 check(headSrcOne.status === 200, "HEAD /api/sources/oaiAug -> 200");
 checkSecurityHeaders(headSrcOne, "HEAD /api/sources/oaiAug");
@@ -341,6 +393,9 @@ const brandBody = await brandRes.json();
 check(brandRes.status === 200 && brandBody.name === "Seraphim AI" && Array.isArray(brandBody.badges) && brandBody.badges.length > 0, "GET /api/brand shape and badges");
 check(brandBody.theme?.default === "dark" && Array.isArray(brandBody.theme?.names) && brandBody.theme.names.includes("dark"), "GET /api/brand theme structure");
 checkSecurityHeaders(brandRes, "GET /api/brand");
+
+const brandBadge = await (await get("/api/brand?badge=passive")).json();
+check(brandBadge.badge?.key === "passive", "GET /api/brand?badge=passive returns badge");
 
 // 9. Method Not Allowed on dynamic API endpoints (Next.js dynamic route handlers return 405 for unexported methods)
 const endpoints405 = [

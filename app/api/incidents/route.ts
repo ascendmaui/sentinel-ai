@@ -1,7 +1,7 @@
-import { json, parseLimit, parseOffset, parseSearchQuery, PUBLIC_CACHE } from "../../../lib/http";
+import { json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
 import { incidents, scenarios, unverified, INCIDENTS_DISCLAIMER } from "../../../lib/incidents";
 
-/** Incident case studies index as JSON. Lists incidents, summaries, counts, and disclaimer. Supports ?id=, ?n=, ?source=, ?year=, ?standing=, ?kicker=, ?q=, ?offset=, and ?limit=. */
+/** Incident case studies index as JSON. Lists incidents, summaries, counts, and disclaimer. Supports ?id=, ?n=, ?source=, ?ref=, ?year=, ?standing=, ?kicker=, ?vuln=, ?impact=, ?q=, ?order=, ?offset=, ?limit=, and ?page=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -13,15 +13,18 @@ export function GET(req?: Request): Response {
       const q = parseSearchQuery(url.searchParams);
       const id = parseSearchQuery(url.searchParams, "id");
       const n = parseSearchQuery(url.searchParams, "n");
-      const source = parseSearchQuery(url.searchParams, "source");
+      const source = parseSearchQuery(url.searchParams, "source") || parseSearchQuery(url.searchParams, "ref");
       const year = parseSearchQuery(url.searchParams, "year");
       const standing = parseSearchQuery(url.searchParams, "standing");
       const kicker = parseSearchQuery(url.searchParams, "kicker");
-      const offset = parseOffset(url.searchParams);
+      const vuln = parseSearchQuery(url.searchParams, "vuln") || parseSearchQuery(url.searchParams, "vulnerability");
+      const impact = parseSearchQuery(url.searchParams, "impact");
       const limit = parseLimit(url.searchParams);
+      const offset = parseOffset(url.searchParams, 10000, limit);
+      const order = parseSortOrder(url.searchParams);
 
       if (id) {
-        let cleanId = id;
+        let cleanId = id.replace(/\.(html|json)$/, "");
         if (cleanId.startsWith("incident-")) cleanId = cleanId.slice(9);
         else if (cleanId.startsWith("case-")) cleanId = cleanId.slice(5);
         else if (cleanId.startsWith("inc-")) cleanId = cleanId.slice(4);
@@ -31,18 +34,22 @@ export function GET(req?: Request): Response {
             i.id.toLowerCase() === cleanId ||
             i.n.toLowerCase() === id ||
             i.n.toLowerCase() === cleanId ||
-            i.n.toLowerCase() === cleanId.padStart(2, "0")
+            i.n.toLowerCase() === cleanId.padStart(2, "0") ||
+            (cleanId.replace(/^0+/, "") && i.n.replace(/^0+/, "") === cleanId.replace(/^0+/, ""))
         );
       }
 
       if (n) {
-        let cleanN = n;
-        if (cleanN.startsWith("case-") || cleanN.startsWith("inc-")) cleanN = cleanN.replace(/^(case|inc)-/, "");
+        let cleanN = n.replace(/\.(html|json)$/, "");
+        if (cleanN.startsWith("incident-") || cleanN.startsWith("case-") || cleanN.startsWith("inc-")) {
+          cleanN = cleanN.replace(/^(incident|case|inc)-/, "");
+        }
         list = list.filter(
           (i) =>
             i.n.toLowerCase() === n ||
             i.n.toLowerCase() === cleanN ||
-            i.n.toLowerCase() === cleanN.padStart(2, "0")
+            i.n.toLowerCase() === cleanN.padStart(2, "0") ||
+            (cleanN.replace(/^0+/, "") && i.n.replace(/^0+/, "") === cleanN.replace(/^0+/, ""))
         );
       }
 
@@ -60,6 +67,14 @@ export function GET(req?: Request): Response {
 
       if (kicker) {
         list = list.filter((i) => i.kicker.toLowerCase().includes(kicker));
+      }
+
+      if (vuln) {
+        list = list.filter((i) => i.vuln.some((v) => v.toLowerCase().includes(vuln)));
+      }
+
+      if (impact) {
+        list = list.filter((i) => i.impact.some((im) => im.toLowerCase().includes(impact)));
       }
 
       if (q) {
@@ -83,6 +98,10 @@ export function GET(req?: Request): Response {
             i.seraphim.limits.toLowerCase().includes(q) ||
             i.sources.some((s) => s.toLowerCase().includes(q))
         );
+      }
+
+      if (order === "desc") {
+        list = [...list].reverse();
       }
 
       if (offset && offset > 0) {

@@ -68,7 +68,8 @@ export function methodNotAllowed(allowed: string[] = ["GET", "HEAD"]): Response 
 export const PUBLIC_CACHE = "public, max-age=0, s-maxage=300, stale-while-revalidate=600";
 
 /**
- * Safely parses an optional integer limit from URL search parameters (accepts "limit" or "take").
+ * Safely parses an optional integer limit from URL search parameters.
+ * Accepts "limit", "take", "pageSize", "page_size", "per_page", or "size".
  * Returns undefined if missing, non-numeric, or <= 0. Bounded by max.
  * Only plain base-10 integers are accepted: partial numerics such as "1e3", "2.5" or "10abc"
  * are rejected rather than silently truncated by parseInt.
@@ -77,7 +78,29 @@ export function parseLimit(params: URLSearchParams, max = 100): number | undefin
   if (!params || typeof params.get !== "function") return undefined;
   const cap = Math.floor(max);
   if (!Number.isFinite(max) || cap <= 0) return undefined;
-  const raw = (params.get("limit") ?? params.get("take"))?.trim();
+  const raw = (
+    params.get("limit") ??
+    params.get("take") ??
+    params.get("pageSize") ??
+    params.get("page_size") ??
+    params.get("per_page") ??
+    params.get("size")
+  )?.trim();
+  if (!raw || !/^\+?\d+$/.test(raw)) return undefined;
+  const num = Number(raw);
+  if (!(num > 0)) return undefined;
+  return Math.min(num, cap);
+}
+
+/**
+ * Safely parses an optional integer 1-based page number from URL search parameters (accepts "page" or "p").
+ * Returns undefined if missing, non-numeric, or <= 0. Bounded by max.
+ */
+export function parsePage(params: URLSearchParams, max = 10000): number | undefined {
+  if (!params || typeof params.get !== "function") return undefined;
+  const cap = Math.floor(max);
+  if (!Number.isFinite(max) || cap <= 0) return undefined;
+  const raw = (params.get("page") ?? params.get("p"))?.trim();
   if (!raw || !/^\+?\d+$/.test(raw)) return undefined;
   const num = Number(raw);
   if (!(num > 0)) return undefined;
@@ -86,19 +109,45 @@ export function parseLimit(params: URLSearchParams, max = 100): number | undefin
 
 /**
  * Safely parses an optional integer offset from URL search parameters (accepts "offset" or "skip").
+ * If neither is present, calculates offset from 1-based "page" / "p" when a page size is available.
  * Returns undefined if missing, non-numeric, or < 0. Bounded by optional max.
  * Only plain base-10 non-negative integers are accepted: partial numerics such as "1e3" or "2.5"
  * are rejected rather than silently truncated by parseInt.
  */
-export function parseOffset(params: URLSearchParams, max = 10000): number | undefined {
+export function parseOffset(params: URLSearchParams, max = 10000, pageSize?: number): number | undefined {
   if (!params || typeof params.get !== "function") return undefined;
   const cap = Math.floor(max);
   if (!Number.isFinite(max) || cap < 0) return undefined;
   const raw = (params.get("offset") ?? params.get("skip"))?.trim();
-  if (!raw || !/^\+?\d+$/.test(raw)) return undefined;
-  const num = Number(raw);
-  if (!Number.isFinite(num) || num < 0) return undefined;
-  return Math.min(num, cap);
+  if (raw) {
+    if (!/^\+?\d+$/.test(raw)) return undefined;
+    const num = Number(raw);
+    if (!Number.isFinite(num) || num < 0) return undefined;
+    return Math.min(num, cap);
+  }
+  const page = parsePage(params, max);
+  if (page && page > 0) {
+    const size = pageSize ?? parseLimit(params, max);
+    if (size && size > 0) {
+      return Math.min((page - 1) * size, cap);
+    }
+  }
+  return undefined;
+}
+
+export type SortOrder = "asc" | "desc";
+
+/**
+ * Safely parses an optional sort order from URL search parameters (accepts "order", "sort", or "dir").
+ * Returns "asc" for ascending/oldest, "desc" for descending/newest, or undefined if omitted/unrecognized.
+ */
+export function parseSortOrder(params: URLSearchParams, paramName = "order"): SortOrder | undefined {
+  if (!params || typeof params.get !== "function" || !paramName || typeof paramName !== "string") return undefined;
+  const raw = (params.get(paramName) ?? params.get("sort") ?? params.get("dir"))?.trim().toLowerCase();
+  if (!raw) return undefined;
+  if (raw === "asc" || raw === "ascending" || raw === "oldest" || raw === "first") return "asc";
+  if (raw === "desc" || raw === "descending" || raw === "newest" || raw === "last") return "desc";
+  return undefined;
 }
 
 /**

@@ -23,7 +23,7 @@ import * as caseStudiesModule from "../lib/caseStudies";
 import { findings } from "../lib/caseStudies";
 import { tiers } from "../lib/tiers";
 import { S, sources } from "../lib/sources";
-import { badRequest, json, methodNotAllowed, notFound, parseLimit, parseOffset, parseSearchQuery, SECURITY_HEADERS } from "../lib/http";
+import { badRequest, json, methodNotAllowed, notFound, parseLimit, parseOffset, parsePage, parseSearchQuery, parseSortOrder, SECURITY_HEADERS } from "../lib/http";
 
 const slugCtx = (slug: string) => ({ params: Promise.resolve({ slug }) });
 const idCtx = (id: string) => ({ params: Promise.resolve({ id }) });
@@ -267,6 +267,47 @@ describe("GET /api/posts", () => {
     const noneRes = postsIndex(req("/api/posts?slug=nonexistent-slug"));
     expect(noneRes.status).toBe(200);
     expect((await noneRes.json()).count).toBe(0);
+  });
+
+  it("supports order/sort ascending and descending, ref alias, and page-based pagination", async () => {
+    const ascRes = postsIndex(req("/api/posts?order=asc"));
+    expect(ascRes.status).toBe(200);
+    const ascBody = await ascRes.json();
+    const ascDates: string[] = ascBody.posts.map((p: { date: string }) => p.date);
+    expect(ascDates).toEqual([...ascDates].sort());
+
+    const descRes = postsIndex(req("/api/posts?order=desc"));
+    expect(descRes.status).toBe(200);
+    const descBody = await descRes.json();
+    const descDates: string[] = descBody.posts.map((p: { date: string }) => p.date);
+    expect(descDates).toEqual([...descDates].sort().reverse());
+
+    const sortAliasRes = postsIndex(req("/api/posts?sort=oldest"));
+    expect(sortAliasRes.status).toBe(200);
+    expect((await sortAliasRes.json()).posts[0].date).toBe(ascBody.posts[0].date);
+
+    const refRes = postsIndex(req("/api/posts?ref=oaiAug"));
+    expect(refRes.status).toBe(200);
+    expect((await refRes.json()).count).toBeGreaterThan(0);
+
+    const page1Res = postsIndex(req("/api/posts?page=1&limit=2"));
+    expect(page1Res.status).toBe(200);
+    const page1Body = await page1Res.json();
+    expect(page1Body.count).toBe(2);
+
+    const page2Res = postsIndex(req("/api/posts?page=2&limit=2"));
+    expect(page2Res.status).toBe(200);
+    const page2Body = await page2Res.json();
+    expect(page2Body.count).toBe(2);
+    expect(page2Body.posts[0].slug).not.toBe(page1Body.posts[0].slug);
+
+    const extRes = await postOne(req("/api/posts/when-the-test-subject-leaves-the-test.json"), slugCtx("when-the-test-subject-leaves-the-test.json"));
+    expect(extRes.status).toBe(200);
+    expect((await extRes.json()).slug).toBe("when-the-test-subject-leaves-the-test");
+
+    const htmlRes = await postOne(req("/api/posts/when-the-test-subject-leaves-the-test.html"), slugCtx("when-the-test-subject-leaves-the-test.html"));
+    expect(htmlRes.status).toBe(200);
+    expect((await htmlRes.json()).slug).toBe("when-the-test-subject-leaves-the-test");
   });
 });
 
@@ -529,6 +570,47 @@ describe("GET /api/incidents", () => {
     const noneRes = incidentsIndex(req("/api/incidents?id=nonexistent-incident"));
     expect(noneRes.status).toBe(200);
     expect((await noneRes.json()).count).toBe(0);
+
+    const id001Res = incidentsIndex(req("/api/incidents?id=001"));
+    expect(id001Res.status).toBe(200);
+    expect((await id001Res.json()).count).toBe(1);
+
+    const n001Res = incidentsIndex(req("/api/incidents?n=001"));
+    expect(n001Res.status).toBe(200);
+    expect((await n001Res.json()).count).toBe(1);
+
+    const nIncShortRes = incidentsIndex(req("/api/incidents?n=inc-1"));
+    expect(nIncShortRes.status).toBe(200);
+    expect((await nIncShortRes.json()).count).toBe(1);
+
+    const nCaseShortRes = incidentsIndex(req("/api/incidents?n=case-1"));
+    expect(nCaseShortRes.status).toBe(200);
+    expect((await nCaseShortRes.json()).count).toBe(1);
+  });
+
+  it("supports order/sort, ref alias, vuln, impact, and page-based pagination", async () => {
+    const descRes = incidentsIndex(req("/api/incidents?order=desc"));
+    expect(descRes.status).toBe(200);
+    const descBody = await descRes.json();
+    expect(descBody.incidents[0].id).toBe(incidents[incidents.length - 1].id);
+
+    const refRes = incidentsIndex(req("/api/incidents?ref=oaiAug"));
+    expect(refRes.status).toBe(200);
+    expect((await refRes.json()).count).toBeGreaterThan(0);
+
+    const vulnRes = incidentsIndex(req("/api/incidents?vuln=token-refresh"));
+    expect(vulnRes.status).toBe(200);
+    expect((await vulnRes.json()).count).toBeGreaterThan(0);
+
+    const impactRes = incidentsIndex(req("/api/incidents?impact=credentials"));
+    expect(impactRes.status).toBe(200);
+    expect((await impactRes.json()).count).toBeGreaterThan(0);
+
+    const page2Res = incidentsIndex(req("/api/incidents?page=2&limit=2"));
+    expect(page2Res.status).toBe(200);
+    const page2Body = await page2Res.json();
+    expect(page2Body.count).toBe(2);
+    expect(page2Body.incidents[0].id).toBe(incidents[2].id);
   });
 });
 
@@ -574,6 +656,14 @@ describe("GET /api/incidents/[id]", () => {
     const trimRes = await incidentOne(req(`/api/incidents/${first.id}`), idCtx(`  ${first.id}  `));
     expect(trimRes.status).toBe(200);
     expect((await trimRes.json()).id).toBe(first.id);
+
+    const jsonRes = await incidentOne(req(`/api/incidents/${first.id}.json`), idCtx(`${first.id}.json`));
+    expect(jsonRes.status).toBe(200);
+    expect((await jsonRes.json()).id).toBe(first.id);
+
+    const htmlRes = await incidentOne(req(`/api/incidents/${first.id}.html`), idCtx(`${first.id}.html`));
+    expect(htmlRes.status).toBe(200);
+    expect((await htmlRes.json()).id).toBe(first.id);
   });
 
   it.each(["nonexistent-incident", "", "   ", "../etc/passwd", "__proto__", "constructor", "toString"])(
@@ -733,6 +823,51 @@ describe("GET /api/case-studies", () => {
     const offBody = await offRes.json();
     expect(offBody.count).toBe(3);
     expect(offBody.totalCount).toBe(findings.length);
+
+    const f1IdRes = caseStudiesIndex(req("/api/case-studies?id=f-1"));
+    expect(f1IdRes.status).toBe(200);
+    expect((await f1IdRes.json()).findings[0].id).toBe("F-01");
+
+    const f1NoHyphenIdRes = caseStudiesIndex(req("/api/case-studies?id=f1"));
+    expect(f1NoHyphenIdRes.status).toBe(200);
+    expect((await f1NoHyphenIdRes.json()).findings[0].id).toBe("F-01");
+
+    const fixF1IdRes = caseStudiesIndex(req("/api/case-studies?id=fix-f-1"));
+    expect(fixF1IdRes.status).toBe(200);
+    expect((await fixF1IdRes.json()).findings[0].id).toBe("F-01");
+
+    const fix1IdRes = caseStudiesIndex(req("/api/case-studies?id=fix-1"));
+    expect(fix1IdRes.status).toBe(200);
+    expect((await fix1IdRes.json()).findings[0].id).toBe("F-01");
+
+    const oneIdRes = caseStudiesIndex(req("/api/case-studies?id=1"));
+    expect(oneIdRes.status).toBe(200);
+    expect((await oneIdRes.json()).findings[0].id).toBe("F-01");
+
+    const pad001IdRes = caseStudiesIndex(req("/api/case-studies?id=001"));
+    expect(pad001IdRes.status).toBe(200);
+    expect((await pad001IdRes.json()).findings[0].id).toBe("F-01");
+
+    const f1NRes = caseStudiesIndex(req("/api/case-studies?n=f-1"));
+    expect(f1NRes.status).toBe(200);
+    expect((await f1NRes.json()).findings[0].id).toBe("F-01");
+
+    const f1NoHyphenNRes = caseStudiesIndex(req("/api/case-studies?n=f1"));
+    expect(f1NoHyphenNRes.status).toBe(200);
+    expect((await f1NoHyphenNRes.json()).findings[0].id).toBe("F-01");
+  });
+
+  it("supports order/sort descending and page-based pagination", async () => {
+    const descRes = caseStudiesIndex(req("/api/case-studies?order=desc"));
+    expect(descRes.status).toBe(200);
+    const descBody = await descRes.json();
+    expect(descBody.findings[0].id).toBe(findings[findings.length - 1].id);
+
+    const page2Res = caseStudiesIndex(req("/api/case-studies?page=2&limit=2"));
+    expect(page2Res.status).toBe(200);
+    const page2Body = await page2Res.json();
+    expect(page2Body.count).toBe(2);
+    expect(page2Body.findings[0].id).toBe(findings[2].id);
   });
 });
 
@@ -772,6 +907,30 @@ describe("GET /api/case-studies/[id]", () => {
     const trimRes = await caseStudyOne(req("/api/case-studies/f-01"), idCtx("  f-01  "));
     expect(trimRes.status).toBe(200);
     expect((await trimRes.json()).id).toBe("F-01");
+
+    const f1Res = await caseStudyOne(req("/api/case-studies/f-1"), idCtx("f-1"));
+    expect(f1Res.status).toBe(200);
+    expect((await f1Res.json()).id).toBe("F-01");
+
+    const f1NoHyphenRes = await caseStudyOne(req("/api/case-studies/f1"), idCtx("f1"));
+    expect(f1NoHyphenRes.status).toBe(200);
+    expect((await f1NoHyphenRes.json()).id).toBe("F-01");
+
+    const fixF1Res = await caseStudyOne(req("/api/case-studies/fix-f-1"), idCtx("fix-f-1"));
+    expect(fixF1Res.status).toBe(200);
+    expect((await fixF1Res.json()).id).toBe("F-01");
+
+    const fix1Res = await caseStudyOne(req("/api/case-studies/fix-1"), idCtx("fix-1"));
+    expect(fix1Res.status).toBe(200);
+    expect((await fix1Res.json()).id).toBe("F-01");
+
+    const jsonRes = await caseStudyOne(req("/api/case-studies/f-01.json"), idCtx("f-01.json"));
+    expect(jsonRes.status).toBe(200);
+    expect((await jsonRes.json()).id).toBe("F-01");
+
+    const htmlRes = await caseStudyOne(req("/api/case-studies/f-01.html"), idCtx("f-01.html"));
+    expect(htmlRes.status).toBe(200);
+    expect((await htmlRes.json()).id).toBe("F-01");
   });
 
   it.each(["F-999", "unknown", "", "   ", "__proto__", "constructor", "toString"])(
@@ -915,6 +1074,19 @@ describe("GET /api/tiers", () => {
     expect(noneIdRes.status).toBe(200);
     expect((await noneIdRes.json()).count).toBe(0);
   });
+
+  it("supports order/sort descending and page-based pagination", async () => {
+    const descRes = tiersIndex(req("/api/tiers?order=desc"));
+    expect(descRes.status).toBe(200);
+    const descBody = await descRes.json();
+    expect(descBody.tiers[0].id).toBe(tiers[tiers.length - 1].id);
+
+    const page2Res = tiersIndex(req("/api/tiers?page=2&limit=2"));
+    expect(page2Res.status).toBe(200);
+    const page2Body = await page2Res.json();
+    expect(page2Body.count).toBe(2);
+    expect(page2Body.tiers[0].id).toBe(tiers[2].id);
+  });
 });
 
 describe("GET /api/tiers/[id]", () => {
@@ -954,6 +1126,14 @@ describe("GET /api/tiers/[id]", () => {
     const plusRankRes = await tierOne(req("/api/tiers/+1"), idCtx("+1"));
     expect(plusRankRes.status).toBe(200);
     expect((await plusRankRes.json()).id).toBe("seraphim");
+
+    const jsonRes = await tierOne(req("/api/tiers/seraphim.json"), idCtx("seraphim.json"));
+    expect(jsonRes.status).toBe(200);
+    expect((await jsonRes.json()).id).toBe("seraphim");
+
+    const htmlRes = await tierOne(req("/api/tiers/seraphim.html"), idCtx("seraphim.html"));
+    expect(htmlRes.status).toBe(200);
+    expect((await htmlRes.json()).id).toBe("seraphim");
   });
 
   it.each(["free", "enterprise-plus", "", "   ", "__proto__", "constructor", "toString"])(
@@ -1050,9 +1230,13 @@ describe("HTTP helper utilities", () => {
     expect(await bigIntRes.json()).toEqual({ error: "internal_error", message: "Serialization failed" });
   });
 
-  it("parseLimit handles valid, invalid, negative, and capped limits", () => {
+  it("parseLimit handles valid, aliases (take, pageSize, page_size, per_page, size), invalid, negative, and capped limits", () => {
     expect(parseLimit(new URLSearchParams("limit=5"))).toBe(5);
     expect(parseLimit(new URLSearchParams("take=5"))).toBe(5);
+    expect(parseLimit(new URLSearchParams("pageSize=5"))).toBe(5);
+    expect(parseLimit(new URLSearchParams("page_size=5"))).toBe(5);
+    expect(parseLimit(new URLSearchParams("per_page=5"))).toBe(5);
+    expect(parseLimit(new URLSearchParams("size=5"))).toBe(5);
     expect(parseLimit(new URLSearchParams("take=0"))).toBeUndefined();
     expect(parseLimit(new URLSearchParams("take=-10"))).toBeUndefined();
     expect(parseLimit(new URLSearchParams("take=250"), 100)).toBe(100);
@@ -1094,6 +1278,39 @@ describe("HTTP helper utilities", () => {
     expect(parseLimit(new URLSearchParams("limit=5"), 3.9)).toBe(3);
   });
 
+  it("parsePage handles valid, p alias, non-numeric, zero, and capped pages", () => {
+    expect(parsePage(new URLSearchParams("page=1"))).toBe(1);
+    expect(parsePage(new URLSearchParams("page=5"))).toBe(5);
+    expect(parsePage(new URLSearchParams("p=3"))).toBe(3);
+    expect(parsePage(new URLSearchParams("page=0"))).toBeUndefined();
+    expect(parsePage(new URLSearchParams("page=-1"))).toBeUndefined();
+    expect(parsePage(new URLSearchParams("page=abc"))).toBeUndefined();
+    expect(parsePage(new URLSearchParams("page=1.5"))).toBeUndefined();
+    expect(parsePage(new URLSearchParams("page=%2B2"))).toBe(2);
+    expect(parsePage(new URLSearchParams("page=500"), 100)).toBe(100);
+    expect(parsePage(undefined as unknown as URLSearchParams)).toBeUndefined();
+    expect(parsePage(null as unknown as URLSearchParams)).toBeUndefined();
+    expect(parsePage(new URLSearchParams("page=2"), 0)).toBeUndefined();
+    expect(parsePage(new URLSearchParams("page=2"), -5)).toBeUndefined();
+  });
+
+  it("parseSortOrder handles asc, desc, direction aliases, case-insensitivity, and fallback", () => {
+    expect(parseSortOrder(new URLSearchParams("order=asc"))).toBe("asc");
+    expect(parseSortOrder(new URLSearchParams("order=ascending"))).toBe("asc");
+    expect(parseSortOrder(new URLSearchParams("order=oldest"))).toBe("asc");
+    expect(parseSortOrder(new URLSearchParams("order=first"))).toBe("asc");
+    expect(parseSortOrder(new URLSearchParams("order=desc"))).toBe("desc");
+    expect(parseSortOrder(new URLSearchParams("order=descending"))).toBe("desc");
+    expect(parseSortOrder(new URLSearchParams("order=newest"))).toBe("desc");
+    expect(parseSortOrder(new URLSearchParams("order=last"))).toBe("desc");
+    expect(parseSortOrder(new URLSearchParams("sort=ASC"))).toBe("asc");
+    expect(parseSortOrder(new URLSearchParams("dir=desc"))).toBe("desc");
+    expect(parseSortOrder(new URLSearchParams("order=custom"), "order")).toBeUndefined();
+    expect(parseSortOrder(new URLSearchParams(""))).toBeUndefined();
+    expect(parseSortOrder(undefined as unknown as URLSearchParams)).toBeUndefined();
+    expect(parseSortOrder(null as unknown as URLSearchParams)).toBeUndefined();
+  });
+
   it("parseSearchQuery handles valid, whitespace, and custom param keys", () => {
     expect(parseSearchQuery(new URLSearchParams("q=Seraphim"))).toBe("seraphim");
     expect(parseSearchQuery(new URLSearchParams("q=  Modal  "))).toBe("modal");
@@ -1108,7 +1325,7 @@ describe("HTTP helper utilities", () => {
     expect(parseSearchQuery(new URLSearchParams("q=test"), null as unknown as string)).toBeUndefined();
   });
 
-  it("parseOffset handles valid, skip alias, negative, invalid, and capped offsets", () => {
+  it("parseOffset handles valid, skip alias, page-based calculation, negative, invalid, and capped offsets", () => {
     expect(parseOffset(new URLSearchParams("offset=5"))).toBe(5);
     expect(parseOffset(new URLSearchParams("skip=3"))).toBe(3);
     expect(parseOffset(new URLSearchParams("offset=0"))).toBe(0);
@@ -1123,6 +1340,16 @@ describe("HTTP helper utilities", () => {
     expect(parseOffset(new URLSearchParams(""))).toBeUndefined();
     expect(parseOffset(new URLSearchParams("offset=500"), 100)).toBe(100);
     expect(parseOffset(new URLSearchParams("offset=50"), 100)).toBe(50);
+    // Page-based offset calculation
+    expect(parseOffset(new URLSearchParams("page=1&limit=5"))).toBe(0);
+    expect(parseOffset(new URLSearchParams("page=2&limit=5"))).toBe(5);
+    expect(parseOffset(new URLSearchParams("page=3&limit=5"))).toBe(10);
+    expect(parseOffset(new URLSearchParams("p=2&take=10"))).toBe(10);
+    expect(parseOffset(new URLSearchParams("page=2"), 10000, 4)).toBe(4);
+    // Offset takes precedence over page
+    expect(parseOffset(new URLSearchParams("offset=8&page=2&limit=5"))).toBe(8);
+    // Page without size returns undefined
+    expect(parseOffset(new URLSearchParams("page=2"))).toBeUndefined();
     expect(parseOffset(undefined as unknown as URLSearchParams)).toBeUndefined();
     expect(parseOffset(null as unknown as URLSearchParams)).toBeUndefined();
     expect(parseOffset(new URLSearchParams("offset=5"), -1)).toBeUndefined();
@@ -1288,6 +1515,35 @@ describe("GET /api/scenarios", () => {
     const noneRes = scenariosIndex(req("/api/scenarios?id=nonexistent-scenario"));
     expect(noneRes.status).toBe(200);
     expect((await noneRes.json()).count).toBe(0);
+
+    const idH01Res = scenariosIndex(req("/api/scenarios?id=h01"));
+    expect(idH01Res.status).toBe(200);
+    expect((await idH01Res.json()).count).toBe(1);
+
+    const nH01Res = scenariosIndex(req("/api/scenarios?n=h01"));
+    expect(nH01Res.status).toBe(200);
+    expect((await nH01Res.json()).count).toBe(1);
+  });
+
+  it("supports order/sort, source alias for ref, control filter, and page-based pagination", async () => {
+    const descRes = scenariosIndex(req("/api/scenarios?order=desc"));
+    expect(descRes.status).toBe(200);
+    const descBody = await descRes.json();
+    expect(descBody.scenarios[0].id).toBe(scenarios[scenarios.length - 1].id);
+
+    const srcAliasRes = scenariosIndex(req("/api/scenarios?source=cs26"));
+    expect(srcAliasRes.status).toBe(200);
+    expect((await srcAliasRes.json()).count).toBeGreaterThan(0);
+
+    const controlRes = scenariosIndex(req("/api/scenarios?control=proxy"));
+    expect(controlRes.status).toBe(200);
+    expect((await controlRes.json()).count).toBeGreaterThan(0);
+
+    const page2Res = scenariosIndex(req("/api/scenarios?page=2&limit=2"));
+    expect(page2Res.status).toBe(200);
+    const page2Body = await page2Res.json();
+    expect(page2Body.count).toBe(2);
+    expect(page2Body.scenarios[0].id).toBe(scenarios[2].id);
   });
 });
 
@@ -1339,6 +1595,14 @@ describe("GET /api/scenarios/[id]", () => {
     const scHyphenRes = await scenarioOne(req("/api/scenarios/h-1"), idCtx("h-1"));
     expect(scHyphenRes.status).toBe(200);
     expect((await scHyphenRes.json()).id).toBe(first.id);
+
+    const jsonRes = await scenarioOne(req(`/api/scenarios/${first.id}.json`), idCtx(`${first.id}.json`));
+    expect(jsonRes.status).toBe(200);
+    expect((await jsonRes.json()).id).toBe(first.id);
+
+    const htmlRes = await scenarioOne(req(`/api/scenarios/${first.id}.html`), idCtx(`${first.id}.html`));
+    expect(htmlRes.status).toBe(200);
+    expect((await htmlRes.json()).id).toBe(first.id);
   });
 
   it.each(["nonexistent-scenario", "", "   ", "../etc/passwd", "__proto__", "constructor", "toString"])(
@@ -1487,6 +1751,19 @@ describe("GET /api/sources", () => {
     expect(noneRes.status).toBe(200);
     expect((await noneRes.json()).count).toBe(0);
   });
+
+  it("supports order/sort descending and page-based pagination", async () => {
+    const descRes = sourcesIndex(req("/api/sources?order=desc"));
+    expect(descRes.status).toBe(200);
+    const descBody = await descRes.json();
+    expect(descBody.sources[0].id).toBe(sources[sources.length - 1].id);
+
+    const page2Res = sourcesIndex(req("/api/sources?page=2&limit=3"));
+    expect(page2Res.status).toBe(200);
+    const page2Body = await page2Res.json();
+    expect(page2Body.count).toBe(3);
+    expect(page2Body.sources[0].id).toBe(sources[3].id);
+  });
 });
 
 describe("GET /api/sources/[id]", () => {
@@ -1518,6 +1795,14 @@ describe("GET /api/sources/[id]", () => {
     const sourcePrefixRes = await sourceOne(req("/api/sources/source-oaiAug"), idCtx("source-oaiAug"));
     expect(sourcePrefixRes.status).toBe(200);
     expect((await sourcePrefixRes.json()).id).toBe(first.id);
+
+    const jsonRes = await sourceOne(req("/api/sources/oaiAug.json"), idCtx("oaiAug.json"));
+    expect(jsonRes.status).toBe(200);
+    expect((await jsonRes.json()).id).toBe(first.id);
+
+    const htmlRes = await sourceOne(req("/api/sources/oaiAug.html"), idCtx("oaiAug.html"));
+    expect(htmlRes.status).toBe(200);
+    expect((await htmlRes.json()).id).toBe(first.id);
   });
 
   it.each(["nonexistent-source", "", "   ", "../etc/passwd", "__proto__", "constructor", "toString"])(
@@ -1565,6 +1850,19 @@ describe("GET /api/brand", () => {
     vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://seraphim.ai/");
     const envBody = await brandEndpoint().json();
     expect(envBody.siteUrl).toBe("https://seraphim.ai");
+
+    const badgeRes = brandEndpoint(req("/api/brand?badge=passive"));
+    expect(badgeRes.status).toBe(200);
+    const badgeBody = await badgeRes.json();
+    expect(badgeBody.badge).toEqual({ key: "passive", label: "Passive recon only", note: "Public information, no probing" });
+
+    const keyRes = brandEndpoint(req("/api/brand?key=local"));
+    expect(keyRes.status).toBe(200);
+    expect((await keyRes.json()).badge.key).toBe("local");
+
+    const unknownBadgeRes = brandEndpoint(req("/api/brand?badge=nonexistent"));
+    expect(unknownBadgeRes.status).toBe(200);
+    expect((await unknownBadgeRes.json()).badge).toBeNull();
   });
 });
 

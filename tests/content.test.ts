@@ -266,6 +266,8 @@ describe("sources registry", () => {
     expect(sourceById("src-oaiAug")).toBe(S.oaiAug);
     expect(sourceById("source-oaiAug")).toBe(S.oaiAug);
     expect(sourceById("SRC-OAIAUG")).toBe(S.oaiAug);
+    expect(sourceById("oaiAug.json")).toBe(S.oaiAug);
+    expect(sourceById("oaiAug.html")).toBe(S.oaiAug);
     expect(sourceById("")).toBeUndefined();
     expect(sourceById("   ")).toBeUndefined();
     expect(sourceById(undefined as unknown as string)).toBeUndefined();
@@ -312,6 +314,8 @@ describe("posts", () => {
     expect(postBySlug(`  ${posts[0].slug}  `)).toBe(posts[0]);
     expect(postBySlug(`/${posts[0].slug}`)).toBe(posts[0]);
     expect(postBySlug(`/${posts[0].slug}/`)).toBe(posts[0]);
+    expect(postBySlug(`${posts[0].slug}.json`)).toBe(posts[0]);
+    expect(postBySlug(`${posts[0].slug}.html`)).toBe(posts[0]);
     expect(postBySlug("")).toBeUndefined();
     expect(postBySlug("   ")).toBeUndefined();
     expect(postBySlug(undefined as unknown as string)).toBeUndefined();
@@ -383,6 +387,8 @@ describe("tiers", () => {
     expect(tierById("1")).toBe(tiers[0]);
     expect(tierById(" 1 ")).toBe(tiers[0]);
     expect(tierById("4")).toBe(tiers[3]);
+    expect(tierById("seraphim.json")).toBe(tiers[0]);
+    expect(tierById("seraphim.html")).toBe(tiers[0]);
     expect(tierById("unknown")).toBeUndefined();
     expect(tierById("99")).toBeUndefined();
     expect(tierById("0")).toBeUndefined();
@@ -463,6 +469,9 @@ describe("incidents", () => {
     expect(incidentById("inc-01")).toBe(first);
     expect(incidentById("case-1")).toBe(first);
     expect(incidentById("inc-1")).toBe(first);
+    expect(incidentById("001")).toBe(first);
+    expect(incidentById(`${first.id}.json`)).toBe(first);
+    expect(incidentById(`${first.id}.html`)).toBe(first);
     expect(incidentById("99")).toBeUndefined();
     expect(incidentById("unknown-incident")).toBeUndefined();
     expect(incidentById("constructor")).toBeUndefined();
@@ -507,6 +516,8 @@ describe("incidents", () => {
     expect(scenarioById("h-1")).toBe(first);
     expect(scenarioById("h01")).toBe(first);
     expect(scenarioById("SC-H1")).toBe(first);
+    expect(scenarioById(`${first.id}.json`)).toBe(first);
+    expect(scenarioById(`${first.id}.html`)).toBe(first);
     expect(scenarioById("h99")).toBeUndefined();
     expect(scenarioById("unknown-scenario")).toBeUndefined();
     expect(scenarioById("constructor")).toBeUndefined();
@@ -530,13 +541,22 @@ describe("case studies / findings", () => {
     }
   });
 
-  it("findingById handles case-insensitivity, fix- prefix, hyphenless form, and returns undefined for unknown", () => {
+  it("findingById handles case-insensitivity, fix- prefix, hyphenless form, single-digit and extension forms, and returns undefined for unknown", () => {
     expect(findingById("F-01")).toBeDefined();
     expect(findingById("f-01")?.id).toBe("F-01");
     expect(findingById("  f-01  ")?.id).toBe("F-01");
     expect(findingById("f01")?.id).toBe("F-01");
+    expect(findingById("f-1")?.id).toBe("F-01");
+    expect(findingById("f1")?.id).toBe("F-01");
     expect(findingById("fix-f-01")?.id).toBe("F-01");
+    expect(findingById("fix-f-1")?.id).toBe("F-01");
     expect(findingById("fix-01")?.id).toBe("F-01");
+    expect(findingById("fix-1")?.id).toBe("F-01");
+    expect(findingById("1")?.id).toBe("F-01");
+    expect(findingById("01")?.id).toBe("F-01");
+    expect(findingById("001")?.id).toBe("F-01");
+    expect(findingById("f-01.json")?.id).toBe("F-01");
+    expect(findingById("f-01.html")?.id).toBe("F-01");
     expect(findingById("FIX-F01")?.id).toBe("F-01");
     expect(findingById("F-99")).toBeUndefined();
     expect(findingById("toString")).toBeUndefined();
@@ -548,13 +568,22 @@ describe("case studies / findings", () => {
     expect(findingById(true as unknown as string)).toBeUndefined();
   });
 
-  it("remediationById handles case-insensitivity, hyphenless form, and returns undefined for unknown", () => {
+  it("remediationById handles case-insensitivity, hyphenless form, single-digit and extension forms, and returns undefined for unknown", () => {
     expect(remediationById("F-01")).toBeDefined();
     expect(remediationById("f-01")?.id).toBe("F-01");
     expect(remediationById("  f-01  ")?.id).toBe("F-01");
     expect(remediationById("f01")?.id).toBe("F-01");
+    expect(remediationById("f-1")?.id).toBe("F-01");
+    expect(remediationById("f1")?.id).toBe("F-01");
     expect(remediationById("fix-f-01")?.id).toBe("F-01");
+    expect(remediationById("fix-f-1")?.id).toBe("F-01");
     expect(remediationById("fix-01")?.id).toBe("F-01");
+    expect(remediationById("fix-1")?.id).toBe("F-01");
+    expect(remediationById("1")?.id).toBe("F-01");
+    expect(remediationById("01")?.id).toBe("F-01");
+    expect(remediationById("001")?.id).toBe("F-01");
+    expect(remediationById("f-01.json")?.id).toBe("F-01");
+    expect(remediationById("f-01.html")?.id).toBe("F-01");
     expect(remediationById("FIX-F-01")?.id).toBe("F-01");
     expect(remediationById("FIX-F01")?.id).toBe("F-01");
     expect(remediationById("F-99")).toBeUndefined();

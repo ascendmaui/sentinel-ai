@@ -1,7 +1,7 @@
-import { json, parseLimit, parseOffset, parseSearchQuery, PUBLIC_CACHE } from "../../../lib/http";
+import { json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
 import { posts, postWords } from "../../../lib/posts";
 
-/** Blog index as JSON: post metadata only (no body). Newest first. Supports ?slug=, ?id=, ?tier=, ?source=, ?year=, ?q=, ?offset=, and ?limit=. */
+/** Blog index as JSON: post metadata only (no body). Newest first by default. Supports ?slug=, ?id=, ?tier=, ?source=, ?ref=, ?year=, ?q=, ?order=, ?offset=, ?limit=, and ?page=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -12,15 +12,22 @@ export function GET(req?: Request): Response {
       const url = new URL(req.url, "http://localhost");
       const slug = parseSearchQuery(url.searchParams, "slug") || parseSearchQuery(url.searchParams, "id");
       const tier = parseSearchQuery(url.searchParams, "tier");
-      const source = parseSearchQuery(url.searchParams, "source");
+      const source = parseSearchQuery(url.searchParams, "source") || parseSearchQuery(url.searchParams, "ref");
       const year = parseSearchQuery(url.searchParams, "year");
       const q = parseSearchQuery(url.searchParams);
-      const offset = parseOffset(url.searchParams);
       const limit = parseLimit(url.searchParams);
+      const offset = parseOffset(url.searchParams, 10000, limit);
+      const order = parseSortOrder(url.searchParams);
 
       if (slug) {
         const cleanSlug = slug.replace(/^\/+|\/+$/g, "");
-        list = list.filter((p) => p.slug.toLowerCase() === slug || p.slug.toLowerCase() === cleanSlug);
+        const withoutExt = cleanSlug.replace(/\.(html|json)$/, "");
+        list = list.filter(
+          (p) =>
+            p.slug.toLowerCase() === slug ||
+            p.slug.toLowerCase() === cleanSlug ||
+            p.slug.toLowerCase() === withoutExt
+        );
       }
 
       if (tier) {
@@ -45,7 +52,11 @@ export function GET(req?: Request): Response {
         );
       }
 
-      list.sort((a, b) => b.date.localeCompare(a.date));
+      if (order === "asc") {
+        list.sort((a, b) => a.date.localeCompare(b.date));
+      } else {
+        list.sort((a, b) => b.date.localeCompare(a.date));
+      }
 
       if (offset && offset > 0) {
         list = list.slice(offset);

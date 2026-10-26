@@ -214,7 +214,8 @@ export const postBySlug = (slug: string): Post | undefined => {
   if (!slug || typeof slug !== "string") return undefined;
   const target = slug.trim().replace(/^\/+|\/+$/g, "").toLowerCase();
   if (!target) return undefined;
-  return posts.find((p) => p.slug === slug || p.slug.toLowerCase() === target);
+  const withoutExt = target.replace(/\.(html|json)$/, "");
+  return posts.find((p) => p.slug === slug || p.slug.toLowerCase() === target || p.slug.toLowerCase() === withoutExt);
 };
 export const postWords = (p: Post): number => {
   if (!p || !Array.isArray(p.body)) return 0;

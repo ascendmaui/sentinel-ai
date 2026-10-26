@@ -1,4 +1,5 @@
 import {
+  badgeByKey,
   BRAND_EMAIL,
   BRAND_MAIL,
   BRAND_NAME,
@@ -10,29 +11,47 @@ import {
   SHOW_CODE_RAIN,
   TRUE_BADGES,
 } from "../../../lib/brand";
-import { json, PUBLIC_CACHE } from "../../../lib/http";
+import { json, parseSearchQuery, PUBLIC_CACHE } from "../../../lib/http";
 import { DEFAULT_THEME, THEME_META, THEME_NAMES } from "../../../lib/theme";
 
-/** Brand identity, trust badges, and public configuration metadata as JSON. */
-export function GET() {
-  return json(
-    {
-      name: BRAND_NAME,
-      word: BRAND_WORD,
-      suffix: BRAND_SUFFIX,
-      parent: BRAND_PARENT,
-      email: BRAND_EMAIL,
-      mailSubject: `${BRAND_MAIL}%20inquiry`,
-      tagline: BRAND_TAGLINE,
-      siteUrl: resolveSiteUrl(),
-      showCodeRain: SHOW_CODE_RAIN,
-      badges: TRUE_BADGES,
-      theme: {
-        default: DEFAULT_THEME,
-        names: THEME_NAMES,
-        meta: THEME_META,
-      },
+/** Brand identity, trust badges, and public configuration metadata as JSON. Supports optional ?badge= or ?key= filter. */
+export function GET(): Response;
+export function GET(req: Request): Response;
+export function GET(req?: Request): Response {
+  let badgeMatch: unknown = undefined;
+  if (req?.url) {
+    try {
+      const url = new URL(req.url, "http://localhost");
+      const badgeKey = parseSearchQuery(url.searchParams, "badge") || parseSearchQuery(url.searchParams, "key");
+      if (badgeKey) {
+        badgeMatch = badgeByKey(badgeKey) ?? null;
+      }
+    } catch {
+      // Ignore malformed URL
+    }
+  }
+
+  const payload: Record<string, unknown> = {
+    name: BRAND_NAME,
+    word: BRAND_WORD,
+    suffix: BRAND_SUFFIX,
+    parent: BRAND_PARENT,
+    email: BRAND_EMAIL,
+    mailSubject: `${BRAND_MAIL}%20inquiry`,
+    tagline: BRAND_TAGLINE,
+    siteUrl: resolveSiteUrl(),
+    showCodeRain: SHOW_CODE_RAIN,
+    badges: TRUE_BADGES,
+    theme: {
+      default: DEFAULT_THEME,
+      names: THEME_NAMES,
+      meta: THEME_META,
     },
-    { cacheControl: PUBLIC_CACHE }
-  );
+  };
+
+  if (badgeMatch !== undefined) {
+    payload.badge = badgeMatch;
+  }
+
+  return json(payload, { cacheControl: PUBLIC_CACHE });
 }

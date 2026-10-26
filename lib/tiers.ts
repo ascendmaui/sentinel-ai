@@ -126,6 +126,7 @@ export const tierById = (id: string): Tier | undefined => {
   if (!id || typeof id !== "string") return undefined;
   let target = id.trim().toLowerCase();
   if (!target) return undefined;
+  target = target.replace(/\.(html|json)$/, "");
   if (target.startsWith("tier-")) target = target.slice(5);
   if (target.startsWith("+")) target = target.slice(1);
   return tiers.find((t) => t.id.toLowerCase() === target || String(t.rank) === target);

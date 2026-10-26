@@ -1,7 +1,7 @@
-import { json, parseLimit, parseOffset, parseSearchQuery, PUBLIC_CACHE } from "../../../lib/http";
+import { json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
 import { findings, remediation, severityCounts } from "../../../lib/caseStudies";
 
-/** Remediation findings and case studies index as JSON. Supports optional ?id=, ?n=, ?severity=, ?status=, ?q=, ?offset=, and ?limit= filters. */
+/** Remediation findings and case studies index as JSON. Supports optional ?id=, ?n=, ?severity=, ?status=, ?q=, ?order=, ?offset=, ?limit=, and ?page= filters. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -13,16 +13,16 @@ export function GET(req?: Request): Response {
       const severity = parseSearchQuery(url.searchParams, "severity");
       const status = parseSearchQuery(url.searchParams, "status");
       const q = parseSearchQuery(url.searchParams);
-      const offset = parseOffset(url.searchParams);
       const limit = parseLimit(url.searchParams);
+      const offset = parseOffset(url.searchParams, 10000, limit);
+      const order = parseSortOrder(url.searchParams);
 
       if (id) {
-        let cleanId = id;
+        let cleanId = id.replace(/\.(html|json)$/, "");
         if (cleanId.startsWith("fix-")) cleanId = cleanId.slice(4);
         const normalized = cleanId.replace(/-/g, "");
-        const withF = normalized.startsWith("f")
-          ? normalized
-          : `f${normalized.length === 1 ? `0${normalized}` : normalized}`;
+        const numMatch = normalized.match(/^(?:f)?0*(\d+)$/);
+        const withF = numMatch ? `f${numMatch[1].padStart(2, "0")}` : normalized;
         list = list.filter(
           (f) =>
             f.id.toLowerCase() === cleanId ||
@@ -49,6 +49,9 @@ export function GET(req?: Request): Response {
             f.after.toLowerCase().includes(q) ||
             f.status.toLowerCase().includes(q)
         );
+      }
+      if (order === "desc") {
+        list = [...list].reverse();
       }
       if (offset && offset > 0) {
         list = list.slice(offset);
