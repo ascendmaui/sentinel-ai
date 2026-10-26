@@ -137,6 +137,28 @@ describe.each(routes.map((r) => [r.path] as const))("route contract %s", (path) 
         expect(offsetBody.count).toBe(1);
         expect(offsetBody.totalCount).toBeGreaterThanOrEqual(1);
       }
+
+      const takeSkipRes = await mod.GET({ url: `${path}?skip=1&take=1` } as unknown as Request);
+      expect(takeSkipRes.status).toBe(200);
+      expectHardenedJson(takeSkipRes, `${path} take/skip url`);
+      const takeSkipBody = await takeSkipRes.json();
+      if ("count" in takeSkipBody && "totalCount" in takeSkipBody) {
+        expect(takeSkipBody.count).toBe(1);
+        expect(takeSkipBody.totalCount).toBeGreaterThanOrEqual(1);
+      }
+
+      const pageRowsRes = await mod.GET({ url: `${path}?page=1&rows=1` } as unknown as Request);
+      expect(pageRowsRes.status).toBe(200);
+      expectHardenedJson(pageRowsRes, `${path} page/rows url`);
+      const pageRowsBody = await pageRowsRes.json();
+      if ("count" in pageRowsBody && "totalCount" in pageRowsBody) {
+        expect(pageRowsBody.count).toBe(1);
+        expect(pageRowsBody.totalCount).toBeGreaterThanOrEqual(1);
+      }
+
+      const sortOrderRes = await mod.GET({ url: `${path}?sort_by=desc&orderBy=desc&order=latest` } as unknown as Request);
+      expect(sortOrderRes.status).toBe(200);
+      expectHardenedJson(sortOrderRes, `${path} sort/order url`);
     });
   } else {
     it("is a dynamic route with generateStaticParams and dynamicParams enabled", () => {

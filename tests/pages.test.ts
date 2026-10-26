@@ -99,6 +99,18 @@ describe("Blog Page and Post Page", () => {
     const upperMeta = await postMeta({ params: Promise.resolve({ slug: `  ${posts[0].slug.toUpperCase()}  ` }) });
     expect(upperMeta.title).toBe(posts[0].title);
     expect(upperMeta.alternates?.canonical).toBe(`/blog/${posts[0].slug}`);
+
+    const numMeta = await postMeta({ params: Promise.resolve({ slug: "1" }) });
+    expect(numMeta.title).toBe(posts[0].title);
+    expect(numMeta.alternates?.canonical).toBe(`/blog/${posts[0].slug}`);
+
+    const p1Meta = await postMeta({ params: Promise.resolve({ slug: "p-1" }) });
+    expect(p1Meta.title).toBe(posts[0].title);
+    expect(p1Meta.alternates?.canonical).toBe(`/blog/${posts[0].slug}`);
+
+    const postPrefixedMeta = await postMeta({ params: Promise.resolve({ slug: `post-${posts[0].slug}` }) });
+    expect(postPrefixedMeta.title).toBe(posts[0].title);
+    expect(postPrefixedMeta.alternates?.canonical).toBe(`/blog/${posts[0].slug}`);
   });
 
   it("generateMetadata returns empty object for unknown post or missing params", async () => {
@@ -126,6 +138,13 @@ describe("Blog Page and Post Page", () => {
       expect(html).toContain(post.title);
       expect(html).toContain(`<time dateTime="${post.date}">${post.date}</time>`);
       expect(html).toContain('rel="noopener noreferrer"');
+    }
+
+    // Resolves by numeric index and prefix aliases
+    for (const alias of ["1", "01", "p-1", "post-1", `post-${posts[0].slug}`]) {
+      const el = await PostPage({ params: Promise.resolve({ slug: alias }) });
+      const html = renderToStaticMarkup(el);
+      expect(html).toContain(posts[0].title);
     }
 
     // Exercise quote block, unknown block fallback, and missing source guard
