@@ -168,6 +168,7 @@ describe("TrustBadges component", () => {
     expect(items[0].key).toBe("passive");
     expect(items[1].key).toBe("auth");
     const html = renderToStaticMarkup(el);
+    expect(html).toContain("badges hero-badges");
     expect(html).toContain("Passive recon only");
     expect(html).toContain("Written client authorization required");
     expect(html).not.toContain("Private local models");
@@ -188,6 +189,16 @@ describe("TrustBadges component", () => {
 
     const malformedKeysEl = TrustBadges({ keys: [null, undefined, 123 as unknown as string] as unknown as string[] });
     expect(malformedKeysEl.props.children).toHaveLength(0);
+  });
+
+  it("deduplicates keys, resolves alias prefixes and numbers, and ignores invalid keys", () => {
+    const el = TrustBadges({
+      keys: ["passive", "badge-passive", "1", "01", "+1", "badge1", "auth", "invalid-badge", 123 as unknown as string],
+    });
+    const items = el.props.children;
+    expect(items).toHaveLength(2);
+    expect(items[0].key).toBe("passive");
+    expect(items[1].key).toBe("auth");
   });
 });
 
@@ -303,9 +314,11 @@ describe("TierCta component", () => {
     expect(renderToStaticMarkup(plusEl!)).toContain('href="/pricing#seraphim"');
   });
 
-  it("returns null for an invalid tier", () => {
-    const el = TierCta({ tier: "invalid" as unknown as TierId, lead: "Test" });
-    expect(el).toBeNull();
+  it("returns null for an invalid tier, empty string, or non-string", () => {
+    expect(TierCta({ tier: "invalid" as unknown as TierId, lead: "Test" })).toBeNull();
+    expect(TierCta({ tier: "" as unknown as TierId, lead: "Test" })).toBeNull();
+    expect(TierCta({ tier: null as unknown as TierId, lead: "Test" })).toBeNull();
+    expect(TierCta({ tier: undefined as unknown as TierId, lead: "Test" })).toBeNull();
   });
 });
 
@@ -343,6 +356,17 @@ describe("Nav component", () => {
     for (const span of summaryEl.props.children) {
       expect(span.props["aria-hidden"]).toBe("true");
     }
+
+    const panel = details.props.children[1];
+    expect(panel.props.className).toBe("nav-menu-panel");
+    const mobileLinks = panel.props.children[0];
+    expect(
+      mobileLinks.map((l: { props: { href: string; children: string } }) => ({
+        href: l.props.href,
+        label: l.props.children,
+      }))
+    ).toEqual(NAV_LINKS);
+    expect(panel.props.children[1].props.className).toBe("nav-menu-theme");
 
     const html = renderToStaticMarkup(el);
     expect(html).toContain('class="nav-wrap"');

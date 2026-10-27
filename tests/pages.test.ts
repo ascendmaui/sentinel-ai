@@ -29,7 +29,7 @@ import { INCIDENTS_DISCLAIMER, incidents, scenarios, unverified } from "../lib/i
 import * as postsModule from "../lib/posts";
 import { posts } from "../lib/posts";
 import * as sourcesModule from "../lib/sources";
-import { tiers } from "../lib/tiers";
+import { ENGAGEMENT_TERMS, helper, matrix, tiers } from "../lib/tiers";
 
 describe("Home Page", () => {
   it("renders HomePage without error and outputs valid markup across all sections", () => {
@@ -82,6 +82,17 @@ describe("Pricing Page", () => {
     expect(html).toContain('id="fit"');
     expect(html).toContain('id="terms"');
     expect(html).toContain('id="contact"');
+    for (const r of matrix) {
+      expect(html).toContain(r.row);
+    }
+    expect(html).toContain(helper[0].q);
+    for (const a of helper[0].a) {
+      expect(html).toContain(a.label);
+    }
+    expect(html).toContain(ENGAGEMENT_TERMS);
+    for (const t of tiers) {
+      expect(html).toContain(`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}%20${encodeURIComponent(t.name)}%20inquiry`);
+    }
     // No published dollar prices on /pricing
     expect(html).not.toMatch(/\$\s*\d/);
   });
@@ -212,6 +223,11 @@ describe("Case Studies Page", () => {
       expect(html).toContain(`id="fix-${r.id.toLowerCase()}"`);
       expect(html).toContain(r.checked.replace(/'/g, "&#x27;"));
     }
+    expect(html).toContain("Self-engagement");
+    expect(html).toContain("airport ride platform");
+    expect(html).toContain("Recon");
+    expect(html).toContain("Scoped Assessment");
+    expect(html).toContain("Remediation and Retest");
     for (const [sev, count] of Object.entries(severityCounts)) {
       expect(html).toContain(`${sev}</span> ${count}`);
     }
@@ -226,9 +242,12 @@ describe("Incident Case Studies Page", () => {
     expect(el.type).toBe("main");
     const html = renderToStaticMarkup(el);
     expect(html).toContain(INCIDENTS_DISCLAIMER);
+    expect(html).toContain("Rogue agent");
+    expect(html).toContain("investigations");
     for (const inc of incidents) {
       expect(html).toContain(`id="${inc.id}"`);
       expect(html).toContain(`href="#${inc.id}"`);
+      expect(html).toContain(`<b>${inc.n}</b> ${inc.title.replace(/'/g, "&#x27;")}`);
       expect(html).toContain(inc.title.replace(/'/g, "&#x27;"));
     }
     for (const sc of scenarios) {
