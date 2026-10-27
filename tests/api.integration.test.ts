@@ -2895,6 +2895,395 @@ describe("Entity query aliases, numeric indexing, and helper extensions", () => 
     expect(oneSrc01.status).toBe(200);
     expect((await oneSrc01.json()).id).toBe(s1.id);
   });
+
+  it("GET /api/posts supports expanded aliases (postSlug, num, service_tier, min, headline, reference, article prefixes, and leading +)", async () => {
+    const post1 = posts[0];
+    const postSlugRes = postsIndex(req(`/api/posts?postSlug=${post1.slug}`));
+    expect(postSlugRes.status).toBe(200);
+    expect((await postSlugRes.json()).posts[0].slug).toBe(post1.slug);
+
+    const numRes = postsIndex(req("/api/posts?num=1"));
+    expect(numRes.status).toBe(200);
+    expect((await numRes.json()).posts[0].slug).toBe(post1.slug);
+
+    const tierRes = postsIndex(req("/api/posts?service_tier=seraphim"));
+    expect(tierRes.status).toBe(200);
+    expect((await tierRes.json()).posts.every((p: { tier: string }) => p.tier === "seraphim")).toBe(true);
+
+    const minRes = postsIndex(req(`/api/posts?min=${post1.readMins}`));
+    expect(minRes.status).toBe(200);
+    expect((await minRes.json()).posts.every((p: { readMins: number }) => p.readMins === post1.readMins)).toBe(true);
+
+    const minutesRes = postsIndex(req(`/api/posts?minutes=${post1.readMins}`));
+    expect(minutesRes.status).toBe(200);
+    expect((await minutesRes.json()).posts.every((p: { readMins: number }) => p.readMins === post1.readMins)).toBe(true);
+
+    const headlineRes = postsIndex(req("/api/posts?headline=test%20subject"));
+    expect(headlineRes.status).toBe(200);
+    expect((await headlineRes.json()).posts[0].slug).toBe(post1.slug);
+
+    const refRes = postsIndex(req("/api/posts?reference=oaiAug"));
+    expect(refRes.status).toBe(200);
+    expect((await refRes.json()).posts[0].slug).toBe(post1.slug);
+
+    const art1Res = await postOne(req("/api/posts/article-1"), slugCtx("article-1"));
+    expect(art1Res.status).toBe(200);
+    expect((await art1Res.json()).slug).toBe(post1.slug);
+
+    const artUnderscore1Res = await postOne(req("/api/posts/article_1"), slugCtx("article_1"));
+    expect(artUnderscore1Res.status).toBe(200);
+    expect((await artUnderscore1Res.json()).slug).toBe(post1.slug);
+
+    const artDigitRes = await postOne(req("/api/posts/article1"), slugCtx("article1"));
+    expect(artDigitRes.status).toBe(200);
+    expect((await artDigitRes.json()).slug).toBe(post1.slug);
+
+    const artShortRes = await postOne(req("/api/posts/art-1"), slugCtx("art-1"));
+    expect(artShortRes.status).toBe(200);
+    expect((await artShortRes.json()).slug).toBe(post1.slug);
+
+    const artShortDigitRes = await postOne(req("/api/posts/art1"), slugCtx("art1"));
+    expect(artShortDigitRes.status).toBe(200);
+    expect((await artShortDigitRes.json()).slug).toBe(post1.slug);
+
+    const plusOneRes = await postOne(req("/api/posts/+1"), slugCtx("+1"));
+    expect(plusOneRes.status).toBe(200);
+    expect((await plusOneRes.json()).slug).toBe(post1.slug);
+
+    const plusZeroOneRes = await postOne(req("/api/posts/+01"), slugCtx("+01"));
+    expect(plusZeroOneRes.status).toBe(200);
+    expect((await plusZeroOneRes.json()).slug).toBe(post1.slug);
+
+    const plusP1Res = await postOne(req("/api/posts/+p1"), slugCtx("+p1"));
+    expect(plusP1Res.status).toBe(200);
+    expect((await plusP1Res.json()).slug).toBe(post1.slug);
+  });
+
+  it("GET /api/incidents supports expanded query aliases and leading + lookups", async () => {
+    const inc1 = incidents[0];
+    const numRes = incidentsIndex(req("/api/incidents?num=01"));
+    expect(numRes.status).toBe(200);
+    expect((await numRes.json()).incidents[0].id).toBe(inc1.id);
+
+    const incRes = incidentsIndex(req("/api/incidents?inc=01"));
+    expect(incRes.status).toBe(200);
+    expect((await incRes.json()).incidents[0].id).toBe(inc1.id);
+
+    const incSlugRes = incidentsIndex(req(`/api/incidents?incident_slug=${inc1.id}`));
+    expect(incSlugRes.status).toBe(200);
+    expect((await incSlugRes.json()).incidents[0].id).toBe(inc1.id);
+
+    const caseSlugRes = incidentsIndex(req(`/api/incidents?case_slug=${inc1.id}`));
+    expect(caseSlugRes.status).toBe(200);
+    expect((await caseSlugRes.json()).incidents[0].id).toBe(inc1.id);
+
+    const refRes = incidentsIndex(req("/api/incidents?reference=oaiAug"));
+    expect(refRes.status).toBe(200);
+    expect((await refRes.json()).incidents[0].id).toBe(inc1.id);
+
+    const timeframeRes = incidentsIndex(req("/api/incidents?timeframe=2026"));
+    expect(timeframeRes.status).toBe(200);
+    expect((await timeframeRes.json()).incidents[0].id).toBe(inc1.id);
+
+    const statusRes = incidentsIndex(req("/api/incidents?status=documented"));
+    expect(statusRes.status).toBe(200);
+    expect((await statusRes.json()).incidents[0].id).toBe(inc1.id);
+
+    const tagRes = incidentsIndex(req("/api/incidents?tag=landmark"));
+    expect(tagRes.status).toBe(200);
+    expect((await tagRes.json()).incidents[0].id).toBe(inc1.id);
+
+    const weaknessRes = incidentsIndex(req("/api/incidents?weakness=token-refresh"));
+    expect(weaknessRes.status).toBe(200);
+    expect((await weaknessRes.json()).incidents[0].id).toBe(inc1.id);
+
+    const flawRes = incidentsIndex(req("/api/incidents?flaw=token-refresh"));
+    expect(flawRes.status).toBe(200);
+    expect((await flawRes.json()).incidents[0].id).toBe(inc1.id);
+
+    const plusOneRes = await incidentOne(req("/api/incidents/+1"), idCtx("+1"));
+    expect(plusOneRes.status).toBe(200);
+    expect((await plusOneRes.json()).id).toBe(inc1.id);
+
+    const plusZeroOneRes = await incidentOne(req("/api/incidents/+01"), idCtx("+01"));
+    expect(plusZeroOneRes.status).toBe(200);
+    expect((await plusZeroOneRes.json()).id).toBe(inc1.id);
+  });
+
+  it("GET /api/scenarios supports expanded query aliases and leading + lookups", async () => {
+    const sc1 = scenarios[0];
+    const numRes = scenariosIndex(req("/api/scenarios?num=01"));
+    expect(numRes.status).toBe(200);
+    expect((await numRes.json()).scenarios[0].id).toBe(sc1.id);
+
+    const scRes = scenariosIndex(req("/api/scenarios?sc=01"));
+    expect(scRes.status).toBe(200);
+    expect((await scRes.json()).scenarios[0].id).toBe(sc1.id);
+
+    const scSlugRes = scenariosIndex(req(`/api/scenarios?scenario_slug=${sc1.id}`));
+    expect(scSlugRes.status).toBe(200);
+    expect((await scSlugRes.json()).scenarios[0].id).toBe(sc1.id);
+
+    const refRes = scenariosIndex(req("/api/scenarios?reference=cs26"));
+    expect(refRes.status).toBe(200);
+    expect((await refRes.json()).scenarios.some((s: { id: string }) => s.id === sc1.id)).toBe(true);
+
+    const mitRes = scenariosIndex(req("/api/scenarios?mitigation=least-privilege"));
+    expect(mitRes.status).toBe(200);
+    expect((await mitRes.json()).scenarios.length).toBeGreaterThan(0);
+
+    const defRes = scenariosIndex(req("/api/scenarios?defense=least-privilege"));
+    expect(defRes.status).toBe(200);
+    expect((await defRes.json()).scenarios.length).toBeGreaterThan(0);
+
+    const techRes = scenariosIndex(req("/api/scenarios?technique=adversary"));
+    expect(techRes.status).toBe(200);
+    expect((await techRes.json()).scenarios.length).toBeGreaterThan(0);
+
+    const assessRes = scenariosIndex(req("/api/scenarios?assessment=scoped"));
+    expect(assessRes.status).toBe(200);
+    expect((await assessRes.json()).scenarios.length).toBeGreaterThan(0);
+
+    const plusOneRes = await scenarioOne(req("/api/scenarios/+1"), idCtx("+1"));
+    expect(plusOneRes.status).toBe(200);
+    expect((await plusOneRes.json()).id).toBe(sc1.id);
+
+    const plusZeroOneRes = await scenarioOne(req("/api/scenarios/+01"), idCtx("+01"));
+    expect(plusZeroOneRes.status).toBe(200);
+    expect((await plusZeroOneRes.json()).id).toBe(sc1.id);
+
+    const plusH1Res = await scenarioOne(req("/api/scenarios/+h1"), idCtx("+h1"));
+    expect(plusH1Res.status).toBe(200);
+    expect((await plusH1Res.json()).id).toBe(sc1.id);
+
+    const plusH01Res = await scenarioOne(req("/api/scenarios/+h01"), idCtx("+h01"));
+    expect(plusH01Res.status).toBe(200);
+    expect((await plusH01Res.json()).id).toBe(sc1.id);
+  });
+
+  it("GET /api/case-studies supports expanded query aliases and leading + lookups", async () => {
+    const f1 = findings[0];
+    const numRes = caseStudiesIndex(req("/api/case-studies?num=01"));
+    expect(numRes.status).toBe(200);
+    expect((await numRes.json()).findings[0].id).toBe(f1.id);
+
+    const csRes = caseStudiesIndex(req("/api/case-studies?cs=01"));
+    expect(csRes.status).toBe(200);
+    expect((await csRes.json()).findings[0].id).toBe(f1.id);
+
+    const fRes = caseStudiesIndex(req("/api/case-studies?f=01"));
+    expect(fRes.status).toBe(200);
+    expect((await fRes.json()).findings[0].id).toBe(f1.id);
+
+    const levelRes = caseStudiesIndex(req("/api/case-studies?level=medium"));
+    expect(levelRes.status).toBe(200);
+    expect((await levelRes.json()).findings.every((f: { severity: string }) => f.severity === "Medium")).toBe(true);
+
+    const stateRes = caseStudiesIndex(req("/api/case-studies?state=fixed"));
+    expect(stateRes.status).toBe(200);
+    expect((await stateRes.json()).findings.length).toBeGreaterThan(0);
+
+    const solRes = caseStudiesIndex(req("/api/case-studies?solution=secret"));
+    expect(solRes.status).toBe(200);
+    expect((await solRes.json()).findings.length).toBeGreaterThan(0);
+
+    const reasonRes = caseStudiesIndex(req("/api/case-studies?reason=credentials"));
+    expect(reasonRes.status).toBe(200);
+    expect((await reasonRes.json()).findings.length).toBeGreaterThan(0);
+
+    const descRes = caseStudiesIndex(req("/api/case-studies?details=unpaid"));
+    expect(descRes.status).toBe(200);
+    expect((await descRes.json()).findings.length).toBeGreaterThan(0);
+
+    const priorRes = caseStudiesIndex(req("/api/case-studies?prior=header"));
+    expect(priorRes.status).toBe(200);
+    expect((await priorRes.json()).findings.length).toBeGreaterThan(0);
+
+    const curRes = caseStudiesIndex(req("/api/case-studies?current=vault"));
+    expect(curRes.status).toBe(200);
+    expect((await curRes.json()).findings.length).toBeGreaterThan(0);
+
+    const plusOneRes = await caseStudyOne(req("/api/case-studies/+1"), idCtx("+1"));
+    expect(plusOneRes.status).toBe(200);
+    expect((await plusOneRes.json()).id).toBe(f1.id);
+
+    const plusZeroOneRes = await caseStudyOne(req("/api/case-studies/+01"), idCtx("+01"));
+    expect(plusZeroOneRes.status).toBe(200);
+    expect((await plusZeroOneRes.json()).id).toBe(f1.id);
+
+    const plusF1Res = await caseStudyOne(req("/api/case-studies/+f1"), idCtx("+f1"));
+    expect(plusF1Res.status).toBe(200);
+    expect((await plusF1Res.json()).id).toBe(f1.id);
+
+    const casestudy1Res = await caseStudyOne(req("/api/case-studies/casestudy1"), idCtx("casestudy1"));
+    expect(casestudy1Res.status).toBe(200);
+    expect((await casestudy1Res.json()).id).toBe(f1.id);
+
+    const fix1Res = await caseStudyOne(req("/api/case-studies/fix1"), idCtx("fix1"));
+    expect(fix1Res.status).toBe(200);
+    expect((await fix1Res.json()).id).toBe(f1.id);
+  });
+
+  it("GET /api/tiers supports expanded query aliases and rank prefixes", async () => {
+    const t1 = tiers[0];
+    const numRes = tiersIndex(req("/api/tiers?num=01"));
+    expect(numRes.status).toBe(200);
+    expect((await numRes.json()).tiers[0].id).toBe(t1.id);
+
+    const tRes = tiersIndex(req("/api/tiers?t=01"));
+    expect(tRes.status).toBe(200);
+    expect((await tRes.json()).tiers[0].id).toBe(t1.id);
+
+    const tierNameRes = tiersIndex(req("/api/tiers?tier_name=seraphim"));
+    expect(tierNameRes.status).toBe(200);
+    expect((await tierNameRes.json()).tiers[0].id).toBe(t1.id);
+
+    const freqRes = tiersIndex(req("/api/tiers?frequency=scoped"));
+    expect(freqRes.status).toBe(200);
+    expect((await freqRes.json()).tiers[0].id).toBe(t1.id);
+
+    const priceRes = tiersIndex(req("/api/tiers?price=premium"));
+    expect(priceRes.status).toBe(200);
+    expect((await priceRes.json()).tiers[0].id).toBe(t1.id);
+
+    const rankRes = tiersIndex(req("/api/tiers?rank=1"));
+    expect(rankRes.status).toBe(200);
+    expect((await rankRes.json()).tiers[0].id).toBe(t1.id);
+
+    const orderRankRes = tiersIndex(req("/api/tiers?order_rank=1"));
+    expect(orderRankRes.status).toBe(200);
+    expect((await orderRankRes.json()).tiers[0].id).toBe(t1.id);
+
+    const rank1Res = await tierOne(req("/api/tiers/rank-1"), idCtx("rank-1"));
+    expect(rank1Res.status).toBe(200);
+    expect((await rank1Res.json()).id).toBe(t1.id);
+
+    const rankUnderscore1Res = await tierOne(req("/api/tiers/rank_1"), idCtx("rank_1"));
+    expect(rankUnderscore1Res.status).toBe(200);
+    expect((await rankUnderscore1Res.json()).id).toBe(t1.id);
+
+    const rankDigitRes = await tierOne(req("/api/tiers/rank1"), idCtx("rank1"));
+    expect(rankDigitRes.status).toBe(200);
+    expect((await rankDigitRes.json()).id).toBe(t1.id);
+
+    const rShortRes = await tierOne(req("/api/tiers/r-1"), idCtx("r-1"));
+    expect(rShortRes.status).toBe(200);
+    expect((await rShortRes.json()).id).toBe(t1.id);
+
+    const rDigitRes = await tierOne(req("/api/tiers/r1"), idCtx("r1"));
+    expect(rDigitRes.status).toBe(200);
+    expect((await rDigitRes.json()).id).toBe(t1.id);
+
+    const plusOneRes = await tierOne(req("/api/tiers/+1"), idCtx("+1"));
+    expect(plusOneRes.status).toBe(200);
+    expect((await plusOneRes.json()).id).toBe(t1.id);
+  });
+
+  it("GET /api/sources supports expanded query aliases and ref prefix lookups", async () => {
+    const s1 = sources[0];
+    const numRes = sourcesIndex(req("/api/sources?num=01"));
+    expect(numRes.status).toBe(200);
+    expect((await numRes.json()).sources[0].id).toBe(s1.id);
+
+    const sRes = sourcesIndex(req("/api/sources?s=01"));
+    expect(sRes.status).toBe(200);
+    expect((await sRes.json()).sources[0].id).toBe(s1.id);
+
+    const refRes = sourcesIndex(req("/api/sources?reference=oaiAug"));
+    expect(refRes.status).toBe(200);
+    expect((await refRes.json()).sources[0].id).toBe(s1.id);
+
+    const uriRes = sourcesIndex(req("/api/sources?uri=openai.com"));
+    expect(uriRes.status).toBe(200);
+    expect((await uriRes.json()).sources.every((s: { url: string }) => s.url.includes("openai.com"))).toBe(true);
+
+    const credRes = sourcesIndex(req("/api/sources?credibility=primary"));
+    expect(credRes.status).toBe(200);
+    expect((await credRes.json()).sources.every((s: { note?: string }) => s.note?.toLowerCase().includes("primary"))).toBe(true);
+
+    const refOaiRes = await sourceOne(req("/api/sources/ref-oaiAug"), idCtx("ref-oaiAug"));
+    expect(refOaiRes.status).toBe(200);
+    expect((await refOaiRes.json()).id).toBe(s1.id);
+
+    const refUnderscoreRes = await sourceOne(req("/api/sources/ref_oaiAug"), idCtx("ref_oaiAug"));
+    expect(refUnderscoreRes.status).toBe(200);
+    expect((await refUnderscoreRes.json()).id).toBe(s1.id);
+
+    const referenceRes = await sourceOne(req("/api/sources/reference-oaiAug"), idCtx("reference-oaiAug"));
+    expect(referenceRes.status).toBe(200);
+    expect((await referenceRes.json()).id).toBe(s1.id);
+
+    const ref1Res = await sourceOne(req("/api/sources/ref1"), idCtx("ref1"));
+    expect(ref1Res.status).toBe(200);
+    expect((await ref1Res.json()).id).toBe(s1.id);
+
+    const ref01Res = await sourceOne(req("/api/sources/ref01"), idCtx("ref01"));
+    expect(ref01Res.status).toBe(200);
+    expect((await ref01Res.json()).id).toBe(s1.id);
+
+    const refHyphen1Res = await sourceOne(req("/api/sources/ref-1"), idCtx("ref-1"));
+    expect(refHyphen1Res.status).toBe(200);
+    expect((await refHyphen1Res.json()).id).toBe(s1.id);
+
+    const reference1Res = await sourceOne(req("/api/sources/reference1"), idCtx("reference1"));
+    expect(reference1Res.status).toBe(200);
+    expect((await reference1Res.json()).id).toBe(s1.id);
+
+    const plusOneRes = await sourceOne(req("/api/sources/+1"), idCtx("+1"));
+    expect(plusOneRes.status).toBe(200);
+    expect((await plusOneRes.json()).id).toBe(s1.id);
+  });
+
+  it("GET /api/brand supports expanded query aliases (b, b_key, bKey, num, badge1)", async () => {
+    const badge1 = TRUE_BADGES[0];
+    const bRes = brandEndpoint(req("/api/brand?b=passive"));
+    expect(bRes.status).toBe(200);
+    expect((await bRes.json()).badge.key).toBe(badge1.key);
+
+    const bKeyRes = brandEndpoint(req("/api/brand?b_key=passive"));
+    expect(bKeyRes.status).toBe(200);
+    expect((await bKeyRes.json()).badge.key).toBe(badge1.key);
+
+    const bKeyCamelRes = brandEndpoint(req("/api/brand?bKey=passive"));
+    expect(bKeyCamelRes.status).toBe(200);
+    expect((await bKeyCamelRes.json()).badge.key).toBe(badge1.key);
+
+    const numRes = brandEndpoint(req("/api/brand?num=1"));
+    expect(numRes.status).toBe(200);
+    expect((await numRes.json()).badge.key).toBe(badge1.key);
+
+    const badge1Res = brandEndpoint(req("/api/brand?badge=badge1"));
+    expect(badge1Res.status).toBe(200);
+    expect((await badge1Res.json()).badge.key).toBe(badge1.key);
+
+    const badge01Res = brandEndpoint(req("/api/brand?badge=badge01"));
+    expect(badge01Res.status).toBe(200);
+    expect((await badge01Res.json()).badge.key).toBe(badge1.key);
+
+    const plusOneRes = brandEndpoint(req("/api/brand?badge=+1"));
+    expect(plusOneRes.status).toBe(200);
+    expect((await plusOneRes.json()).badge.key).toBe(badge1.key);
+  });
+
+  it("lib/http pagination and query parsing helpers support extended parameter aliases", () => {
+    const params = new URLSearchParams("results=5&limit_count=10&skip_count=2&start_idx=4&page_id=3&sort_direction=up&search_term=openai");
+    expect(parseLimit(new URLSearchParams("results=7"))).toBe(7);
+    expect(parseLimit(new URLSearchParams("limit_count=8"))).toBe(8);
+    expect(parseLimit(new URLSearchParams("limitCount=9"))).toBe(9);
+    expect(parseOffset(new URLSearchParams("skip_count=3"))).toBe(3);
+    expect(parseOffset(new URLSearchParams("skipCount=4"))).toBe(4);
+    expect(parseOffset(new URLSearchParams("start_idx=5"))).toBe(5);
+    expect(parseOffset(new URLSearchParams("startIdx=6"))).toBe(6);
+    expect(parsePage(new URLSearchParams("page_id=2"))).toBe(2);
+    expect(parsePage(new URLSearchParams("pageId=3"))).toBe(3);
+    expect(parseSortOrder(new URLSearchParams("sort_direction=up"))).toBe("asc");
+    expect(parseSortOrder(new URLSearchParams("sortDirection=down"))).toBe("desc");
+    expect(parseSortOrder(new URLSearchParams("sort_direction=ascend"))).toBe("asc");
+    expect(parseSortOrder(new URLSearchParams("sort_direction=descend"))).toBe("desc");
+    expect(parseSearchQuery(new URLSearchParams("search_term=foo"))).toBe("foo");
+    expect(parseSearchQuery(new URLSearchParams("searchTerm=bar"))).toBe("bar");
+    expect(parseSearchQuery(new URLSearchParams("keywords=baz"))).toBe("baz");
+  });
 });
 
 

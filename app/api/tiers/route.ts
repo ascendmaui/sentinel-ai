@@ -1,7 +1,7 @@
 import { json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
 import { tiers, tierById, tierHref, matrix, helper, ENGAGEMENT_TERMS } from "../../../lib/tiers";
 
-/** Service tiers index as JSON: all four engagement tiers and comparison matrix. Supports ?id=, ?tier=, ?name=, ?cadence=, ?positioning=, ?rank=, ?q=, ?order=, ?offset=, ?limit=, and ?page=. */
+/** Service tiers index as JSON: all four engagement tiers and comparison matrix. Supports ?id=, ?tier=, ?name=, ?cadence=, ?positioning=, ?rank=, ?q=, ?order=, ?sort=, ?offset=, ?limit=, ?take=, and ?page=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -16,12 +16,35 @@ export function GET(req?: Request): Response {
         parseSearchQuery(url.searchParams, "tier") ||
         parseSearchQuery(url.searchParams, "tier_id") ||
         parseSearchQuery(url.searchParams, "tierId") ||
+        parseSearchQuery(url.searchParams, "tier_slug") ||
+        parseSearchQuery(url.searchParams, "tierSlug") ||
+        parseSearchQuery(url.searchParams, "t") ||
+        parseSearchQuery(url.searchParams, "t_id") ||
+        parseSearchQuery(url.searchParams, "tId") ||
         parseSearchQuery(url.searchParams, "slug") ||
-        parseSearchQuery(url.searchParams, "n");
-      const name = parseSearchQuery(url.searchParams, "name");
-      const cadence = parseSearchQuery(url.searchParams, "cadence");
-      const positioning = parseSearchQuery(url.searchParams, "positioning");
-      const rankParam = (url.searchParams.get("rank") ?? url.searchParams.get("tier_rank"))?.trim();
+        parseSearchQuery(url.searchParams, "n") ||
+        parseSearchQuery(url.searchParams, "num") ||
+        parseSearchQuery(url.searchParams, "number");
+      const name =
+        parseSearchQuery(url.searchParams, "name") ||
+        parseSearchQuery(url.searchParams, "tier_name") ||
+        parseSearchQuery(url.searchParams, "tierName") ||
+        parseSearchQuery(url.searchParams, "title");
+      const cadence =
+        parseSearchQuery(url.searchParams, "cadence") ||
+        parseSearchQuery(url.searchParams, "frequency") ||
+        parseSearchQuery(url.searchParams, "schedule");
+      const positioning =
+        parseSearchQuery(url.searchParams, "positioning") ||
+        parseSearchQuery(url.searchParams, "price") ||
+        parseSearchQuery(url.searchParams, "pricing") ||
+        parseSearchQuery(url.searchParams, "level");
+      const rankParam = (
+        url.searchParams.get("rank") ??
+        url.searchParams.get("tier_rank") ??
+        url.searchParams.get("tierRank") ??
+        url.searchParams.get("order_rank")
+      )?.trim();
       const rank = rankParam && /^\+?\d+$/.test(rankParam) ? Number(rankParam) : undefined;
       const limit = parseLimit(url.searchParams);
       const offset = parseOffset(url.searchParams, 10000, limit);

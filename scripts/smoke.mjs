@@ -159,6 +159,18 @@ check(postIdAliasPosts.count === 1 && postIdAliasPosts.posts[0].slug === posts.p
 const readTimeAliasPosts = await (await get("/api/posts?read_time=8")).json();
 check(readTimeAliasPosts.count > 0 && readTimeAliasPosts.posts.every(p => p.readMins === 8), "GET /api/posts?read_time=8 filter");
 
+const postArticle1 = await get("/api/posts/article-1");
+check(postArticle1.status === 200 && (await postArticle1.json()).slug === posts.posts[0].slug, "GET /api/posts/article-1 -> 200");
+
+const postPlus1 = await get("/api/posts/+1");
+check(postPlus1.status === 200 && (await postPlus1.json()).slug === posts.posts[0].slug, "GET /api/posts/+1 -> 200");
+
+const postNumFilter = await (await get("/api/posts?num=1")).json();
+check(postNumFilter.count === 1 && postNumFilter.posts[0].slug === posts.posts[0].slug, "GET /api/posts?num=1 filter");
+
+const postSlugFilter = await (await get(`/api/posts?postSlug=${posts.posts[0].slug}`)).json();
+check(postSlugFilter.count === 1 && postSlugFilter.posts[0].slug === posts.posts[0].slug, "GET /api/posts?postSlug=... filter");
+
 for (const p of posts.posts) {
   const r = await get(`/api/posts/${p.slug}`);
   const b = await r.json();
@@ -271,6 +283,10 @@ const incIncidentAlias = await (await get("/api/incidents?incident=01")).json();
 check(incIncidentAlias.count === 1 && incIncidentAlias.incidents[0].id === "openai-huggingface-2026", "GET /api/incidents?incident=01 alias filter");
 const jsonInc = await get(`/api/incidents/${incs.incidents[0].id}.json`);
 check(jsonInc.status === 200 && (await jsonInc.json()).id === incs.incidents[0].id, "GET /api/incidents/[id].json -> 200");
+const incPlus1 = await get("/api/incidents/+1");
+check(incPlus1.status === 200 && (await incPlus1.json()).id === "openai-huggingface-2026", "GET /api/incidents/+1 -> 200");
+const incNumFilter = await (await get("/api/incidents?num=01")).json();
+check(incNumFilter.count === 1 && incNumFilter.incidents[0].id === "openai-huggingface-2026", "GET /api/incidents?num=01 filter");
 const missingInc = await get("/api/incidents/does-not-exist");
 check(missingInc.status === 404 && (await missingInc.json()).error === "not_found", "unknown incident -> JSON 404");
 check(missingInc.headers.get("cache-control") === "no-store", "404 unknown incident cache-control is no-store");
@@ -348,6 +364,12 @@ const csPage = await (await get("/api/case-studies?page=2&limit=2")).json();
 check(csPage.count === 2, "GET /api/case-studies?page=2&limit=2 (page pagination)");
 const jsonCs = await get("/api/case-studies/f-01.json");
 check(jsonCs.status === 200 && (await jsonCs.json()).id === "F-01", "GET /api/case-studies/f-01.json -> 200");
+const csPlus1 = await get("/api/case-studies/+1");
+check(csPlus1.status === 200 && (await csPlus1.json()).id === "F-01", "GET /api/case-studies/+1 -> 200");
+const csCaseStudy1 = await get("/api/case-studies/casestudy1");
+check(csCaseStudy1.status === 200 && (await csCaseStudy1.json()).id === "F-01", "GET /api/case-studies/casestudy1 -> 200");
+const csNumFilter = await (await get("/api/case-studies?num=01")).json();
+check(csNumFilter.count === 1 && csNumFilter.findings[0].id === "F-01", "GET /api/case-studies?num=01 filter");
 
 const headCsOne = await get("/api/case-studies/f-01", { method: "HEAD" });
 check(headCsOne.status === 200, "HEAD /api/case-studies/f-01 -> 200");
@@ -422,6 +444,12 @@ const tiersPage = await (await get("/api/tiers?page=2&limit=2")).json();
 check(tiersPage.count === 2, "GET /api/tiers?page=2&limit=2 (page pagination)");
 const jsonTier = await get("/api/tiers/seraphim.json");
 check(jsonTier.status === 200 && (await jsonTier.json()).id === "seraphim", "GET /api/tiers/seraphim.json -> 200");
+const tierRank1 = await get("/api/tiers/rank-1");
+check(tierRank1.status === 200 && (await tierRank1.json()).id === "seraphim", "GET /api/tiers/rank-1 -> 200");
+const tierPlus1 = await get("/api/tiers/+1");
+check(tierPlus1.status === 200 && (await tierPlus1.json()).id === "seraphim", "GET /api/tiers/+1 -> 200");
+const tierRankFilter = await (await get("/api/tiers?rank=1")).json();
+check(tierRankFilter.count === 1 && tierRankFilter.tiers[0].id === "seraphim", "GET /api/tiers?rank=1 filter");
 
 const headTierOne = await get("/api/tiers/seraphim", { method: "HEAD" });
 check(headTierOne.status === 200, "HEAD /api/tiers/seraphim -> 200");
@@ -502,6 +530,10 @@ const scPage = await (await get("/api/scenarios?page=2&limit=2")).json();
 check(scPage.count === 2, "GET /api/scenarios?page=2&limit=2 (page pagination)");
 const jsonSc = await get(`/api/scenarios/legacy-internal-app.json`);
 check(jsonSc.status === 200, "GET /api/scenarios/[id].json -> 200");
+const scPlus1 = await get("/api/scenarios/+1");
+check(scPlus1.status === 200, "GET /api/scenarios/+1 -> 200");
+const scNumFilter = await (await get("/api/scenarios?num=01")).json();
+check(scNumFilter.count === 1, "GET /api/scenarios?num=01 filter");
 
 const headScOne = await get("/api/scenarios/legacy-internal-app", { method: "HEAD" });
 check(headScOne.status === 200, "HEAD /api/scenarios/legacy-internal-app -> 200");
@@ -577,6 +609,12 @@ check(srcBySrc1.status === 200 && (await srcBySrc1.json()).id === "oaiAug", "GET
 
 const srcBySource1 = await get("/api/sources/source1");
 check(srcBySource1.status === 200 && (await srcBySource1.json()).id === "oaiAug", "GET /api/sources/source1 (source1 prefix)");
+const sourceRef1 = await get("/api/sources/ref-oaiAug");
+check(sourceRef1.status === 200 && (await sourceRef1.json()).id === "oaiAug", "GET /api/sources/ref-oaiAug -> 200");
+const sourcePlus1 = await get("/api/sources/+1");
+check(sourcePlus1.status === 200 && (await sourcePlus1.json()).id === "oaiAug", "GET /api/sources/+1 -> 200");
+const sourceNumFilter = await (await get("/api/sources?num=01")).json();
+check(sourceNumFilter.count === 1 && sourceNumFilter.sources[0].id === "oaiAug", "GET /api/sources?num=01 filter");
 
 const srcBySrcAlias = await (await get("/api/sources?src=oaiAug")).json();
 check(srcBySrcAlias.count === 1 && srcBySrcAlias.sources[0].id === "oaiAug", "GET /api/sources?src=oaiAug filter");
@@ -634,6 +672,15 @@ check(brandBadgeB1.badge?.key === "passive", "GET /api/brand?badge=b1 returns ba
 
 const brandNameFilter = await (await get("/api/brand?name=passive")).json();
 check(brandNameFilter.badge?.key === "passive", "GET /api/brand?name=passive returns badge");
+
+const brandBAlias = await (await get("/api/brand?b=passive")).json();
+check(brandBAlias.badge && brandBAlias.badge.key === "passive", "GET /api/brand?b=passive (b alias)");
+
+const brandBadge1 = await (await get("/api/brand?badge=badge1")).json();
+check(brandBadge1.badge && brandBadge1.badge.key === "passive", "GET /api/brand?badge=badge1");
+
+const brandBadgePlus1 = await (await get("/api/brand?badge=+1")).json();
+check(brandBadgePlus1.badge && brandBadgePlus1.badge.key === "passive", "GET /api/brand?badge=+1");
 
 // 9. Method Not Allowed on dynamic API endpoints (Next.js dynamic route handlers return 405 for unexported methods)
 const endpoints405 = [

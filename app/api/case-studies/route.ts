@@ -1,7 +1,7 @@
 import { json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
 import { findingById, findings, remediation, severityCounts } from "../../../lib/caseStudies";
 
-/** Remediation findings and case studies index as JSON. Supports optional ?id=, ?n=, ?finding=, ?finding_id=, ?findingId=, ?case_study=, ?caseStudy=, ?slug=, ?title=, ?severity=, ?sev=, ?status=, ?fix=, ?rationale=, ?what=, ?before=, ?after=, ?q=, ?order=, ?offset=, ?limit=, and ?page= filters. */
+/** Remediation findings and case studies index as JSON. Supports optional ?id=, ?n=, ?num=, ?finding=, ?finding_id=, ?findingId=, ?case_study=, ?caseStudy=, ?cs=, ?f=, ?slug=, ?title=, ?severity=, ?sev=, ?status=, ?fix=, ?rationale=, ?what=, ?before=, ?after=, ?q=, ?order=, ?sort=, ?offset=, ?limit=, ?take=, and ?page= filters. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -12,20 +12,57 @@ export function GET(req?: Request): Response {
       const id =
         parseSearchQuery(url.searchParams, "id") ||
         parseSearchQuery(url.searchParams, "n") ||
+        parseSearchQuery(url.searchParams, "num") ||
+        parseSearchQuery(url.searchParams, "number") ||
         parseSearchQuery(url.searchParams, "finding") ||
         parseSearchQuery(url.searchParams, "finding_id") ||
         parseSearchQuery(url.searchParams, "findingId") ||
+        parseSearchQuery(url.searchParams, "finding_slug") ||
+        parseSearchQuery(url.searchParams, "findingSlug") ||
         parseSearchQuery(url.searchParams, "case_study") ||
         parseSearchQuery(url.searchParams, "caseStudy") ||
+        parseSearchQuery(url.searchParams, "cs") ||
+        parseSearchQuery(url.searchParams, "cs_id") ||
+        parseSearchQuery(url.searchParams, "csId") ||
+        parseSearchQuery(url.searchParams, "f") ||
+        parseSearchQuery(url.searchParams, "f_id") ||
+        parseSearchQuery(url.searchParams, "fId") ||
         parseSearchQuery(url.searchParams, "slug");
-      const title = parseSearchQuery(url.searchParams, "title");
-      const severity = parseSearchQuery(url.searchParams, "severity") || parseSearchQuery(url.searchParams, "sev");
-      const status = parseSearchQuery(url.searchParams, "status");
-      const fix = parseSearchQuery(url.searchParams, "fix") || parseSearchQuery(url.searchParams, "remediation");
-      const rationale = parseSearchQuery(url.searchParams, "rationale");
-      const what = parseSearchQuery(url.searchParams, "what") || parseSearchQuery(url.searchParams, "summary");
-      const before = parseSearchQuery(url.searchParams, "before");
-      const after = parseSearchQuery(url.searchParams, "after");
+      const title =
+        parseSearchQuery(url.searchParams, "title") ||
+        parseSearchQuery(url.searchParams, "name") ||
+        parseSearchQuery(url.searchParams, "headline");
+      const severity =
+        parseSearchQuery(url.searchParams, "severity") ||
+        parseSearchQuery(url.searchParams, "sev") ||
+        parseSearchQuery(url.searchParams, "level") ||
+        parseSearchQuery(url.searchParams, "priority");
+      const status =
+        parseSearchQuery(url.searchParams, "status") ||
+        parseSearchQuery(url.searchParams, "state") ||
+        parseSearchQuery(url.searchParams, "resolution");
+      const fix =
+        parseSearchQuery(url.searchParams, "fix") ||
+        parseSearchQuery(url.searchParams, "remediation") ||
+        parseSearchQuery(url.searchParams, "solution") ||
+        parseSearchQuery(url.searchParams, "resolution_note");
+      const rationale =
+        parseSearchQuery(url.searchParams, "rationale") ||
+        parseSearchQuery(url.searchParams, "reason") ||
+        parseSearchQuery(url.searchParams, "justification");
+      const what =
+        parseSearchQuery(url.searchParams, "what") ||
+        parseSearchQuery(url.searchParams, "summary") ||
+        parseSearchQuery(url.searchParams, "description") ||
+        parseSearchQuery(url.searchParams, "details");
+      const before =
+        parseSearchQuery(url.searchParams, "before") ||
+        parseSearchQuery(url.searchParams, "prior") ||
+        parseSearchQuery(url.searchParams, "original");
+      const after =
+        parseSearchQuery(url.searchParams, "after") ||
+        parseSearchQuery(url.searchParams, "current") ||
+        parseSearchQuery(url.searchParams, "remediated");
       const q = parseSearchQuery(url.searchParams);
       const limit = parseLimit(url.searchParams);
       const offset = parseOffset(url.searchParams, 10000, limit);

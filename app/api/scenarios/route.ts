@@ -1,7 +1,7 @@
 import { json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
 import { scenarioById, scenarios } from "../../../lib/incidents";
 
-/** Hypothetical scenarios index as JSON. Lists conceptual threat models and controls. Supports ?id=, ?n=, ?ref=, ?source=, ?weakness=, ?target=, ?control=, ?speed=, ?approach=, ?seraphim=, ?analysis=, ?q=, ?order=, ?offset=, ?limit=, and ?page=. */
+/** Hypothetical scenarios index as JSON. Lists conceptual threat models and controls. Supports ?id=, ?n=, ?num=, ?scenario=, ?ref=, ?source=, ?weakness=, ?target=, ?control=, ?speed=, ?approach=, ?seraphim=, ?analysis=, ?q=, ?order=, ?sort=, ?offset=, ?limit=, ?take=, and ?page=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -15,19 +15,64 @@ export function GET(req?: Request): Response {
         parseSearchQuery(url.searchParams, "scenario") ||
         parseSearchQuery(url.searchParams, "scenario_id") ||
         parseSearchQuery(url.searchParams, "scenarioId") ||
+        parseSearchQuery(url.searchParams, "scenario_slug") ||
+        parseSearchQuery(url.searchParams, "scenarioSlug") ||
+        parseSearchQuery(url.searchParams, "sc") ||
+        parseSearchQuery(url.searchParams, "sc_id") ||
+        parseSearchQuery(url.searchParams, "scId") ||
         parseSearchQuery(url.searchParams, "slug");
-      const n = parseSearchQuery(url.searchParams, "n");
-      const title = parseSearchQuery(url.searchParams, "title");
-      const ref = parseSearchQuery(url.searchParams, "ref") || parseSearchQuery(url.searchParams, "source");
+      const n =
+        parseSearchQuery(url.searchParams, "n") ||
+        parseSearchQuery(url.searchParams, "num") ||
+        parseSearchQuery(url.searchParams, "number") ||
+        parseSearchQuery(url.searchParams, "h") ||
+        parseSearchQuery(url.searchParams, "scenario_no");
+      const title =
+        parseSearchQuery(url.searchParams, "title") ||
+        parseSearchQuery(url.searchParams, "name") ||
+        parseSearchQuery(url.searchParams, "headline");
+      const ref =
+        parseSearchQuery(url.searchParams, "ref") ||
+        parseSearchQuery(url.searchParams, "reference") ||
+        parseSearchQuery(url.searchParams, "source") ||
+        parseSearchQuery(url.searchParams, "source_id") ||
+        parseSearchQuery(url.searchParams, "sourceId") ||
+        parseSearchQuery(url.searchParams, "src") ||
+        parseSearchQuery(url.searchParams, "src_id") ||
+        parseSearchQuery(url.searchParams, "srcId");
       const weakness =
         parseSearchQuery(url.searchParams, "weakness") ||
         parseSearchQuery(url.searchParams, "weaknessClass") ||
-        parseSearchQuery(url.searchParams, "weakness_class");
-      const target = parseSearchQuery(url.searchParams, "target");
-      const control = parseSearchQuery(url.searchParams, "control") || parseSearchQuery(url.searchParams, "controls");
-      const speed = parseSearchQuery(url.searchParams, "speed");
-      const approach = parseSearchQuery(url.searchParams, "approach");
-      const seraphim = parseSearchQuery(url.searchParams, "seraphim") || parseSearchQuery(url.searchParams, "analysis");
+        parseSearchQuery(url.searchParams, "weakness_class") ||
+        parseSearchQuery(url.searchParams, "vuln") ||
+        parseSearchQuery(url.searchParams, "vulnerability") ||
+        parseSearchQuery(url.searchParams, "flaw");
+      const target =
+        parseSearchQuery(url.searchParams, "target") ||
+        parseSearchQuery(url.searchParams, "victim") ||
+        parseSearchQuery(url.searchParams, "system") ||
+        parseSearchQuery(url.searchParams, "environment");
+      const control =
+        parseSearchQuery(url.searchParams, "control") ||
+        parseSearchQuery(url.searchParams, "controls") ||
+        parseSearchQuery(url.searchParams, "mitigation") ||
+        parseSearchQuery(url.searchParams, "defense") ||
+        parseSearchQuery(url.searchParams, "remediation");
+      const speed =
+        parseSearchQuery(url.searchParams, "speed") ||
+        parseSearchQuery(url.searchParams, "rate") ||
+        parseSearchQuery(url.searchParams, "tempo") ||
+        parseSearchQuery(url.searchParams, "pace");
+      const approach =
+        parseSearchQuery(url.searchParams, "approach") ||
+        parseSearchQuery(url.searchParams, "technique") ||
+        parseSearchQuery(url.searchParams, "method") ||
+        parseSearchQuery(url.searchParams, "attack");
+      const seraphim =
+        parseSearchQuery(url.searchParams, "seraphim") ||
+        parseSearchQuery(url.searchParams, "analysis") ||
+        parseSearchQuery(url.searchParams, "assessment") ||
+        parseSearchQuery(url.searchParams, "recommendation");
       const q = parseSearchQuery(url.searchParams);
       const limit = parseLimit(url.searchParams);
       const offset = parseOffset(url.searchParams, 10000, limit);

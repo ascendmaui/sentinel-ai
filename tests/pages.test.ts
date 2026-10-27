@@ -149,7 +149,7 @@ describe("Blog Page and Post Page", () => {
     }
 
     // Resolves by numeric index and prefix aliases
-    for (const alias of ["1", "01", "p-1", "post-1", "1.json", "01.json", "p-1.json", `post-${posts[0].slug}`]) {
+    for (const alias of ["1", "01", "+1", "p-1", "post-1", "article-1", "art-1", "article1", "1.json", "01.json", "p-1.json", `post-${posts[0].slug}`]) {
       const el = await PostPage({ params: Promise.resolve({ slug: alias }) });
       const html = renderToStaticMarkup(el);
       expect(html).toContain(posts[0].title);

@@ -1,7 +1,7 @@
 import { json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
 import { incidentById, incidents, scenarios, unverified, INCIDENTS_DISCLAIMER } from "../../../lib/incidents";
 
-/** Incident case studies index as JSON. Lists incidents, summaries, counts, and disclaimer. Supports ?id=, ?n=, ?source=, ?ref=, ?year=, ?date=, ?title=, ?standing=, ?kicker=, ?vuln=, ?cve=, ?impact=, ?q=, ?order=, ?offset=, ?limit=, and ?page=. */
+/** Incident case studies index as JSON. Lists incidents, summaries, counts, and disclaimer. Supports ?id=, ?n=, ?num=, ?incident=, ?case=, ?source=, ?ref=, ?year=, ?date=, ?title=, ?standing=, ?kicker=, ?vuln=, ?cve=, ?impact=, ?q=, ?order=, ?sort=, ?offset=, ?limit=, ?take=, and ?page=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -16,21 +16,62 @@ export function GET(req?: Request): Response {
         parseSearchQuery(url.searchParams, "incident") ||
         parseSearchQuery(url.searchParams, "incident_id") ||
         parseSearchQuery(url.searchParams, "incidentId") ||
+        parseSearchQuery(url.searchParams, "incident_slug") ||
+        parseSearchQuery(url.searchParams, "incidentSlug") ||
         parseSearchQuery(url.searchParams, "case") ||
         parseSearchQuery(url.searchParams, "case_id") ||
         parseSearchQuery(url.searchParams, "caseId") ||
+        parseSearchQuery(url.searchParams, "case_slug") ||
+        parseSearchQuery(url.searchParams, "caseSlug") ||
+        parseSearchQuery(url.searchParams, "inc") ||
+        parseSearchQuery(url.searchParams, "inc_id") ||
+        parseSearchQuery(url.searchParams, "incId") ||
         parseSearchQuery(url.searchParams, "slug");
-      const n = parseSearchQuery(url.searchParams, "n");
-      const source = parseSearchQuery(url.searchParams, "source") || parseSearchQuery(url.searchParams, "ref");
-      const year = parseSearchQuery(url.searchParams, "year") || parseSearchQuery(url.searchParams, "date");
-      const title = parseSearchQuery(url.searchParams, "title");
-      const standing = parseSearchQuery(url.searchParams, "standing");
-      const kicker = parseSearchQuery(url.searchParams, "kicker");
+      const n =
+        parseSearchQuery(url.searchParams, "n") ||
+        parseSearchQuery(url.searchParams, "num") ||
+        parseSearchQuery(url.searchParams, "number") ||
+        parseSearchQuery(url.searchParams, "no") ||
+        parseSearchQuery(url.searchParams, "incident_no") ||
+        parseSearchQuery(url.searchParams, "case_no");
+      const source =
+        parseSearchQuery(url.searchParams, "source") ||
+        parseSearchQuery(url.searchParams, "source_id") ||
+        parseSearchQuery(url.searchParams, "sourceId") ||
+        parseSearchQuery(url.searchParams, "src") ||
+        parseSearchQuery(url.searchParams, "src_id") ||
+        parseSearchQuery(url.searchParams, "srcId") ||
+        parseSearchQuery(url.searchParams, "ref") ||
+        parseSearchQuery(url.searchParams, "reference");
+      const year =
+        parseSearchQuery(url.searchParams, "year") ||
+        parseSearchQuery(url.searchParams, "date") ||
+        parseSearchQuery(url.searchParams, "timeframe") ||
+        parseSearchQuery(url.searchParams, "period");
+      const title =
+        parseSearchQuery(url.searchParams, "title") ||
+        parseSearchQuery(url.searchParams, "name") ||
+        parseSearchQuery(url.searchParams, "headline");
+      const standing =
+        parseSearchQuery(url.searchParams, "standing") ||
+        parseSearchQuery(url.searchParams, "status") ||
+        parseSearchQuery(url.searchParams, "credibility");
+      const kicker =
+        parseSearchQuery(url.searchParams, "kicker") ||
+        parseSearchQuery(url.searchParams, "tag") ||
+        parseSearchQuery(url.searchParams, "badge") ||
+        parseSearchQuery(url.searchParams, "category");
       const vuln =
         parseSearchQuery(url.searchParams, "vuln") ||
         parseSearchQuery(url.searchParams, "vulnerability") ||
-        parseSearchQuery(url.searchParams, "cve");
-      const impact = parseSearchQuery(url.searchParams, "impact");
+        parseSearchQuery(url.searchParams, "cve") ||
+        parseSearchQuery(url.searchParams, "weakness") ||
+        parseSearchQuery(url.searchParams, "flaw");
+      const impact =
+        parseSearchQuery(url.searchParams, "impact") ||
+        parseSearchQuery(url.searchParams, "severity") ||
+        parseSearchQuery(url.searchParams, "consequence") ||
+        parseSearchQuery(url.searchParams, "effect");
       const limit = parseLimit(url.searchParams);
       const offset = parseOffset(url.searchParams, 10000, limit);
       const order = parseSortOrder(url.searchParams);

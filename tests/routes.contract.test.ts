@@ -185,6 +185,19 @@ describe.each(routes.map((r) => [r.path] as const))("route contract %s", (path) 
       const sortNumericRes = await mod.GET({ url: `${path}?order=1&sort=-1` } as unknown as Request);
       expect(sortNumericRes.status).toBe(200);
       expectHardenedJson(sortNumericRes, `${path} numeric sort url`);
+
+      const sortDirectionUpDownRes = await mod.GET({ url: `${path}?order=up&sort_direction=down&sortDirection=descend` } as unknown as Request);
+      expect(sortDirectionUpDownRes.status).toBe(200);
+      expectHardenedJson(sortDirectionUpDownRes, `${path} up/down/descend sort url`);
+
+      const pageIdResultsRes = await mod.GET({ url: `${path}?page_id=1&results=1&start_idx=0&limit_count=1&skip_count=0` } as unknown as Request);
+      expect(pageIdResultsRes.status).toBe(200);
+      expectHardenedJson(pageIdResultsRes, `${path} page_id/results/start_idx url`);
+      const pageIdResultsBody = await pageIdResultsRes.json();
+      if ("count" in pageIdResultsBody && "totalCount" in pageIdResultsBody) {
+        expect(pageIdResultsBody.count).toBe(1);
+        expect(pageIdResultsBody.totalCount).toBeGreaterThanOrEqual(1);
+      }
     });
   } else {
     it("is a dynamic route with generateStaticParams and dynamicParams enabled", () => {

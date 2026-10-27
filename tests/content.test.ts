@@ -81,6 +81,9 @@ describe("brand", () => {
     expect(badgeByKey("b-1")).toEqual(TRUE_BADGES[0]);
     expect(badgeByKey("b_1")).toEqual(TRUE_BADGES[0]);
     expect(badgeByKey("b1")).toEqual(TRUE_BADGES[0]);
+    expect(badgeByKey("b01")).toEqual(TRUE_BADGES[0]);
+    expect(badgeByKey("badge1")).toEqual(TRUE_BADGES[0]);
+    expect(badgeByKey("badge01")).toEqual(TRUE_BADGES[0]);
     expect(badgeByKey("+1")).toEqual(TRUE_BADGES[0]);
     expect(badgeByKey("Passive recon only")).toEqual(TRUE_BADGES[0]);
     expect(badgeByKey("Written client authorization required")).toEqual(TRUE_BADGES[1]);
@@ -285,6 +288,10 @@ describe("sources registry", () => {
     expect(sourceById("src_oaiAug")).toBe(S.oaiAug);
     expect(sourceById("source-oaiAug")).toBe(S.oaiAug);
     expect(sourceById("source_oaiAug")).toBe(S.oaiAug);
+    expect(sourceById("ref-oaiAug")).toBe(S.oaiAug);
+    expect(sourceById("ref_oaiAug")).toBe(S.oaiAug);
+    expect(sourceById("reference-oaiAug")).toBe(S.oaiAug);
+    expect(sourceById("reference_oaiAug")).toBe(S.oaiAug);
     expect(sourceById("src%2DoaiAug")).toBe(S.oaiAug);
     expect(sourceById("SRC-OAIAUG")).toBe(S.oaiAug);
     expect(sourceById("oaiAug.json")).toBe(S.oaiAug);
@@ -306,7 +313,14 @@ describe("sources registry", () => {
     expect(sourceById("src1")).toBe(sources[0]);
     expect(sourceById("src01")).toBe(sources[0]);
     expect(sourceById("src-1")).toBe(sources[0]);
+    expect(sourceById("ref1")).toBe(sources[0]);
+    expect(sourceById("ref01")).toBe(sources[0]);
+    expect(sourceById("ref-1")).toBe(sources[0]);
+    expect(sourceById("ref_1")).toBe(sources[0]);
+    expect(sourceById("reference1")).toBe(sources[0]);
+    expect(sourceById("reference-1")).toBe(sources[0]);
     expect(sourceById("+1")).toBe(sources[0]);
+    expect(sourceById("+01")).toBe(sources[0]);
     expect(sourceById("")).toBeUndefined();
     expect(sourceById("   ")).toBeUndefined();
     expect(sourceById(undefined as unknown as string)).toBeUndefined();
@@ -359,6 +373,8 @@ describe("posts", () => {
     expect(postBySlug("post-" + posts[0].slug)).toBe(posts[0]);
     expect(postBySlug("blog-" + posts[0].slug)).toBe(posts[0]);
     expect(postBySlug("p-" + posts[0].slug)).toBe(posts[0]);
+    expect(postBySlug("article-" + posts[0].slug)).toBe(posts[0]);
+    expect(postBySlug("art-" + posts[0].slug)).toBe(posts[0]);
     expect(postBySlug("1")).toBe(posts[0]);
     expect(postBySlug("01")).toBe(posts[0]);
     expect(postBySlug("+1")).toBe(posts[0]);
@@ -381,6 +397,13 @@ describe("posts", () => {
     expect(postBySlug("blog-1")).toBe(posts[0]);
     expect(postBySlug("blog_1")).toBe(posts[0]);
     expect(postBySlug("blog1")).toBe(posts[0]);
+    expect(postBySlug("article-1")).toBe(posts[0]);
+    expect(postBySlug("article_1")).toBe(posts[0]);
+    expect(postBySlug("article1")).toBe(posts[0]);
+    expect(postBySlug("art-1")).toBe(posts[0]);
+    expect(postBySlug("art_1")).toBe(posts[0]);
+    expect(postBySlug("art1")).toBe(posts[0]);
+    expect(postBySlug("+p-1")).toBe(posts[0]);
     expect(postBySlug("0")).toBeUndefined();
     expect(postBySlug("5")).toBeUndefined();
     expect(postBySlug("99")).toBeUndefined();
@@ -492,6 +515,14 @@ describe("tiers", () => {
     expect(tierById("/seraphim/")).toBe(tiers[0]);
     expect(tierById("//t-1//")).toBe(tiers[0]);
     expect(tierById("/01/")).toBe(tiers[0]);
+    expect(tierById("rank-1")).toBe(tiers[0]);
+    expect(tierById("rank_1")).toBe(tiers[0]);
+    expect(tierById("rank1")).toBe(tiers[0]);
+    expect(tierById("rank01")).toBe(tiers[0]);
+    expect(tierById("r-1")).toBe(tiers[0]);
+    expect(tierById("r_1")).toBe(tiers[0]);
+    expect(tierById("r1")).toBe(tiers[0]);
+    expect(tierById("r01")).toBe(tiers[0]);
   });
 
   it("matrix and helper cover all tiers correctly", () => {
@@ -602,6 +633,8 @@ describe("incidents", () => {
     expect(incidentById("/01/")).toBe(first);
     expect(incidentById("/openai-huggingface-2026/")).toBe(first);
     expect(incidentById("//i-1//")).toBe(first);
+    expect(incidentById("+1")).toBe(first);
+    expect(incidentById("+01")).toBe(first);
   });
 
   it("scenarios have unique ids, contiguous H-numbering, non-empty sections, and cite only registered sources", () => {
@@ -670,6 +703,10 @@ describe("incidents", () => {
     expect(scenarioById("/legacy-internal-app/")).toBe(first);
     expect(scenarioById("/h1/")).toBe(first);
     expect(scenarioById("//h-1//")).toBe(first);
+    expect(scenarioById("+1")).toBe(first);
+    expect(scenarioById("+01")).toBe(first);
+    expect(scenarioById("+h1")).toBe(first);
+    expect(scenarioById("+h01")).toBe(first);
   });
 });
 
@@ -730,6 +767,16 @@ describe("case studies / findings", () => {
     expect(findingById("case_study_01")?.id).toBe("F-01");
     expect(findingById("/f-01/")?.id).toBe("F-01");
     expect(findingById("//cs-1//")?.id).toBe("F-01");
+    expect(findingById("+1")?.id).toBe("F-01");
+    expect(findingById("+01")?.id).toBe("F-01");
+    expect(findingById("+f1")?.id).toBe("F-01");
+    expect(findingById("casestudy1")?.id).toBe("F-01");
+    expect(findingById("fix1")?.id).toBe("F-01");
+    expect(remediationById("+1")?.id).toBe("F-01");
+    expect(remediationById("+01")?.id).toBe("F-01");
+    expect(remediationById("+f1")?.id).toBe("F-01");
+    expect(remediationById("casestudy1")?.id).toBe("F-01");
+    expect(remediationById("fix1")?.id).toBe("F-01");
 
     expect(remediationById("cs-01")?.id).toBe("F-01");
     expect(remediationById("cs-1")?.id).toBe("F-01");

@@ -1,7 +1,7 @@
 import { json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
 import { postBySlug, posts, postWords } from "../../../lib/posts";
 
-/** Blog index as JSON: post metadata only (no body). Newest first by default. Supports ?slug=, ?id=, ?n=, ?post=, ?post_id=, ?postId=, ?article=, ?article_id=, ?articleId=, ?title=, ?tier=, ?source=, ?source_id=, ?sourceId=, ?src=, ?ref=, ?year=, ?date=, ?readMins=, ?read_mins=, ?read_time=, ?q=, ?order=, ?offset=, ?limit=, and ?page=. */
+/** Blog index as JSON: post metadata only (no body). Newest first by default. Supports ?slug=, ?id=, ?n=, ?num=, ?post=, ?post_id=, ?postId=, ?post_slug=, ?postSlug=, ?article=, ?article_id=, ?articleId=, ?title=, ?tier=, ?service_tier=, ?source=, ?source_id=, ?sourceId=, ?src=, ?ref=, ?reference=, ?year=, ?date=, ?readMins=, ?mins=, ?min=, ?read_mins=, ?read_time=, ?reading_time=, ?q=, ?order=, ?sort=, ?offset=, ?limit=, ?take=, and ?page=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -14,26 +14,46 @@ export function GET(req?: Request): Response {
         parseSearchQuery(url.searchParams, "slug") ||
         parseSearchQuery(url.searchParams, "id") ||
         parseSearchQuery(url.searchParams, "n") ||
+        parseSearchQuery(url.searchParams, "num") ||
+        parseSearchQuery(url.searchParams, "number") ||
         parseSearchQuery(url.searchParams, "post") ||
         parseSearchQuery(url.searchParams, "post_id") ||
         parseSearchQuery(url.searchParams, "postId") ||
+        parseSearchQuery(url.searchParams, "post_slug") ||
+        parseSearchQuery(url.searchParams, "postSlug") ||
         parseSearchQuery(url.searchParams, "article") ||
         parseSearchQuery(url.searchParams, "article_id") ||
-        parseSearchQuery(url.searchParams, "articleId");
-      const title = parseSearchQuery(url.searchParams, "title");
-      const tier = parseSearchQuery(url.searchParams, "tier");
+        parseSearchQuery(url.searchParams, "articleId") ||
+        parseSearchQuery(url.searchParams, "article_slug") ||
+        parseSearchQuery(url.searchParams, "articleSlug");
+      const title =
+        parseSearchQuery(url.searchParams, "title") ||
+        parseSearchQuery(url.searchParams, "name") ||
+        parseSearchQuery(url.searchParams, "headline") ||
+        parseSearchQuery(url.searchParams, "post_title") ||
+        parseSearchQuery(url.searchParams, "postTitle");
+      const tier =
+        parseSearchQuery(url.searchParams, "tier") ||
+        parseSearchQuery(url.searchParams, "service_tier") ||
+        parseSearchQuery(url.searchParams, "serviceTier");
       const source =
         parseSearchQuery(url.searchParams, "source") ||
         parseSearchQuery(url.searchParams, "source_id") ||
         parseSearchQuery(url.searchParams, "sourceId") ||
+        parseSearchQuery(url.searchParams, "source_slug") ||
         parseSearchQuery(url.searchParams, "src") ||
         parseSearchQuery(url.searchParams, "src_id") ||
-        parseSearchQuery(url.searchParams, "ref");
+        parseSearchQuery(url.searchParams, "srcId") ||
+        parseSearchQuery(url.searchParams, "ref") ||
+        parseSearchQuery(url.searchParams, "reference");
       const year = parseSearchQuery(url.searchParams, "year") || parseSearchQuery(url.searchParams, "date");
       const q = parseSearchQuery(url.searchParams);
       const readMinsParam = (
         url.searchParams.get("readMins") ??
         url.searchParams.get("mins") ??
+        url.searchParams.get("min") ??
+        url.searchParams.get("minute") ??
+        url.searchParams.get("minutes") ??
         url.searchParams.get("read_mins") ??
         url.searchParams.get("read_time") ??
         url.searchParams.get("readTime") ??

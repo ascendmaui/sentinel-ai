@@ -93,6 +93,9 @@ export function parseLimit(params: URLSearchParams, max = 100): number | undefin
     params.get("rows") ??
     params.get("rows_per_page") ??
     params.get("rowsPerPage") ??
+    params.get("limit_count") ??
+    params.get("limitCount") ??
+    params.get("results") ??
     params.get("max")
   )?.trim();
   if (!raw || !/^\+?\d+$/.test(raw)) return undefined;
@@ -119,6 +122,8 @@ export function parsePage(params: URLSearchParams, max = 10000): number | undefi
     params.get("page_number") ??
     params.get("pageNo") ??
     params.get("page_no") ??
+    params.get("page_id") ??
+    params.get("pageId") ??
     params.get("page_idx") ??
     params.get("pageIdx") ??
     params.get("page_index") ??
@@ -149,7 +154,11 @@ export function parseOffset(params: URLSearchParams, max = 10000, pageSize?: num
     params.get("start_at") ??
     params.get("startAt") ??
     params.get("start_index") ??
-    params.get("startIndex")
+    params.get("startIndex") ??
+    params.get("start_idx") ??
+    params.get("startIdx") ??
+    params.get("skip_count") ??
+    params.get("skipCount")
   )?.trim();
   if (raw) {
     if (!/^\+?\d+$/.test(raw)) return undefined;
@@ -184,14 +193,16 @@ export function parseSortOrder(params: URLSearchParams, paramName = "order"): So
     params.get("direction") ??
     params.get("sort_dir") ??
     params.get("sortDir") ??
+    params.get("sort_direction") ??
+    params.get("sortDirection") ??
     params.get("sort_by") ??
     params.get("sortBy") ??
     params.get("orderBy") ??
     params.get("order_by")
   )?.trim().toLowerCase();
   if (!raw) return undefined;
-  if (raw === "asc" || raw === "ascending" || raw === "oldest" || raw === "earliest" || raw === "first" || raw === "forward" || raw === "1" || raw === "+1") return "asc";
-  if (raw === "desc" || raw === "descending" || raw === "newest" || raw === "latest" || raw === "last" || raw === "reverse" || raw === "recent" || raw === "backward" || raw === "backwards" || raw === "-1") return "desc";
+  if (raw === "asc" || raw === "ascending" || raw === "oldest" || raw === "earliest" || raw === "first" || raw === "forward" || raw === "up" || raw === "ascend" || raw === "1" || raw === "+1") return "asc";
+  if (raw === "desc" || raw === "descending" || raw === "newest" || raw === "latest" || raw === "last" || raw === "reverse" || raw === "recent" || raw === "backward" || raw === "backwards" || raw === "down" || raw === "descend" || raw === "-1") return "desc";
   return undefined;
 }
 
@@ -212,7 +223,10 @@ export function parseSearchQuery(params: URLSearchParams, paramName = "q"): stri
       params.get("filter") ??
       params.get("find") ??
       params.get("search_query") ??
-      params.get("searchQuery");
+      params.get("searchQuery") ??
+      params.get("search_term") ??
+      params.get("searchTerm") ??
+      params.get("keywords");
   }
   if (!raw) return undefined;
   let trimmed = raw.trim();

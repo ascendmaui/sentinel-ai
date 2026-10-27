@@ -26,11 +26,18 @@ export function GET(req?: Request): Response {
         parseSearchQuery(url.searchParams, "badge") ||
         parseSearchQuery(url.searchParams, "badge_key") ||
         parseSearchQuery(url.searchParams, "badgeKey") ||
+        parseSearchQuery(url.searchParams, "badge_id") ||
+        parseSearchQuery(url.searchParams, "badgeId") ||
+        parseSearchQuery(url.searchParams, "b") ||
+        parseSearchQuery(url.searchParams, "b_key") ||
+        parseSearchQuery(url.searchParams, "bKey") ||
         parseSearchQuery(url.searchParams, "key") ||
         parseSearchQuery(url.searchParams, "id") ||
         parseSearchQuery(url.searchParams, "slug") ||
         parseSearchQuery(url.searchParams, "name") ||
-        parseSearchQuery(url.searchParams, "n");
+        parseSearchQuery(url.searchParams, "n") ||
+        parseSearchQuery(url.searchParams, "num") ||
+        parseSearchQuery(url.searchParams, "number");
       if (badgeKey) {
         badgeMatch = badgeByKey(badgeKey) ?? null;
       }

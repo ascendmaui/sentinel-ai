@@ -223,12 +223,18 @@ export const postBySlug = (slug: string): Post | undefined => {
   const rawTarget = target;
   target = target.replace(/\.(html|json)$/, "");
 
+  if (target.startsWith("+")) target = target.slice(1);
+
   if (target.startsWith("post-") || target.startsWith("post_")) target = target.slice(5);
   else if (target.startsWith("blog-") || target.startsWith("blog_")) target = target.slice(5);
+  else if (target.startsWith("article-") || target.startsWith("article_")) target = target.slice(8);
+  else if (target.startsWith("art-") || target.startsWith("art_")) target = target.slice(4);
   else if (target.startsWith("p-") || target.startsWith("p_")) target = target.slice(2);
   else if (target.startsWith("p") && /^\d+$/.test(target.slice(1))) target = target.slice(1);
   else if (target.startsWith("post") && /^\d+$/.test(target.slice(4))) target = target.slice(4);
   else if (target.startsWith("blog") && /^\d+$/.test(target.slice(4))) target = target.slice(4);
+  else if (target.startsWith("article") && /^\d+$/.test(target.slice(7))) target = target.slice(7);
+  else if (target.startsWith("art") && /^\d+$/.test(target.slice(3))) target = target.slice(3);
 
   if (target.startsWith("+")) target = target.slice(1);
   const numClean = target.replace(/^0+/, "");
