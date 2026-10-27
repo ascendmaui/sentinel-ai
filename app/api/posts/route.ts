@@ -87,7 +87,7 @@ export function GET(req?: Request): Response {
         );
       }
       if (source) {
-        const cleanSource = source.replace(/^(source|src)[-_]/, "").replace(/\.(html|json)$/, "");
+        const cleanSource = source.replace(/^(source|src|ref|reference)[-_]/, "").replace(/\.(html|json)$/, "");
         list = list.filter(
           (p) =>
             p.sources.some(

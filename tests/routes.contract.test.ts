@@ -198,6 +198,14 @@ describe.each(routes.map((r) => [r.path] as const))("route contract %s", (path) 
         expect(pageIdResultsBody.count).toBe(1);
         expect(pageIdResultsBody.totalCount).toBeGreaterThanOrEqual(1);
       }
+
+      const extendedAliasesRes = await mod.GET({ url: `${path}?ordering=newer&items=1&from_index=0&lookup=seraphim` } as unknown as Request);
+      expect(extendedAliasesRes.status).toBe(200);
+      expectHardenedJson(extendedAliasesRes, `${path} ordering/items/from_index/lookup url`);
+      const extendedAliasesBody = await extendedAliasesRes.json();
+      if ("count" in extendedAliasesBody && "totalCount" in extendedAliasesBody) {
+        expect(extendedAliasesBody.count).toBeLessThanOrEqual(1);
+      }
     });
   } else {
     it("is a dynamic route with generateStaticParams and dynamicParams enabled", () => {

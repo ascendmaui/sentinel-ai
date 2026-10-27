@@ -80,10 +80,12 @@ export function GET(req?: Request): Response {
 
       if (id) {
         const matched = scenarioById(id);
-        let cleanId = id.replace(/\.(html|json)$/, "");
+        let cleanId = id.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
+        if (cleanId.startsWith("+")) cleanId = cleanId.slice(1);
         cleanId = cleanId.replace(/^(scenario|sc)[-_]/, "");
         if (cleanId.startsWith("scenario") && /^(?:h)?\d+$/.test(cleanId.slice(8))) cleanId = cleanId.slice(8);
         else if (cleanId.startsWith("sc") && /^\d+$/.test(cleanId.slice(2))) cleanId = cleanId.slice(2);
+        if (cleanId.startsWith("+")) cleanId = cleanId.slice(1);
         if (cleanId.startsWith("h-") || cleanId.startsWith("h_")) cleanId = `h${cleanId.slice(2)}`;
         cleanId = cleanId.replace(/^h0*(\d+)$/, "h$1").replace(/^0*(\d+)$/, "$1");
         const normalized = cleanId.startsWith("h") ? cleanId : `h${cleanId}`;
@@ -100,10 +102,12 @@ export function GET(req?: Request): Response {
 
       if (n) {
         const matched = scenarioById(n);
-        let cleanN = n.replace(/\.(html|json)$/, "");
+        let cleanN = n.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
+        if (cleanN.startsWith("+")) cleanN = cleanN.slice(1);
         cleanN = cleanN.replace(/^(scenario|sc)[-_]/, "");
         if (cleanN.startsWith("scenario") && /^(?:h)?\d+$/.test(cleanN.slice(8))) cleanN = cleanN.slice(8);
         else if (cleanN.startsWith("sc") && /^\d+$/.test(cleanN.slice(2))) cleanN = cleanN.slice(2);
+        if (cleanN.startsWith("+")) cleanN = cleanN.slice(1);
         if (cleanN.startsWith("h-") || cleanN.startsWith("h_")) cleanN = `h${cleanN.slice(2)}`;
         cleanN = cleanN.replace(/^h0*(\d+)$/, "h$1").replace(/^0*(\d+)$/, "$1");
         const normalized = cleanN.startsWith("h") ? cleanN : `h${cleanN}`;
@@ -117,7 +121,7 @@ export function GET(req?: Request): Response {
       }
 
       if (ref) {
-        const cleanRef = ref.replace(/^(source|src)[-_]/, "").replace(/\.(html|json)$/, "");
+        const cleanRef = ref.replace(/^(source|src|ref|reference)[-_]/, "").replace(/\.(html|json)$/, "");
         list = list.filter(
           (s) =>
             s.refs.some(

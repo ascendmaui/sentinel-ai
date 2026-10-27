@@ -41,11 +41,27 @@ export function GET(req?: Request): Response {
         parseSearchQuery(url.searchParams, "level");
       const rankParam = (
         url.searchParams.get("rank") ??
+        url.searchParams.get("rank_id") ??
+        url.searchParams.get("rankId") ??
         url.searchParams.get("tier_rank") ??
         url.searchParams.get("tierRank") ??
         url.searchParams.get("order_rank")
       )?.trim();
-      const rank = rankParam && /^\+?\d+$/.test(rankParam) ? Number(rankParam) : undefined;
+      let cleanRank = rankParam;
+      if (cleanRank) {
+        if (cleanRank.startsWith("+")) cleanRank = cleanRank.slice(1);
+        if (cleanRank.startsWith("rank-") || cleanRank.startsWith("rank_")) cleanRank = cleanRank.slice(5);
+        else if (cleanRank.startsWith("rank") && /^\d+$/.test(cleanRank.slice(4))) cleanRank = cleanRank.slice(4);
+        else if (cleanRank.startsWith("r-") || cleanRank.startsWith("r_")) cleanRank = cleanRank.slice(2);
+        else if (cleanRank.startsWith("r") && /^\d+$/.test(cleanRank.slice(1))) cleanRank = cleanRank.slice(1);
+        else if (cleanRank.startsWith("tier-") || cleanRank.startsWith("tier_")) cleanRank = cleanRank.slice(5);
+        else if (cleanRank.startsWith("tier") && /^\d+$/.test(cleanRank.slice(4))) cleanRank = cleanRank.slice(4);
+        else if (cleanRank.startsWith("t-") || cleanRank.startsWith("t_")) cleanRank = cleanRank.slice(2);
+        else if (cleanRank.startsWith("t") && /^\d+$/.test(cleanRank.slice(1))) cleanRank = cleanRank.slice(1);
+        if (cleanRank.startsWith("+")) cleanRank = cleanRank.slice(1);
+        cleanRank = cleanRank.replace(/^0+/, "");
+      }
+      const rank = cleanRank && /^\d+$/.test(cleanRank) ? Number(cleanRank) : undefined;
       const limit = parseLimit(url.searchParams);
       const offset = parseOffset(url.searchParams, 10000, limit);
       const order = parseSortOrder(url.searchParams);
@@ -53,8 +69,14 @@ export function GET(req?: Request): Response {
       if (id) {
         const matched = tierById(id);
         let cleanId = id.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
+        if (cleanId.startsWith("+")) cleanId = cleanId.slice(1);
         if (cleanId.startsWith("tier-") || cleanId.startsWith("tier_")) cleanId = cleanId.slice(5);
+        else if (cleanId.startsWith("tier") && /^\d+$/.test(cleanId.slice(4))) cleanId = cleanId.slice(4);
         else if (cleanId.startsWith("tier")) cleanId = cleanId.slice(4);
+        else if (cleanId.startsWith("rank-") || cleanId.startsWith("rank_")) cleanId = cleanId.slice(5);
+        else if (cleanId.startsWith("rank") && /^\d+$/.test(cleanId.slice(4))) cleanId = cleanId.slice(4);
+        else if (cleanId.startsWith("r-") || cleanId.startsWith("r_")) cleanId = cleanId.slice(2);
+        else if (cleanId.startsWith("r") && /^\d+$/.test(cleanId.slice(1))) cleanId = cleanId.slice(1);
         else if (cleanId.startsWith("t-") || cleanId.startsWith("t_")) cleanId = cleanId.slice(2);
         else if (cleanId.startsWith("t") && /^\d+$/.test(cleanId.slice(1))) cleanId = cleanId.slice(1);
         if (cleanId.startsWith("+")) cleanId = cleanId.slice(1);

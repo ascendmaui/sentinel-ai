@@ -3248,6 +3248,14 @@ describe("Entity query aliases, numeric indexing, and helper extensions", () => 
     expect(bKeyCamelRes.status).toBe(200);
     expect((await bKeyCamelRes.json()).badge.key).toBe(badge1.key);
 
+    const bIdRes = brandEndpoint(req("/api/brand?b_id=passive"));
+    expect(bIdRes.status).toBe(200);
+    expect((await bIdRes.json()).badge.key).toBe(badge1.key);
+
+    const bIdCamelRes = brandEndpoint(req("/api/brand?bId=passive"));
+    expect(bIdCamelRes.status).toBe(200);
+    expect((await bIdCamelRes.json()).badge.key).toBe(badge1.key);
+
     const numRes = brandEndpoint(req("/api/brand?num=1"));
     expect(numRes.status).toBe(200);
     expect((await numRes.json()).badge.key).toBe(badge1.key);
@@ -3265,24 +3273,123 @@ describe("Entity query aliases, numeric indexing, and helper extensions", () => 
     expect((await plusOneRes.json()).badge.key).toBe(badge1.key);
   });
 
+  it("GET /api/tiers supports rank prefix and rank ID query aliases (rank-1, r-1, rank1, tier-1, rank_id)", async () => {
+    const t1 = tiers[0];
+    const rankHyphenRes = tiersIndex(req("/api/tiers?rank=rank-1"));
+    expect(rankHyphenRes.status).toBe(200);
+    expect((await rankHyphenRes.json()).tiers[0].id).toBe(t1.id);
+
+    const rHyphenRes = tiersIndex(req("/api/tiers?rank=r-1"));
+    expect(rHyphenRes.status).toBe(200);
+    expect((await rHyphenRes.json()).tiers[0].id).toBe(t1.id);
+
+    const rankDigitRes = tiersIndex(req("/api/tiers?rank=rank1"));
+    expect(rankDigitRes.status).toBe(200);
+    expect((await rankDigitRes.json()).tiers[0].id).toBe(t1.id);
+
+    const tierPrefixRes = tiersIndex(req("/api/tiers?rank=tier-1"));
+    expect(tierPrefixRes.status).toBe(200);
+    expect((await tierPrefixRes.json()).tiers[0].id).toBe(t1.id);
+
+    const rankIdRes = tiersIndex(req("/api/tiers?rank_id=1"));
+    expect(rankIdRes.status).toBe(200);
+    expect((await rankIdRes.json()).tiers[0].id).toBe(t1.id);
+
+    const rankIdCamelRes = tiersIndex(req("/api/tiers?rankId=1"));
+    expect(rankIdCamelRes.status).toBe(200);
+    expect((await rankIdCamelRes.json()).tiers[0].id).toBe(t1.id);
+  });
+
+  it("GET /api/case-studies supports fix1, casestudy1, +1, and +f1 lookup and query filters", async () => {
+    const f1 = findings[0];
+    const fix1Res = caseStudiesIndex(req("/api/case-studies?id=fix1"));
+    expect(fix1Res.status).toBe(200);
+    expect((await fix1Res.json()).findings[0].id).toBe(f1.id);
+
+    const cs1Res = caseStudiesIndex(req("/api/case-studies?id=casestudy1"));
+    expect(cs1Res.status).toBe(200);
+    expect((await cs1Res.json()).findings[0].id).toBe(f1.id);
+
+    const plus1Res = caseStudiesIndex(req("/api/case-studies?id=+1"));
+    expect(plus1Res.status).toBe(200);
+    expect((await plus1Res.json()).findings[0].id).toBe(f1.id);
+
+    const plusF1Res = caseStudiesIndex(req("/api/case-studies?id=+f1"));
+    expect(plusF1Res.status).toBe(200);
+    expect((await plusF1Res.json()).findings[0].id).toBe(f1.id);
+
+    const csOneFix1 = await caseStudyOne(req("/api/case-studies/fix1"), idCtx("fix1"));
+    expect(csOneFix1.status).toBe(200);
+    expect((await csOneFix1.json()).id).toBe(f1.id);
+
+    const csOnePlusF1 = await caseStudyOne(req("/api/case-studies/+f1"), idCtx("+f1"));
+    expect(csOnePlusF1.status).toBe(200);
+    expect((await csOnePlusF1.json()).id).toBe(f1.id);
+  });
+
+  it("GET /api/scenarios and /api/incidents support leading plus and ref prefix filters", async () => {
+    const sc1 = scenarios[0];
+    const plusNRes = scenariosIndex(req("/api/scenarios?n=+1"));
+    expect(plusNRes.status).toBe(200);
+    expect((await plusNRes.json()).scenarios[0].id).toBe(sc1.id);
+
+    const plusH1Res = scenariosIndex(req("/api/scenarios?n=+h1"));
+    expect(plusH1Res.status).toBe(200);
+    expect((await plusH1Res.json()).scenarios[0].id).toBe(sc1.id);
+
+    const scRefPrefixRes = scenariosIndex(req("/api/scenarios?ref=ref-cs26"));
+    expect(scRefPrefixRes.status).toBe(200);
+    expect((await scRefPrefixRes.json()).scenarios.some((s: { id: string }) => s.id === sc1.id)).toBe(true);
+
+    const inc1 = incidents[0];
+    const incPlusNRes = incidentsIndex(req("/api/incidents?n=+1"));
+    expect(incPlusNRes.status).toBe(200);
+    expect((await incPlusNRes.json()).incidents[0].id).toBe(inc1.id);
+
+    const incPlus01Res = incidentsIndex(req("/api/incidents?n=+01"));
+    expect(incPlus01Res.status).toBe(200);
+    expect((await incPlus01Res.json()).incidents[0].id).toBe(inc1.id);
+
+    const incRefPrefixRes = incidentsIndex(req("/api/incidents?source=ref-oaiAug"));
+    expect(incRefPrefixRes.status).toBe(200);
+    expect((await incRefPrefixRes.json()).incidents[0].id).toBe(inc1.id);
+
+    const postRefPrefixRes = postsIndex(req("/api/posts?source=ref-oaiAug"));
+    expect(postRefPrefixRes.status).toBe(200);
+    expect((await postRefPrefixRes.json()).posts.length).toBeGreaterThan(0);
+  });
+
   it("lib/http pagination and query parsing helpers support extended parameter aliases", () => {
     const params = new URLSearchParams("results=5&limit_count=10&skip_count=2&start_idx=4&page_id=3&sort_direction=up&search_term=openai");
     expect(parseLimit(new URLSearchParams("results=7"))).toBe(7);
     expect(parseLimit(new URLSearchParams("limit_count=8"))).toBe(8);
     expect(parseLimit(new URLSearchParams("limitCount=9"))).toBe(9);
+    expect(parseLimit(new URLSearchParams("items=11"))).toBe(11);
+    expect(parseLimit(new URLSearchParams("items_per_page=12"))).toBe(12);
+    expect(parseLimit(new URLSearchParams("itemsPerPage=13"))).toBe(13);
     expect(parseOffset(new URLSearchParams("skip_count=3"))).toBe(3);
     expect(parseOffset(new URLSearchParams("skipCount=4"))).toBe(4);
     expect(parseOffset(new URLSearchParams("start_idx=5"))).toBe(5);
     expect(parseOffset(new URLSearchParams("startIdx=6"))).toBe(6);
+    expect(parseOffset(new URLSearchParams("from_index=7"))).toBe(7);
+    expect(parseOffset(new URLSearchParams("fromIndex=8"))).toBe(8);
     expect(parsePage(new URLSearchParams("page_id=2"))).toBe(2);
     expect(parsePage(new URLSearchParams("pageId=3"))).toBe(3);
     expect(parseSortOrder(new URLSearchParams("sort_direction=up"))).toBe("asc");
     expect(parseSortOrder(new URLSearchParams("sortDirection=down"))).toBe("desc");
     expect(parseSortOrder(new URLSearchParams("sort_direction=ascend"))).toBe("asc");
     expect(parseSortOrder(new URLSearchParams("sort_direction=descend"))).toBe("desc");
+    expect(parseSortOrder(new URLSearchParams("ordering=newer"))).toBe("desc");
+    expect(parseSortOrder(new URLSearchParams("ordering=older"))).toBe("asc");
+    expect(parseSortOrder(new URLSearchParams("order=chronological"))).toBe("asc");
+    expect(parseSortOrder(new URLSearchParams("sort=reverse-chronological"))).toBe("desc");
+    expect(parseSortOrder(new URLSearchParams("sort_dir=reverse_chronological"))).toBe("desc");
     expect(parseSearchQuery(new URLSearchParams("search_term=foo"))).toBe("foo");
     expect(parseSearchQuery(new URLSearchParams("searchTerm=bar"))).toBe("bar");
     expect(parseSearchQuery(new URLSearchParams("keywords=baz"))).toBe("baz");
+    expect(parseSearchQuery(new URLSearchParams("lookup=qux"))).toBe("qux");
+    expect(parseSearchQuery(new URLSearchParams("q_term=quux"))).toBe("quux");
+    expect(parseSearchQuery(new URLSearchParams("qTerm=corge"))).toBe("corge");
   });
 });
 

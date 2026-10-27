@@ -71,12 +71,16 @@ export function GET(req?: Request): Response {
       if (id) {
         const matched = findingById(id);
         let cleanId = id.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
+        if (cleanId.startsWith("+")) cleanId = cleanId.slice(1);
         if (cleanId.startsWith("fix-") || cleanId.startsWith("fix_")) cleanId = cleanId.slice(4);
+        else if (cleanId.startsWith("fix") && /^\d+$/.test(cleanId.slice(3))) cleanId = cleanId.slice(3);
         else if (cleanId.startsWith("finding-") || cleanId.startsWith("finding_")) cleanId = cleanId.slice(8);
         else if (cleanId.startsWith("finding") && /^\d+$/.test(cleanId.slice(7))) cleanId = cleanId.slice(7);
         else if (cleanId.startsWith("case-study-") || cleanId.startsWith("case_study_")) cleanId = cleanId.slice(11);
+        else if (cleanId.startsWith("casestudy") && /^\d+$/.test(cleanId.slice(9))) cleanId = cleanId.slice(9);
         else if (cleanId.startsWith("cs-") || cleanId.startsWith("cs_")) cleanId = cleanId.slice(3);
         else if (cleanId.startsWith("cs") && /^\d+$/.test(cleanId.slice(2))) cleanId = cleanId.slice(2);
+        if (cleanId.startsWith("+")) cleanId = cleanId.slice(1);
         const normalized = cleanId.replace(/[-_]/g, "");
         const numMatch = normalized.match(/^(?:f)?0*(\d+)$/);
         const withF = numMatch ? `f${numMatch[1].padStart(2, "0")}` : normalized;

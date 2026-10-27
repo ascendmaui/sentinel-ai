@@ -58,6 +58,10 @@ export function resolveSiteUrl(env: Record<string, string | undefined> = process
   }
   const vercelUrl = cleanUrl(env.VERCEL_URL);
   if (vercelUrl) return vercelUrl;
+  const port = env.PORT?.trim();
+  if (port && /^\d+$/.test(port) && Number(port) > 0 && Number(port) <= 65535) {
+    return `http://localhost:${port}`;
+  }
   return "http://localhost:3000";
 }
 
@@ -93,6 +97,7 @@ export function badgeByKey(key: string): TrustBadge | undefined {
   }
   if (!target) return undefined;
   target = target.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
+  if (target.startsWith("+")) target = target.slice(1);
   if (target.startsWith("badge-") || target.startsWith("badge_")) target = target.slice(6);
   else if (target.startsWith("badge") && /^\d+$/.test(target.slice(5))) target = target.slice(5);
   else if (target.startsWith("b-") || target.startsWith("b_")) target = target.slice(2);

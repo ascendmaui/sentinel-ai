@@ -45,6 +45,11 @@ describe("brand", () => {
     expect(resolveSiteUrl(null as unknown as Record<string, string | undefined>)).toBe("http://localhost:3000");
     expect(resolveSiteUrl({ VERCEL_ENV: "preview", VERCEL_PROJECT_PRODUCTION_URL: "prod.seraphim.ai", VERCEL_URL: "branch-preview.vercel.app" })).toBe("https://branch-preview.vercel.app");
     expect(resolveSiteUrl({ VERCEL_ENV: "production", VERCEL_PROJECT_PRODUCTION_URL: "   ", VERCEL_URL: "fallback-prod.vercel.app" })).toBe("https://fallback-prod.vercel.app");
+    expect(resolveSiteUrl({ PORT: "4000" })).toBe("http://localhost:4000");
+    expect(resolveSiteUrl({ PORT: "  8080  " })).toBe("http://localhost:8080");
+    expect(resolveSiteUrl({ PORT: "99999" })).toBe("http://localhost:3000");
+    expect(resolveSiteUrl({ PORT: "0" })).toBe("http://localhost:3000");
+    expect(resolveSiteUrl({ PORT: "invalid" })).toBe("http://localhost:3000");
     expect(resolveSiteUrl({})).toBe("http://localhost:3000");
     expect(resolveSiteUrl({ NEXT_PUBLIC_SITE_URL: "", SITE_URL: "" })).toBe("http://localhost:3000");
   });
@@ -85,6 +90,10 @@ describe("brand", () => {
     expect(badgeByKey("badge1")).toEqual(TRUE_BADGES[0]);
     expect(badgeByKey("badge01")).toEqual(TRUE_BADGES[0]);
     expect(badgeByKey("+1")).toEqual(TRUE_BADGES[0]);
+    expect(badgeByKey("+badge-passive")).toEqual(TRUE_BADGES[0]);
+    expect(badgeByKey("+b-passive")).toEqual(TRUE_BADGES[0]);
+    expect(badgeByKey("+badge1")).toEqual(TRUE_BADGES[0]);
+    expect(badgeByKey("+b1")).toEqual(TRUE_BADGES[0]);
     expect(badgeByKey("Passive recon only")).toEqual(TRUE_BADGES[0]);
     expect(badgeByKey("Written client authorization required")).toEqual(TRUE_BADGES[1]);
   });

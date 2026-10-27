@@ -171,6 +171,12 @@ check(postNumFilter.count === 1 && postNumFilter.posts[0].slug === posts.posts[0
 const postSlugFilter = await (await get(`/api/posts?postSlug=${posts.posts[0].slug}`)).json();
 check(postSlugFilter.count === 1 && postSlugFilter.posts[0].slug === posts.posts[0].slug, "GET /api/posts?postSlug=... filter");
 
+const postItemsFilter = await (await get("/api/posts?items=2")).json();
+check(postItemsFilter.count === 2 && postItemsFilter.posts.length === 2, "GET /api/posts?items=2 filter");
+
+const postOrderingFilter = await (await get("/api/posts?ordering=newer")).json();
+check(postOrderingFilter.count === posts.posts.length, "GET /api/posts?ordering=newer filter");
+
 for (const p of posts.posts) {
   const r = await get(`/api/posts/${p.slug}`);
   const b = await r.json();
@@ -451,6 +457,12 @@ check(tierPlus1.status === 200 && (await tierPlus1.json()).id === "seraphim", "G
 const tierRankFilter = await (await get("/api/tiers?rank=1")).json();
 check(tierRankFilter.count === 1 && tierRankFilter.tiers[0].id === "seraphim", "GET /api/tiers?rank=1 filter");
 
+const tierRankPrefixFilter = await (await get("/api/tiers?rank=rank-1")).json();
+check(tierRankPrefixFilter.count === 1 && tierRankPrefixFilter.tiers[0].id === "seraphim", "GET /api/tiers?rank=rank-1 filter");
+
+const tierRankIdFilter = await (await get("/api/tiers?rank_id=1")).json();
+check(tierRankIdFilter.count === 1 && tierRankIdFilter.tiers[0].id === "seraphim", "GET /api/tiers?rank_id=1 filter");
+
 const headTierOne = await get("/api/tiers/seraphim", { method: "HEAD" });
 check(headTierOne.status === 200, "HEAD /api/tiers/seraphim -> 200");
 checkSecurityHeaders(headTierOne, "HEAD /api/tiers/seraphim");
@@ -681,6 +693,12 @@ check(brandBadge1.badge && brandBadge1.badge.key === "passive", "GET /api/brand?
 
 const brandBadgePlus1 = await (await get("/api/brand?badge=+1")).json();
 check(brandBadgePlus1.badge && brandBadgePlus1.badge.key === "passive", "GET /api/brand?badge=+1");
+
+const brandBIdAlias = await (await get("/api/brand?b_id=passive")).json();
+check(brandBIdAlias.badge && brandBIdAlias.badge.key === "passive", "GET /api/brand?b_id=passive (b_id alias)");
+
+const brandBIdCamelAlias = await (await get("/api/brand?bId=passive")).json();
+check(brandBIdCamelAlias.badge && brandBIdCamelAlias.badge.key === "passive", "GET /api/brand?bId=passive (bId alias)");
 
 // 9. Method Not Allowed on dynamic API endpoints (Next.js dynamic route handlers return 405 for unexported methods)
 const endpoints405 = [

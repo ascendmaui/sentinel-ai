@@ -95,6 +95,9 @@ export function parseLimit(params: URLSearchParams, max = 100): number | undefin
     params.get("rowsPerPage") ??
     params.get("limit_count") ??
     params.get("limitCount") ??
+    params.get("items") ??
+    params.get("items_per_page") ??
+    params.get("itemsPerPage") ??
     params.get("results") ??
     params.get("max")
   )?.trim();
@@ -157,6 +160,8 @@ export function parseOffset(params: URLSearchParams, max = 10000, pageSize?: num
     params.get("startIndex") ??
     params.get("start_idx") ??
     params.get("startIdx") ??
+    params.get("from_index") ??
+    params.get("fromIndex") ??
     params.get("skip_count") ??
     params.get("skipCount")
   )?.trim();
@@ -197,12 +202,13 @@ export function parseSortOrder(params: URLSearchParams, paramName = "order"): So
     params.get("sortDirection") ??
     params.get("sort_by") ??
     params.get("sortBy") ??
+    params.get("ordering") ??
     params.get("orderBy") ??
     params.get("order_by")
   )?.trim().toLowerCase();
   if (!raw) return undefined;
-  if (raw === "asc" || raw === "ascending" || raw === "oldest" || raw === "earliest" || raw === "first" || raw === "forward" || raw === "up" || raw === "ascend" || raw === "1" || raw === "+1") return "asc";
-  if (raw === "desc" || raw === "descending" || raw === "newest" || raw === "latest" || raw === "last" || raw === "reverse" || raw === "recent" || raw === "backward" || raw === "backwards" || raw === "down" || raw === "descend" || raw === "-1") return "desc";
+  if (raw === "asc" || raw === "ascending" || raw === "oldest" || raw === "earliest" || raw === "first" || raw === "forward" || raw === "up" || raw === "ascend" || raw === "older" || raw === "chronological" || raw === "1" || raw === "+1") return "asc";
+  if (raw === "desc" || raw === "descending" || raw === "newest" || raw === "latest" || raw === "last" || raw === "reverse" || raw === "recent" || raw === "backward" || raw === "backwards" || raw === "down" || raw === "descend" || raw === "newer" || raw === "reverse-chronological" || raw === "reverse_chronological" || raw === "-1") return "desc";
   return undefined;
 }
 
@@ -222,6 +228,9 @@ export function parseSearchQuery(params: URLSearchParams, paramName = "q"): stri
       params.get("term") ??
       params.get("filter") ??
       params.get("find") ??
+      params.get("lookup") ??
+      params.get("q_term") ??
+      params.get("qTerm") ??
       params.get("search_query") ??
       params.get("searchQuery") ??
       params.get("search_term") ??
