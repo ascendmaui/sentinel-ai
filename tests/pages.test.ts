@@ -23,13 +23,13 @@ import { GET as incidentsApi } from "../app/api/incidents/route";
 import { GET as scenariosApi } from "../app/api/scenarios/route";
 import { GET as caseStudiesApi } from "../app/api/case-studies/route";
 import { GET as tiersApi } from "../app/api/tiers/route";
-import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, SITE_URL } from "../lib/brand";
+import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, BRAND_PARENT, SITE_URL } from "../lib/brand";
 import { findings, remediation, severityCounts } from "../lib/caseStudies";
 import { INCIDENTS_DISCLAIMER, incidents, scenarios, unverified } from "../lib/incidents";
 import * as postsModule from "../lib/posts";
 import { posts } from "../lib/posts";
 import * as sourcesModule from "../lib/sources";
-import { ENGAGEMENT_TERMS, helper, matrix, tiers } from "../lib/tiers";
+import { ENGAGEMENT_TERMS, helper, matrix, tierById, tierHref, tiers } from "../lib/tiers";
 
 describe("Home Page", () => {
   it("renders HomePage without error and outputs valid markup across all sections", () => {
@@ -54,8 +54,41 @@ describe("Home Page", () => {
     expect(html).toContain("Define scope");
     expect(html).toContain("Run the three phases");
     expect(html).toContain("Verify and hand off");
+    expect(`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}%20inquiry`).toBeDefined();
     expect(html).toContain(`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}%20inquiry`);
     expect(html).toContain("Ready to see what an attacker would see first?");
+  });
+
+  it("renders hero actions, phases with icons, audience cards, process steps, and dual contact mailto links", () => {
+    const html = renderToStaticMarkup(HomePage());
+    expect(html).toContain('class="pulse"');
+    expect(html).toContain("Know your exposure.");
+    expect(html).toContain("Close it on purpose.");
+    expect(html).toContain(`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}%20inquiry`);
+    expect(html).toContain('href="#phases"');
+    expect(html).toContain('class="badges badges-compact"');
+    expect(html).toContain(`Built by ${BRAND_PARENT}`);
+
+    // All phases with icons
+    for (const phase of ["Phase 01", "Phase 02", "Phase 03"]) {
+      expect(html).toContain(phase);
+    }
+
+    // Process steps
+    expect(html).toContain("01");
+    expect(html).toContain("02");
+    expect(html).toContain("03");
+    expect(html).toContain("Agree on systems, accounts, windows, and hard stop conditions.");
+    expect(html).toContain("Recon, Scoped Assessment, then Remediation and Retest");
+    expect(html).toContain("Confirm critical fixes, leave a durable record");
+
+    // Incident teaser button
+    expect(html).toContain('href="/incident-case-studies"');
+    expect(html).toContain("Read the Incident Case Studies");
+
+    // Dual mailto links
+    expect(html).toContain(`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}%20scope%20request`);
+    expect(html).toContain("Request a scoped assessment");
   });
 });
 
@@ -103,6 +136,21 @@ describe("Pricing Page", () => {
     }
     // No published dollar prices on /pricing
     expect(html).not.toMatch(/\$\s*\d/);
+  });
+
+  it("renders comparison table header, positioning, column order, and fit recommendations", () => {
+    const html = renderToStaticMarkup(PricingPage());
+    expect(html).toContain('scope="col">What you get</th>');
+    expect(html).toContain('scope="col">Positioning</th>');
+    for (const id of ["seraphim", "cherubim", "thrones", "angels"]) {
+      expect(html).toContain(tierById(id)!.name);
+      expect(html).toContain(tierById(id)!.positioning);
+    }
+    for (const item of helper[0].a) {
+      expect(html).toContain(tierHref(item.tier));
+      expect(html).toContain(tierById(item.tier)!.name);
+    }
+    expect(html).toContain(`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}%20scope%20request`);
   });
 });
 
@@ -222,6 +270,32 @@ describe("Blog Page and Post Page", () => {
     expect(noSrcHtml).not.toMatch(/<(?:ul|ol)\b[^>]*>\s*<\/(?:ul|ol)>/);
     spy.mockRestore();
   });
+
+  it("renders blog header links, ordered lists in post bodies, reading note callouts, and post CTA bands", async () => {
+    const blogHtml = renderToStaticMarkup(BlogIndex());
+    expect(blogMeta.openGraph).toBeDefined();
+    expect((blogMeta.openGraph as Record<string, unknown>).type).toBe("website");
+    expect(blogMeta.openGraph?.url).toBe("/blog");
+    expect(blogHtml).toContain('href="/incident-case-studies"');
+    expect(blogHtml).toContain('aria-label="Seraphim tier"');
+
+    // Verify all posts render, with <ol> lists where defined
+    for (const post of posts) {
+      const el = await PostPage({ params: Promise.resolve({ slug: post.slug }) });
+      const html = renderToStaticMarkup(el);
+      expect(html).toContain("Reading note.");
+      expect(html).toContain('href="/incident-case-studies#hypothetical-scenarios"');
+      expect(html).toContain('href="/incident-case-studies"');
+      expect(html).toContain(`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}%20inquiry`);
+      expect(html).toContain(post.ctaLead);
+
+      const hasOl = post.body.some((b) => b.t === "ol");
+      if (hasOl) {
+        expect(html).toContain("<ol>");
+        expect(html).toContain("</ol>");
+      }
+    }
+  });
 });
 
 describe("Case Studies Page", () => {
@@ -249,6 +323,43 @@ describe("Case Studies Page", () => {
     for (const [sev, count] of Object.entries(severityCounts)) {
       expect(html).toContain(`${sev}</span> ${count}`);
     }
+  });
+
+  it("renders summary definition list, 3 phase states, before/after finding descriptions, and limits writeup", () => {
+    const html = renderToStaticMarkup(CaseStudiesPage());
+    // Metadata OpenGraph
+    expect(csMeta.openGraph).toBeDefined();
+    expect((csMeta.openGraph as Record<string, unknown>).type).toBe("article");
+    expect(csMeta.openGraph?.title).toBe("Case study 01: Self-engagement, airport ride platform");
+    expect(csMeta.openGraph?.url).toBe("/case-studies");
+
+    // Assessment summary dictionary
+    expect(html).toContain("<dt>Assessor</dt>");
+    expect(html).toContain("<dt>Target</dt>");
+    expect(html).toContain("<dt>Method</dt>");
+    expect(html).toContain("<dt>Scope</dt>");
+    expect(html).toContain("<dt>Report status</dt>");
+    expect(html).toContain("This is a self-engagement.");
+
+    // The three phases
+    expect(html).toContain("Performed (observational)");
+    expect(html).toContain("Not performed");
+    expect(html).toContain("Performed, with verification");
+
+    // Finding before/after sections
+    for (const f of findings) {
+      expect(html).toContain(f.what.replace(/"/g, "&quot;").replace(/'/g, "&#x27;"));
+      expect(html).toContain(f.before.replace(/"/g, "&quot;").replace(/'/g, "&#x27;"));
+      expect(html).toContain(f.after.replace(/"/g, "&quot;").replace(/'/g, "&#x27;"));
+      expect(html).toContain(f.status.replace(/"/g, "&quot;").replace(/'/g, "&#x27;"));
+    }
+
+    // Limits panel and TierCta aside
+    expect(html).toContain('id="cs-limits"');
+    expect(html).toContain("What this case study does not claim");
+    expect(html).toContain('aria-label="Thrones tier"');
+    expect(html).toContain(`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}%20inquiry`);
+    expect(html).toContain(`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}%20scope%20request`);
   });
 });
 
@@ -296,6 +407,59 @@ describe("Incident Case Studies Page", () => {
       scenarios[0].refs = origRefs;
       spy.mockRestore();
     }
+  });
+
+  it("renders table of contents, premise panel, detailed case breakdown, and hypothetical scenarios controls", () => {
+    const html = renderToStaticMarkup(IncidentCaseStudiesPage());
+    // Metadata OpenGraph
+    expect(incMeta.openGraph).toBeDefined();
+    expect((incMeta.openGraph as Record<string, unknown>).type).toBe("article");
+    expect(incMeta.openGraph?.url).toBe("/incident-case-studies");
+
+    // TOC
+    expect(html).toContain('class="inc-toc"');
+    expect(html).toContain('href="#hypothetical-scenarios"');
+    expect(html).toContain('href="#not-verified"');
+
+    // Premise panel
+    expect(html).toContain('id="premise"');
+    expect(html).toContain("Did an AI really hack Hugging Face?");
+
+    // Incident details
+    for (const inc of incidents) {
+      expect(html).toContain(inc.standing.replace(/'/g, "&#x27;"));
+      for (const t of inc.timeline) {
+        expect(html).toContain(t.d.replace(/'/g, "&#x27;"));
+      }
+      for (const d of inc.did) {
+        expect(html).toContain(d.replace(/'/g, "&#x27;"));
+      }
+    }
+
+    // Aside TierCta for seraphim
+    expect(html).toContain('aria-label="Seraphim tier"');
+
+    // Hypothetical scenarios
+    expect(html).toContain('id="hypothetical-scenarios"');
+    expect(html).toContain("Conceptual and educational only.");
+    for (const sc of scenarios) {
+      expect(html).toContain(sc.target.replace(/'/g, "&#x27;"));
+      expect(html).toContain(sc.speed.replace(/'/g, "&#x27;"));
+      for (const c of sc.controls) {
+        expect(html).toContain(c.replace(/'/g, "&#x27;"));
+      }
+    }
+
+    // Aside TierCta for thrones
+    expect(html).toContain('aria-label="Thrones tier"');
+
+    // How it works panel
+    expect(html).toContain('id="how"');
+    expect(html).toContain('href="/pricing#terms"');
+
+    // Contact CTA band
+    expect(html).toContain('href="/pricing#compare"');
+    expect(html).toContain(`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}%20scope%20request`);
   });
 });
 

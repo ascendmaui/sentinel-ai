@@ -94,6 +94,9 @@ describe("brand", () => {
     expect(badgeByKey("+b-passive")).toEqual(TRUE_BADGES[0]);
     expect(badgeByKey("+badge1")).toEqual(TRUE_BADGES[0]);
     expect(badgeByKey("+b1")).toEqual(TRUE_BADGES[0]);
+    expect(badgeByKey("##passive")).toEqual(TRUE_BADGES[0]);
+    expect(badgeByKey("++passive")).toEqual(TRUE_BADGES[0]);
+    expect(badgeByKey("#passive#")).toEqual(TRUE_BADGES[0]);
     expect(badgeByKey("Passive recon only")).toEqual(TRUE_BADGES[0]);
     expect(badgeByKey("Written client authorization required")).toEqual(TRUE_BADGES[1]);
   });
@@ -330,6 +333,9 @@ describe("sources registry", () => {
     expect(sourceById("reference-1")).toBe(sources[0]);
     expect(sourceById("+1")).toBe(sources[0]);
     expect(sourceById("+01")).toBe(sources[0]);
+    expect(sourceById("##oaiAug")).toBe(sources[0]);
+    expect(sourceById("++oaiAug")).toBe(sources[0]);
+    expect(sourceById("#oaiAug#")).toBe(sources[0]);
     expect(sourceById("")).toBeUndefined();
     expect(sourceById("   ")).toBeUndefined();
     expect(sourceById(undefined as unknown as string)).toBeUndefined();
@@ -412,6 +418,12 @@ describe("posts", () => {
     expect(postBySlug("art-1")).toBe(posts[0]);
     expect(postBySlug("art_1")).toBe(posts[0]);
     expect(postBySlug("art1")).toBe(posts[0]);
+    expect(postBySlug("##" + posts[0].slug)).toBe(posts[0]);
+    expect(postBySlug("++" + posts[0].slug)).toBe(posts[0]);
+    expect(postBySlug("#" + posts[0].slug + "#")).toBe(posts[0]);
+    expect(postBySlug("##1")).toBe(posts[0]);
+    expect(postBySlug("++1")).toBe(posts[0]);
+    expect(postBySlug("#1#")).toBe(posts[0]);
     expect(postBySlug("+p-1")).toBe(posts[0]);
     expect(postBySlug("0")).toBeUndefined();
     expect(postBySlug("5")).toBeUndefined();
@@ -556,6 +568,12 @@ describe("tiers", () => {
     expect(tierHref("tier_02")).toBe("/pricing#cherubim");
     expect(tierHref("#cherubim")).toBe("/pricing#cherubim");
     expect(tierHref("+cherubim")).toBe("/pricing#cherubim");
+    expect(tierHref("##cherubim")).toBe("/pricing#cherubim");
+    expect(tierHref("++cherubim")).toBe("/pricing#cherubim");
+    expect(tierHref("#cherubim#")).toBe("/pricing#cherubim");
+    expect(tierById("##seraphim")).toBe(tiers[0]);
+    expect(tierById("++seraphim")).toBe(tiers[0]);
+    expect(tierById("#seraphim#")).toBe(tiers[0]);
     expect(tierHref("#unknown")).toBe("/pricing#unknown");
     expect(tierHref("+unknown")).toBe("/pricing#unknown");
     expect(tierHref("unknown.json")).toBe("/pricing#unknown");
@@ -725,6 +743,12 @@ describe("incidents", () => {
     expect(scenarioById("+01")).toBe(first);
     expect(scenarioById("+h1")).toBe(first);
     expect(scenarioById("+h01")).toBe(first);
+    expect(scenarioById("##legacy-internal-app")).toBe(first);
+    expect(scenarioById("++h1")).toBe(first);
+    expect(scenarioById("#h1#")).toBe(first);
+    expect(incidentById("##openai-huggingface-2026")).toBe(incidents[0]);
+    expect(incidentById("++01")).toBe(incidents[0]);
+    expect(incidentById("#01#")).toBe(incidents[0]);
   });
 });
 
@@ -834,6 +858,12 @@ describe("case studies / findings", () => {
     expect(remediationById("f%2D01")?.id).toBe("F-01");
     expect(remediationById("FIX-F-01")?.id).toBe("F-01");
     expect(remediationById("FIX-F01")?.id).toBe("F-01");
+    expect(remediationById("##f-01")?.id).toBe("F-01");
+    expect(remediationById("++f01")?.id).toBe("F-01");
+    expect(remediationById("#f-01#")?.id).toBe("F-01");
+    expect(findingById("##f-01")?.id).toBe("F-01");
+    expect(findingById("++f01")?.id).toBe("F-01");
+    expect(findingById("#f-01#")?.id).toBe("F-01");
     expect(remediationById("F-99")).toBeUndefined();
     expect(remediationById("toString")).toBeUndefined();
     expect(remediationById("")).toBeUndefined();

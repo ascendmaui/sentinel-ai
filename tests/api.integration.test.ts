@@ -3692,6 +3692,117 @@ describe("Entity query aliases, numeric indexing, and helper extensions", () => 
       expect((await bRes.json()).badge?.key).toBe(badge.key);
     }
   });
+
+  it("Pagination continuity and boundary consistency across all 6 index endpoints", async () => {
+    const endpoints: {
+      url: string;
+      handler: (r: Request) => Response;
+      field: string;
+      idKey: string;
+    }[] = [
+      { url: "/api/posts", handler: postsIndex, field: "posts", idKey: "slug" },
+      { url: "/api/incidents", handler: incidentsIndex, field: "incidents", idKey: "id" },
+      { url: "/api/scenarios", handler: scenariosIndex, field: "scenarios", idKey: "id" },
+      { url: "/api/case-studies", handler: caseStudiesIndex, field: "findings", idKey: "id" },
+      { url: "/api/sources", handler: sourcesIndex, field: "sources", idKey: "id" },
+      { url: "/api/tiers", handler: tiersIndex, field: "tiers", idKey: "id" },
+    ];
+
+    for (const { url, handler, field, idKey } of endpoints) {
+      // 1. Full list baseline
+      const fullRes = handler(req(url));
+      expect(fullRes.status).toBe(200);
+      const fullData = (await fullRes.json()) as Record<string, unknown>;
+      const totalCount = fullData.totalCount as number;
+      const allItems = fullData[field] as Record<string, unknown>[];
+      expect(totalCount).toBeGreaterThan(0);
+      expect(allItems).toHaveLength(totalCount);
+
+      // 2. Page 1 + Page 2 continuity
+      const p1Res = handler(req(`${url}?page=1&limit=2`));
+      expect(p1Res.status).toBe(200);
+      const p1Data = (await p1Res.json()) as Record<string, unknown>;
+      const p1Items = p1Data[field] as Record<string, unknown>[];
+      expect(p1Items).toHaveLength(Math.min(2, totalCount));
+
+      const p2Res = handler(req(`${url}?page=2&limit=2`));
+      expect(p2Res.status).toBe(200);
+      const p2Data = (await p2Res.json()) as Record<string, unknown>;
+      const p2Items = p2Data[field] as Record<string, unknown>[];
+      if (totalCount > 2) {
+        expect(p2Items).toHaveLength(Math.min(2, totalCount - 2));
+        // Verify disjoint sets (no overlap between page 1 and page 2)
+        const p1Ids = new Set(p1Items.map((item) => String(item[idKey])));
+        for (const item of p2Items) {
+          expect(p1Ids.has(String(item[idKey]))).toBe(false);
+        }
+      }
+
+      // 3. Out-of-bounds offset returns count: 0 with empty array
+      const oobRes = handler(req(`${url}?offset=${totalCount + 10}&limit=5`));
+      expect(oobRes.status).toBe(200);
+      const oobData = (await oobRes.json()) as Record<string, unknown>;
+      expect(oobData.count).toBe(0);
+      expect((oobData[field] as unknown[]).length).toBe(0);
+      expect(oobData.totalCount).toBe(totalCount);
+
+      // 4. Over-large limit is bounded and does not crash
+      const largeRes = handler(req(`${url}?limit=9999`));
+      expect(largeRes.status).toBe(200);
+      const largeData = (await largeRes.json()) as Record<string, unknown>;
+      expect((largeData[field] as unknown[]).length).toBe(totalCount);
+    }
+  });
+
+  it("Multi-anchor resilience (##, ++, #...#) and multi-parameter filtering across all endpoints", async () => {
+    // 1. Posts multi-filter and double-hash resilience
+    const postRes = postsIndex(req("/api/posts?tier=%23%23seraphim&source=%23%23oaiAug&order=asc&limit=1"));
+    expect(postRes.status).toBe(200);
+    const postData = await postRes.json();
+    expect(postData.count).toBe(1);
+    expect(postData.posts[0].tier).toBe("seraphim");
+
+    // 2. Incidents multi-filter with leading pluses
+    const incRes = incidentsIndex(req("/api/incidents?source=++oaiAug&year=2026&order=desc&limit=1"));
+    expect(incRes.status).toBe(200);
+    const incData = await incRes.json();
+    expect(incData.count).toBe(1);
+    expect(incData.incidents[0].date).toContain("2026");
+
+    // 3. Case studies multi-filter with double-hash severity
+    const csRes = caseStudiesIndex(req("/api/case-studies?severity=%23%23high&status=fixed&limit=2"));
+    expect(csRes.status).toBe(200);
+    const csData = await csRes.json();
+    expect(csData.count).toBeGreaterThan(0);
+    expect(csData.findings.every((f: { severity: string }) => f.severity.toLowerCase() === "high")).toBe(true);
+
+    // 4. Scenarios multi-filter with proxy weakness and speed
+    const scRes = scenariosIndex(req("/api/scenarios?weakness=proxy&speed=swarm&limit=1"));
+    expect(scRes.status).toBe(200);
+    const scData = await scRes.json();
+    expect(scData.count).toBe(1);
+    expect(scData.scenarios[0].id).toBe("agent-sandbox-egress");
+
+    // 5. Sources double-hash lookup
+    const srcRes = sourcesIndex(req("/api/sources?id=%23%23oaiAug"));
+    expect(srcRes.status).toBe(200);
+    const srcData = await srcRes.json();
+    expect(srcData.count).toBe(1);
+    expect(srcData.sources[0].id).toBe("oaiAug");
+
+    // 6. Tiers double-hash filter and order
+    const tierRes = tiersIndex(req("/api/tiers?tier=%23%23seraphim&order=desc"));
+    expect(tierRes.status).toBe(200);
+    const tierData = await tierRes.json();
+    expect(tierData.count).toBe(1);
+    expect(tierData.tiers[0].id).toBe("seraphim");
+
+    // 7. Brand double-hash filter
+    const brandRes = brandEndpoint(req("/api/brand?badge=%23%23passive"));
+    expect(brandRes.status).toBe(200);
+    const brandData = await brandRes.json();
+    expect(brandData.badge?.key).toBe("passive");
+  });
 });
 
 

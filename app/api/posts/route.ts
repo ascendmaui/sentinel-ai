@@ -76,7 +76,7 @@ export function GET(req?: Request): Response {
       if (slug) {
         const matched = postBySlug(slug);
         let cleanSlug = slug.replace(/^\/+|\/+$/g, "");
-        if (cleanSlug.startsWith("+") || cleanSlug.startsWith("#")) cleanSlug = cleanSlug.slice(1);
+        cleanSlug = cleanSlug.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         const withoutExt = cleanSlug.replace(/\.(html|json)$/, "");
         list = list.filter(
           (p) =>
@@ -90,9 +90,9 @@ export function GET(req?: Request): Response {
       if (tier) {
         const matchedTier = tierById(tier);
         let cleanTier = tier.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
-        if (cleanTier.startsWith("+") || cleanTier.startsWith("#")) cleanTier = cleanTier.slice(1);
+        cleanTier = cleanTier.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         cleanTier = cleanTier.replace(/^(tier|rank|r|t)[-_]?/, "");
-        if (cleanTier.startsWith("+") || cleanTier.startsWith("#")) cleanTier = cleanTier.slice(1);
+        cleanTier = cleanTier.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         list = list.filter(
           (p) =>
             p.tier.toLowerCase() === tier ||
@@ -102,9 +102,9 @@ export function GET(req?: Request): Response {
       }
       if (source) {
         let cleanSource = source.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
-        if (cleanSource.startsWith("+") || cleanSource.startsWith("#")) cleanSource = cleanSource.slice(1);
+        cleanSource = cleanSource.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         cleanSource = cleanSource.replace(/^(source|src|ref|reference)[-_]/, "");
-        if (cleanSource.startsWith("+") || cleanSource.startsWith("#")) cleanSource = cleanSource.slice(1);
+        cleanSource = cleanSource.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         list = list.filter(
           (p) =>
             p.sources.some(

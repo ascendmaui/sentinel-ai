@@ -54,7 +54,7 @@ export function GET(req?: Request): Response {
       )?.trim();
       let cleanRank = rankParam;
       if (cleanRank) {
-        if (cleanRank.startsWith("+") || cleanRank.startsWith("#")) cleanRank = cleanRank.slice(1);
+        cleanRank = cleanRank.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         if (cleanRank.startsWith("rank-") || cleanRank.startsWith("rank_")) cleanRank = cleanRank.slice(5);
         else if (cleanRank.startsWith("rank") && /^\d+$/.test(cleanRank.slice(4))) cleanRank = cleanRank.slice(4);
         else if (cleanRank.startsWith("r-") || cleanRank.startsWith("r_")) cleanRank = cleanRank.slice(2);
@@ -63,7 +63,7 @@ export function GET(req?: Request): Response {
         else if (cleanRank.startsWith("tier") && /^\d+$/.test(cleanRank.slice(4))) cleanRank = cleanRank.slice(4);
         else if (cleanRank.startsWith("t-") || cleanRank.startsWith("t_")) cleanRank = cleanRank.slice(2);
         else if (cleanRank.startsWith("t") && /^\d+$/.test(cleanRank.slice(1))) cleanRank = cleanRank.slice(1);
-        if (cleanRank.startsWith("+") || cleanRank.startsWith("#")) cleanRank = cleanRank.slice(1);
+        cleanRank = cleanRank.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         cleanRank = cleanRank.replace(/^0+/, "");
       }
       const rank = cleanRank && /^\d+$/.test(cleanRank) ? Number(cleanRank) : undefined;
@@ -74,7 +74,7 @@ export function GET(req?: Request): Response {
       if (id) {
         const matched = tierById(id);
         let cleanId = id.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
-        if (cleanId.startsWith("+") || cleanId.startsWith("#")) cleanId = cleanId.slice(1);
+        cleanId = cleanId.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         if (cleanId.startsWith("tier-") || cleanId.startsWith("tier_")) cleanId = cleanId.slice(5);
         else if (cleanId.startsWith("tier") && /^\d+$/.test(cleanId.slice(4))) cleanId = cleanId.slice(4);
         else if (cleanId.startsWith("tier")) cleanId = cleanId.slice(4);
@@ -84,7 +84,7 @@ export function GET(req?: Request): Response {
         else if (cleanId.startsWith("r") && /^\d+$/.test(cleanId.slice(1))) cleanId = cleanId.slice(1);
         else if (cleanId.startsWith("t-") || cleanId.startsWith("t_")) cleanId = cleanId.slice(2);
         else if (cleanId.startsWith("t") && /^\d+$/.test(cleanId.slice(1))) cleanId = cleanId.slice(1);
-        if (cleanId.startsWith("+") || cleanId.startsWith("#")) cleanId = cleanId.slice(1);
+        cleanId = cleanId.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         const numClean = cleanId.replace(/^0+/, "");
         list = list.filter(
           (t) =>

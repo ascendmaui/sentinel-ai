@@ -59,7 +59,7 @@ export function GET(req?: Request): Response {
       if (id) {
         const matched = sourceById(id);
         let cleanId = id.trim().toLowerCase().replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
-        if (cleanId.startsWith("+") || cleanId.startsWith("#")) cleanId = cleanId.slice(1);
+        cleanId = cleanId.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         if (cleanId.startsWith("source-") || cleanId.startsWith("source_")) cleanId = cleanId.slice(7);
         else if (cleanId.startsWith("source") && /^\d+$/.test(cleanId.slice(6))) cleanId = cleanId.slice(6);
         else if (cleanId.startsWith("src-") || cleanId.startsWith("src_")) cleanId = cleanId.slice(4);
@@ -70,7 +70,7 @@ export function GET(req?: Request): Response {
         else if (cleanId.startsWith("reference") && /^\d+$/.test(cleanId.slice(9))) cleanId = cleanId.slice(9);
         else if (cleanId.startsWith("s-") || cleanId.startsWith("s_")) cleanId = cleanId.slice(2);
         else if (cleanId.startsWith("s") && /^\d+$/.test(cleanId.slice(1))) cleanId = cleanId.slice(1);
-        if (cleanId.startsWith("+") || cleanId.startsWith("#")) cleanId = cleanId.slice(1);
+        cleanId = cleanId.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         const lowerId = id.trim().toLowerCase();
         list = list.filter(
           (s) =>

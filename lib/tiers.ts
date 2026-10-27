@@ -132,7 +132,7 @@ export const tierById = (id: string): Tier | undefined => {
   }
   if (!target) return undefined;
   target = target.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
-  if (target.startsWith("+") || target.startsWith("#")) target = target.slice(1);
+  target = target.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
   if (target.startsWith("tier-") || target.startsWith("tier_")) target = target.slice(5);
   else if (target.startsWith("tier") && /^\d+$/.test(target.slice(4))) target = target.slice(4);
   else if (target.startsWith("tier")) target = target.slice(4);
@@ -142,7 +142,7 @@ export const tierById = (id: string): Tier | undefined => {
   else if (target.startsWith("r") && /^\d+$/.test(target.slice(1))) target = target.slice(1);
   else if (target.startsWith("t-") || target.startsWith("t_")) target = target.slice(2);
   else if (target.startsWith("t") && /^\d+$/.test(target.slice(1))) target = target.slice(1);
-  if (target.startsWith("+") || target.startsWith("#")) target = target.slice(1);
+  target = target.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
   const numClean = target.replace(/^0+/, "");
   return tiers.find(
     (t) =>
