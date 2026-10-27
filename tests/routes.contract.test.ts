@@ -293,10 +293,27 @@ describe("CI & Repository Hardening Contracts", () => {
     const ciYaml = readFileSync(join(ROOT_DIR, ".github", "workflows", "ci.yml"), "utf8");
     expect(ciYaml).toContain("contents: read");
     expect(ciYaml).toContain("workflow_dispatch:");
+    expect(ciYaml).toContain("cancel-in-progress: true");
+    expect(ciYaml).toContain("node-version: 22");
+    expect(ciYaml).toContain("cache: npm");
+
     const checkoutCount = [...ciYaml.matchAll(/uses:\s*actions\/checkout@v4/g)].length;
     const persistFalseCount = [...ciYaml.matchAll(/persist-credentials:\s*false/g)].length;
     expect(checkoutCount).toBeGreaterThanOrEqual(2);
     expect(persistFalseCount).toBe(checkoutCount);
+
+    const timeouts = [...ciYaml.matchAll(/timeout-minutes:\s*(\d+)/g)].map((m) => Number(m[1]));
+    expect(timeouts.length).toBeGreaterThanOrEqual(2);
+    for (const t of timeouts) {
+      expect(t).toBeGreaterThan(0);
+      expect(t).toBeLessThanOrEqual(15);
+    }
+
+    const runsOn = [...ciYaml.matchAll(/runs-on:\s*([a-z0-9-]+)/g)].map((m) => m[1]);
+    expect(runsOn.length).toBeGreaterThanOrEqual(2);
+    for (const r of runsOn) {
+      expect(r).toBe("ubuntu-latest");
+    }
 
     const npmCiLines = [...ciYaml.matchAll(/run:\s*npm ci\b[^\n]*/g)].map((m) => m[0]);
     expect(npmCiLines.length).toBeGreaterThanOrEqual(2);
