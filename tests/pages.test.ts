@@ -60,9 +60,12 @@ describe("Home Page", () => {
 });
 
 describe("Pricing Page", () => {
-  it("exports valid metadata", () => {
+  it("exports valid metadata and OpenGraph configuration", () => {
     expect(pricingMeta.title).toBe("Services and tiers");
     expect(pricingMeta.alternates?.canonical).toBe("/pricing");
+    expect((pricingMeta.openGraph as Record<string, unknown>)?.type).toBe("website");
+    expect(pricingMeta.openGraph?.url).toBe("/pricing");
+    expect(pricingMeta.openGraph?.siteName).toBe(BRAND_NAME);
   });
 
   it("renders PricingPage with tier cards, comparison, and markup", () => {
@@ -76,8 +79,13 @@ describe("Pricing Page", () => {
       expect(html).toContain(t.name);
       expect(html).toContain(t.positioning);
     }
+    expect(html).toContain("tier-flagship");
+    expect(html).toContain('class="cmp-hi"');
     expect(html).toContain('<span class="yes">Included</span>');
     expect(html).toContain('<span class="no">Not included</span>');
+    expect(html).toContain('<span class="yes">Scheduled re-checks</span>');
+    expect(html).toContain('<span class="yes">Comprehensive</span>');
+    expect(html).toContain('<span class="yes">One target</span>');
     expect(html).toContain('id="compare"');
     expect(html).toContain('id="fit"');
     expect(html).toContain('id="terms"');

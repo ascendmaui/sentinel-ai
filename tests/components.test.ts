@@ -275,6 +275,18 @@ describe("TierStrip and TierEmblem components", () => {
 
     const plusStrip = TierStrip({ activeTier: "+2" });
     expect(renderToStaticMarkup(plusStrip)).toContain('class="tier-strip-active"');
+
+    const leadingZeroStrip = TierStrip({ activeTier: "02" });
+    expect(renderToStaticMarkup(leadingZeroStrip)).toContain('class="tier-strip-active"');
+
+    const t2Strip = TierStrip({ activeTier: "t2" });
+    expect(renderToStaticMarkup(t2Strip)).toContain('class="tier-strip-active"');
+
+    const r2Strip = TierStrip({ activeTier: "r2" });
+    expect(renderToStaticMarkup(r2Strip)).toContain('class="tier-strip-active"');
+
+    const extStrip = TierStrip({ activeTier: "cherubim.json" });
+    expect(renderToStaticMarkup(extStrip)).toContain('class="tier-strip-active"');
   });
 });
 
@@ -312,6 +324,18 @@ describe("TierCta component", () => {
 
     const plusEl = TierCta({ tier: "+1" as unknown as TierId, lead: "Plus." });
     expect(renderToStaticMarkup(plusEl!)).toContain('href="/pricing#seraphim"');
+
+    const zeroEl = TierCta({ tier: "01" as unknown as TierId, lead: "Zero." });
+    expect(renderToStaticMarkup(zeroEl!)).toContain('href="/pricing#seraphim"');
+
+    const t1El = TierCta({ tier: "t1" as unknown as TierId, lead: "T1." });
+    expect(renderToStaticMarkup(t1El!)).toContain('href="/pricing#seraphim"');
+
+    const r1El = TierCta({ tier: "r1" as unknown as TierId, lead: "R1." });
+    expect(renderToStaticMarkup(r1El!)).toContain('href="/pricing#seraphim"');
+
+    const extEl = TierCta({ tier: "seraphim.json" as unknown as TierId, lead: "Extension." });
+    expect(renderToStaticMarkup(extEl!)).toContain('href="/pricing#seraphim"');
   });
 
   it("returns null for an invalid tier, empty string, or non-string", () => {
@@ -434,6 +458,14 @@ describe("HeroStage component", () => {
     expect(mark.props.title).toBe(`${BRAND_NAME} seraphim mark`);
 
     expect(figure.type).toBe(HeroFigure);
+
+    const html = renderToStaticMarkup(el);
+    expect(html).toContain('class="hero-stage"');
+    expect(html).toContain('data-hero-stage="true"');
+    expect(html).toContain('class="hero-rings"');
+    expect(html).toContain('class="ao-mark hero-mark"');
+    expect(html).toContain('aria-label="Seraphim AI seraphim mark"');
+    expect(html).toContain('class="hero-canvas"');
   });
 });
 
