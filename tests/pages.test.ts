@@ -154,6 +154,14 @@ describe("Blog Page and Post Page", () => {
     const postPrefixedMeta = await postMeta({ params: Promise.resolve({ slug: `post-${posts[0].slug}` }) });
     expect(postPrefixedMeta.title).toBe(posts[0].title);
     expect(postPrefixedMeta.alternates?.canonical).toBe(`/blog/${posts[0].slug}`);
+
+    const hashMeta = await postMeta({ params: Promise.resolve({ slug: `#${posts[0].slug}` }) });
+    expect(hashMeta.title).toBe(posts[0].title);
+    expect(hashMeta.alternates?.canonical).toBe(`/blog/${posts[0].slug}`);
+
+    const hashNumMeta = await postMeta({ params: Promise.resolve({ slug: "#1" }) });
+    expect(hashNumMeta.title).toBe(posts[0].title);
+    expect(hashNumMeta.alternates?.canonical).toBe(`/blog/${posts[0].slug}`);
   });
 
   it("generateMetadata returns empty object for unknown post or missing params", async () => {
@@ -184,7 +192,7 @@ describe("Blog Page and Post Page", () => {
     }
 
     // Resolves by numeric index and prefix aliases
-    for (const alias of ["1", "01", "+1", "p-1", "post-1", "article-1", "art-1", "article1", "1.json", "01.json", "p-1.json", `post-${posts[0].slug}`]) {
+    for (const alias of ["1", "01", "+1", "p-1", "post-1", "article-1", "art-1", "article1", "1.json", "01.json", "p-1.json", `post-${posts[0].slug}`, `#${posts[0].slug}`, "#1", "#p-1", `#post-${posts[0].slug}`]) {
       const el = await PostPage({ params: Promise.resolve({ slug: alias }) });
       const html = renderToStaticMarkup(el);
       expect(html).toContain(posts[0].title);
@@ -226,6 +234,8 @@ describe("Case Studies Page", () => {
     for (const f of findings) {
       expect(html).toContain(`id="${f.id.toLowerCase()}"`);
       expect(html).toContain(f.title.replace(/'/g, "&#x27;"));
+      expect(html).toContain(f.rationale.replace(/'/g, "&#x27;"));
+      expect(html).toContain(f.fix.replace(/'/g, "&#x27;"));
     }
     for (const r of remediation) {
       expect(html).toContain(`id="fix-${r.id.toLowerCase()}"`);
@@ -257,6 +267,8 @@ describe("Incident Case Studies Page", () => {
       expect(html).toContain(`href="#${inc.id}"`);
       expect(html).toContain(`<b>${inc.n}</b> ${inc.title.replace(/'/g, "&#x27;")}`);
       expect(html).toContain(inc.title.replace(/'/g, "&#x27;"));
+      expect(html).toContain(inc.kicker.replace(/'/g, "&#x27;"));
+      expect(html).toContain(inc.seraphim.limits.replace(/'/g, "&#x27;"));
     }
     for (const sc of scenarios) {
       expect(html).toContain(`id="${sc.id}"`);
