@@ -663,6 +663,43 @@ describe("Cross-page internal link, anchor (#id), and unique DOM id integrity", 
         }
       }
 
+      // Accessibility: no positive tabindex values (disrupts natural tab order)
+      for (const m of html.matchAll(/\btabindex="([^"]+)"/gi)) {
+        const val = Number(m[1]);
+        expect(val <= 0, `${sourceRoute} has positive tabindex="${m[1]}"`).toBe(true);
+      }
+
+      // Accessibility: every heading tag (h1-h6) has non-empty text content
+      for (const m of html.matchAll(/<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>/gi)) {
+        const text = m[2].replace(/<[^>]+>/g, "").trim();
+        expect(text.length, `${sourceRoute} has empty <h${m[1]}>`).toBeGreaterThan(0);
+      }
+
+      // Accessibility: every <summary> inside <details> has an accessible label or non-empty inner text
+      for (const m of html.matchAll(/<summary\b([^>]*)>([\s\S]*?)<\/summary>/gi)) {
+        const attrs = m[1];
+        const innerText = m[2].replace(/<[^>]+>/g, "").trim();
+        const hasAriaLabel = /\baria-label="[^"]+"/.test(attrs);
+        expect(hasAriaLabel || innerText.length > 0, `${sourceRoute} <summary> lacks accessible name`).toBe(true);
+      }
+
+      // Accessibility: every <button> has an accessible label or non-empty inner text
+      for (const m of html.matchAll(/<button\b([^>]*)>([\s\S]*?)<\/button>/gi)) {
+        const attrs = m[1];
+        const innerText = m[2].replace(/<[^>]+>/g, "").trim();
+        const hasAriaLabel = /\baria-label="[^"]+"/.test(attrs);
+        expect(hasAriaLabel || innerText.length > 0, `${sourceRoute} <button> lacks accessible text`).toBe(true);
+      }
+
+      // Accessibility: every <a href> has non-empty accessible text or aria-label
+      for (const m of html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi)) {
+        const attrs = m[1];
+        const innerText = m[2].replace(/<[^>]+>/g, "").trim();
+        const hasAriaLabel = /\baria-label="[^"]+"/.test(attrs);
+        const hasRoleHidden = /aria-hidden="true"/.test(attrs);
+        expect(hasRoleHidden || hasAriaLabel || innerText.length > 0, `${sourceRoute} <a ${attrs}> lacks accessible text`).toBe(true);
+      }
+
       // Copy honesty guardrails: no unverified certification claims anywhere on the site
       expect(html, `${sourceRoute} certification claim`).not.toMatch(/\b(?:SOC\s*2|ISO\s*27001|FedRAMP|PCI-DSS)\b/i);
       // No empty <ul> or <ol> elements on any page
@@ -789,5 +826,88 @@ describe("App Router page and layout export contracts", () => {
     const sitemapUrls = sitemapEntries.map((e) => e.url);
     expect(new Set(sitemapUrls).size).toBe(sitemapUrls.length);
     expect([...sitemapUrls].sort()).toEqual([...expectedUrls].sort());
+  });
+});
+
+describe("WCAG 2.1 AA Accessibility & Landmark Integrity across all routes", () => {
+  it("enforces skip-links, interactive element labeling, keyboard navigability, and table/svg accessibility", async () => {
+    const routeHtml = new Map<string, string>();
+    routeHtml.set("/", renderToStaticMarkup(RootLayout({ children: HomePage() })));
+    routeHtml.set("/pricing", renderToStaticMarkup(RootLayout({ children: PricingPage() })));
+    routeHtml.set("/blog", renderToStaticMarkup(RootLayout({ children: BlogIndex() })));
+    routeHtml.set("/case-studies", renderToStaticMarkup(RootLayout({ children: CaseStudiesPage() })));
+    routeHtml.set("/incident-case-studies", renderToStaticMarkup(RootLayout({ children: IncidentCaseStudiesPage() })));
+    routeHtml.set("/_not-found", renderToStaticMarkup(RootLayout({ children: NotFound() })));
+
+    for (const post of posts) {
+      const postEl = await PostPage({ params: Promise.resolve({ slug: post.slug }) });
+      routeHtml.set(`/blog/${post.slug}`, renderToStaticMarkup(RootLayout({ children: postEl })));
+    }
+
+    for (const [sourceRoute, html] of routeHtml.entries()) {
+      // 1. Skip link targets existing element with substantive content
+      expect(html).toContain('href="#main"');
+      expect(html).toContain('id="main"');
+
+      // 2. Exact landmark counts: 1 <main>, 1 <h1>, and 1 <nav aria-label="Main">
+      expect([...html.matchAll(/<main\b/g)].length, `${sourceRoute} main count`).toBe(1);
+      expect([...html.matchAll(/<h1\b/g)].length, `${sourceRoute} h1 count`).toBe(1);
+      expect([...html.matchAll(/<nav\b[^>]*aria-label="Main"/g)].length, `${sourceRoute} nav main count`).toBe(1);
+
+      // 3. No empty headings
+      for (const m of html.matchAll(/<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>/gi)) {
+        const text = m[2].replace(/<[^>]+>/g, "").trim();
+        expect(text.length, `${sourceRoute} has empty <h${m[1]}>`).toBeGreaterThan(0);
+      }
+
+      // 4. Tabindex: no positive tabindex values anywhere
+      for (const m of html.matchAll(/\btabindex="([^"]+)"/gi)) {
+        const val = Number(m[1]);
+        expect(val <= 0, `${sourceRoute} positive tabindex`).toBe(true);
+      }
+
+      // 5. Interactive controls have accessible name
+      for (const m of html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi)) {
+        const attrs = m[1];
+        const innerText = m[2].replace(/<[^>]+>/g, "").trim();
+        const hasAriaLabel = /\baria-label="[^"]+"/.test(attrs);
+        const isHidden = /aria-hidden="true"/.test(attrs);
+        expect(isHidden || hasAriaLabel || innerText.length > 0, `${sourceRoute} <a ${attrs}> lacks accessible text`).toBe(true);
+      }
+      for (const m of html.matchAll(/<button\b([^>]*)>([\s\S]*?)<\/button>/gi)) {
+        const attrs = m[1];
+        const innerText = m[2].replace(/<[^>]+>/g, "").trim();
+        const hasAriaLabel = /\baria-label="[^"]+"/.test(attrs);
+        expect(hasAriaLabel || innerText.length > 0, `${sourceRoute} <button> lacks accessible text`).toBe(true);
+      }
+      for (const m of html.matchAll(/<summary\b([^>]*)>([\s\S]*?)<\/summary>/gi)) {
+        const attrs = m[1];
+        const innerText = m[2].replace(/<[^>]+>/g, "").trim();
+        const hasAriaLabel = /\baria-label="[^"]+"/.test(attrs);
+        expect(hasAriaLabel || innerText.length > 0, `${sourceRoute} <summary> lacks accessible name`).toBe(true);
+      }
+
+      // 6. Visual elements (svg, canvas) have accessibility attributes
+      for (const m of html.matchAll(/<svg\b([^>]*)>/gi)) {
+        const attrs = m[1];
+        if (attrs.includes('role="img"')) {
+          expect(attrs, `${sourceRoute} svg[role=img]`).toMatch(/\baria-label="[^"]+"/);
+        } else {
+          expect(attrs, `${sourceRoute} decorative svg`).toContain('aria-hidden="true"');
+        }
+      }
+      for (const m of html.matchAll(/<canvas\b([^>]*)>/gi)) {
+        const attrs = m[1];
+        expect(attrs, `${sourceRoute} canvas`).toContain('aria-hidden="true"');
+      }
+
+      // 7. Tables have label/labelledby and headers have scope
+      for (const m of html.matchAll(/<table\b([^>]*)>/gi)) {
+        expect(/\baria-label="[^"]+"|\baria-labelledby="[^"]+"/.test(m[1]), `${sourceRoute} table label`).toBe(true);
+      }
+      for (const m of html.matchAll(/<th\b([^>]*)>/gi)) {
+        expect(m[1], `${sourceRoute} th scope`).toMatch(/\bscope="(?:col|row)"/);
+      }
+    }
   });
 });

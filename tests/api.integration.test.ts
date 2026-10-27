@@ -3945,4 +3945,111 @@ describe("Entity query aliases, numeric indexing, and helper extensions", () => 
   });
 });
 
+describe("Cross-route end-to-end user journeys and relational data integrity", () => {
+  it("Discovery-to-Action journey: brand metadata -> trust badges -> tier scoping -> contact mailto prefill", async () => {
+    // 1. Initial brand metadata retrieval
+    const brandRes = brandEndpoint(req("/api/brand"));
+    expect(brandRes.status).toBe(200);
+    const brand = await brandRes.json();
+    expect(brand.name).toBe(BRAND_NAME);
+    expect(brand.badges.length).toBe(TRUE_BADGES.length);
+
+    // 2. Client queries a specific trust badge
+    const badgeRes = brandEndpoint(req("/api/brand?badge=scoped"));
+    expect(badgeRes.status).toBe(200);
+    const badgeData = await badgeRes.json();
+    expect(badgeData.badge.key).toBe("scoped");
+    expect(badgeData.badge.label).toBe("Scoped Assessment");
+
+    // 3. Client evaluates service tiers
+    const tiersRes = tiersIndex(req("/api/tiers"));
+    expect(tiersRes.status).toBe(200);
+    const tiersData = await tiersRes.json();
+    expect(tiersData.count).toBe(4);
+    expect(tiersData.matrix.length).toBeGreaterThan(0);
+    expect(tiersData.helper.length).toBeGreaterThan(0);
+
+    // 4. Client selects 'thrones' tier for one system assessment
+    const thronesSummary = tiersData.tiers.find((t: { id: string }) => t.id === "thrones");
+    expect(thronesSummary).toBeDefined();
+    expect(thronesSummary.url).toBe("/pricing#thrones");
+
+    // 5. Client inspects detail of selected tier
+    const throneDetailRes = await tierOne(req("/api/tiers/thrones"), idCtx("thrones"));
+    expect(throneDetailRes.status).toBe(200);
+    const throneDetail = await throneDetailRes.json();
+    expect(throneDetail.name).toBe("Thrones");
+    expect(throneDetail.rank).toBe(3);
+    expect(throneDetail.included.length).toBeGreaterThan(0);
+
+    // 6. Cross-reference with case studies to inspect prior work on that tier shape
+    const csRes = caseStudiesIndex(req("/api/case-studies"));
+    expect(csRes.status).toBe(200);
+    const csData = await csRes.json();
+    expect(csData.findings.length).toBe(findings.length);
+
+    // 7. Verify mailto contact parameters for the selected tier
+    const mailtoSubject = `${BRAND_MAIL}%20${encodeURIComponent(throneDetail.name)}%20inquiry`;
+    expect(mailtoSubject).toContain("Thrones");
+    expect(decodeURIComponent(mailtoSubject)).toBe(`${BRAND_NAME} Thrones inquiry`);
+  });
+
+  it("Research journey: blog post citation -> resolved sources -> incident case study linkage", async () => {
+    // 1. User lists recent posts
+    const postsRes = postsIndex(req("/api/posts?order=desc&limit=1"));
+    expect(postsRes.status).toBe(200);
+    const postsData = await postsRes.json();
+    expect(postsData.posts.length).toBe(1);
+    const latestSlug = postsData.posts[0].slug;
+
+    // 2. User fetches full post content
+    const postRes = await postOne(req(`/api/posts/${latestSlug}`), slugCtx(latestSlug));
+    expect(postRes.status).toBe(200);
+    const post = await postRes.json();
+    expect(post.body.length).toBeGreaterThan(0);
+    expect(post.sources.length).toBeGreaterThan(0);
+
+    // 3. User verifies citations resolve directly in sources API
+    for (const src of post.sources) {
+      const srcRes = await sourceOne(req(`/api/sources/${src.id}`), idCtx(src.id));
+      expect(srcRes.status).toBe(200);
+      const srcData = await srcRes.json();
+      expect(srcData.id).toBe(src.id);
+      expect(srcData.url).toBe(src.url);
+      expect(srcData.url.startsWith("https://")).toBe(true);
+
+      // 4. User queries related incidents using the same source
+      const relIncRes = incidentsIndex(req(`/api/incidents?source=${src.id}`));
+      expect(relIncRes.status).toBe(200);
+      const relIncData = await relIncRes.json();
+      for (const inc of relIncData.incidents) {
+        const incDetailRes = await incidentOne(req(`/api/incidents/${inc.id}`), idCtx(inc.id));
+        expect(incDetailRes.status).toBe(200);
+        const incDetail = await incDetailRes.json();
+        expect(incDetail.sources.some((s: { id: string }) => s.id === src.id)).toBe(true);
+      }
+    }
+  });
+
+  it("Remediation verification journey: case study findings -> before/after status -> automated test evidence", async () => {
+    // 1. Enumerate all findings
+    const csRes = caseStudiesIndex(req("/api/case-studies"));
+    expect(csRes.status).toBe(200);
+    const csData = await csRes.json();
+
+    // 2. For each finding, verify remediation log status and check notes
+    for (const f of csData.findings) {
+      const detailRes = await caseStudyOne(req(`/api/case-studies/${f.id}`), idCtx(f.id));
+      expect(detailRes.status).toBe(200);
+      const detail = await detailRes.json();
+      expect(detail.status.toLowerCase()).toContain("fixed");
+      expect(detail.remediation).not.toBeNull();
+      expect(detail.remediation.checked.length).toBeGreaterThan(0);
+      expect(detail.before.length).toBeGreaterThan(0);
+      expect(detail.after.length).toBeGreaterThan(0);
+      expect(detail.fix.length).toBeGreaterThan(0);
+    }
+  });
+});
+
 
