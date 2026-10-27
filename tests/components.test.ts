@@ -193,7 +193,7 @@ describe("TrustBadges component", () => {
 
   it("deduplicates keys, resolves alias prefixes and numbers, and ignores invalid keys", () => {
     const el = TrustBadges({
-      keys: ["passive", "badge-passive", "1", "01", "+1", "badge1", "auth", "invalid-badge", 123 as unknown as string],
+      keys: ["passive", "badge-passive", "#passive", "1", "01", "+1", "#1", "badge1", "auth", "invalid-badge", 123 as unknown as string],
     });
     const items = el.props.children;
     expect(items).toHaveLength(2);
