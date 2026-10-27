@@ -13,16 +13,16 @@ import { GET as scenarioOne, generateStaticParams as scenarioParams } from "../a
 import { GET as sourcesIndex } from "../app/api/sources/route";
 import { GET as sourceOne, generateStaticParams as sourceParams } from "../app/api/sources/[id]/route";
 import { GET as brandEndpoint } from "../app/api/brand/route";
-import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, BRAND_PARENT, BRAND_SUFFIX, BRAND_TAGLINE, BRAND_WORD, SHOW_CODE_RAIN, SITE_URL, TRUE_BADGES } from "../lib/brand";
+import { badgeByKey, BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, BRAND_PARENT, BRAND_SUFFIX, BRAND_TAGLINE, BRAND_WORD, SHOW_CODE_RAIN, SITE_URL, TRUE_BADGES } from "../lib/brand";
 import { THEME_META, THEME_NAMES } from "../lib/theme";
 import * as postsModule from "../lib/posts";
-import { posts } from "../lib/posts";
+import { postBySlug, posts } from "../lib/posts";
 import * as incidentsModule from "../lib/incidents";
-import { incidents, scenarios } from "../lib/incidents";
+import { incidentById, incidents, scenarioById, scenarios } from "../lib/incidents";
 import * as caseStudiesModule from "../lib/caseStudies";
-import { findings } from "../lib/caseStudies";
-import { tiers } from "../lib/tiers";
-import { S, sources } from "../lib/sources";
+import { findingById, findings, remediationById } from "../lib/caseStudies";
+import { tierById, tiers } from "../lib/tiers";
+import { S, sourceById, sources } from "../lib/sources";
 import { badRequest, json, methodNotAllowed, notFound, parseLimit, parseOffset, parsePage, parseSearchQuery, parseSortOrder, SECURITY_HEADERS } from "../lib/http";
 
 const slugCtx = (slug: string) => ({ params: Promise.resolve({ slug }) });
@@ -3379,21 +3379,46 @@ describe("Entity query aliases, numeric indexing, and helper extensions", () => 
     expect(parseLimit(new URLSearchParams("items=11"))).toBe(11);
     expect(parseLimit(new URLSearchParams("items_per_page=12"))).toBe(12);
     expect(parseLimit(new URLSearchParams("itemsPerPage=13"))).toBe(13);
+    expect(parseLimit(new URLSearchParams("records=14"))).toBe(14);
+    expect(parseLimit(new URLSearchParams("records_per_page=15"))).toBe(15);
+    expect(parseLimit(new URLSearchParams("recordsPerPage=16"))).toBe(16);
+    expect(parseLimit(new URLSearchParams("item_count=17"))).toBe(17);
+    expect(parseLimit(new URLSearchParams("itemCount=18"))).toBe(18);
+    expect(parseLimit(new URLSearchParams("num_results=19"))).toBe(19);
+    expect(parseLimit(new URLSearchParams("numResults=20"))).toBe(20);
+    expect(parseLimit(new URLSearchParams("top=21"))).toBe(21);
     expect(parseOffset(new URLSearchParams("skip_count=3"))).toBe(3);
     expect(parseOffset(new URLSearchParams("skipCount=4"))).toBe(4);
     expect(parseOffset(new URLSearchParams("start_idx=5"))).toBe(5);
     expect(parseOffset(new URLSearchParams("startIdx=6"))).toBe(6);
     expect(parseOffset(new URLSearchParams("from_index=7"))).toBe(7);
     expect(parseOffset(new URLSearchParams("fromIndex=8"))).toBe(8);
+    expect(parseOffset(new URLSearchParams("from_idx=9"))).toBe(9);
+    expect(parseOffset(new URLSearchParams("fromIdx=10"))).toBe(10);
+    expect(parseOffset(new URLSearchParams("offset_count=11"))).toBe(11);
+    expect(parseOffset(new URLSearchParams("offsetCount=12"))).toBe(12);
+    expect(parseOffset(new URLSearchParams("offset_idx=13"))).toBe(13);
+    expect(parseOffset(new URLSearchParams("offsetIdx=14"))).toBe(14);
     expect(parsePage(new URLSearchParams("page_id=2"))).toBe(2);
     expect(parsePage(new URLSearchParams("pageId=3"))).toBe(3);
+    expect(parsePage(new URLSearchParams("p_num=4"))).toBe(4);
+    expect(parsePage(new URLSearchParams("pNum=5"))).toBe(5);
     expect(parseSortOrder(new URLSearchParams("sort_direction=up"))).toBe("asc");
     expect(parseSortOrder(new URLSearchParams("sortDirection=down"))).toBe("desc");
     expect(parseSortOrder(new URLSearchParams("sort_direction=ascend"))).toBe("asc");
     expect(parseSortOrder(new URLSearchParams("sort_direction=descend"))).toBe("desc");
+    expect(parseSortOrder(new URLSearchParams("order_dir=asc"))).toBe("asc");
+    expect(parseSortOrder(new URLSearchParams("orderDir=desc"))).toBe("desc");
+    expect(parseSortOrder(new URLSearchParams("order_direction=asc"))).toBe("asc");
+    expect(parseSortOrder(new URLSearchParams("orderDirection=desc"))).toBe("desc");
+    expect(parseSortOrder(new URLSearchParams("sort_order_dir=asc"))).toBe("asc");
+    expect(parseSortOrder(new URLSearchParams("sortOrderDir=desc"))).toBe("desc");
     expect(parseSortOrder(new URLSearchParams("ordering=newer"))).toBe("desc");
     expect(parseSortOrder(new URLSearchParams("ordering=older"))).toBe("asc");
     expect(parseSortOrder(new URLSearchParams("order=chronological"))).toBe("asc");
+    expect(parseSortOrder(new URLSearchParams("sort=chrono"))).toBe("asc");
+    expect(parseSortOrder(new URLSearchParams("sort=rev"))).toBe("desc");
+    expect(parseSortOrder(new URLSearchParams("sort=reversed"))).toBe("desc");
     expect(parseSortOrder(new URLSearchParams("sort=reverse-chronological"))).toBe("desc");
     expect(parseSortOrder(new URLSearchParams("sort_dir=reverse_chronological"))).toBe("desc");
     expect(parseSearchQuery(new URLSearchParams("search_term=foo"))).toBe("foo");
@@ -3402,6 +3427,143 @@ describe("Entity query aliases, numeric indexing, and helper extensions", () => 
     expect(parseSearchQuery(new URLSearchParams("lookup=qux"))).toBe("qux");
     expect(parseSearchQuery(new URLSearchParams("q_term=quux"))).toBe("quux");
     expect(parseSearchQuery(new URLSearchParams("qTerm=corge"))).toBe("corge");
+    expect(parseSearchQuery(new URLSearchParams("query_term=grault"))).toBe("grault");
+    expect(parseSearchQuery(new URLSearchParams("queryTerm=garply"))).toBe("garply");
+    expect(parseSearchQuery(new URLSearchParams("search_text=waldo"))).toBe("waldo");
+    expect(parseSearchQuery(new URLSearchParams("searchText=fred"))).toBe("fred");
+    expect(parseSearchQuery(new URLSearchParams("text=plugh"))).toBe("plugh");
+    expect(parseSearchQuery(new URLSearchParams("filter_text=xyzzy"))).toBe("xyzzy");
+    expect(parseSearchQuery(new URLSearchParams("filterText=thud"))).toBe("thud");
+  });
+
+  it("entity lookup helpers and API endpoints support leading hash fragment (#) resilience", async () => {
+    expect(badgeByKey("#passive")?.key).toBe("passive");
+    expect(badgeByKey("#1")?.key).toBe("passive");
+    expect(badgeByKey("#badge-passive")?.key).toBe("passive");
+    expect(badgeByKey("#b1")?.key).toBe("passive");
+
+    expect(tierById("#seraphim")?.id).toBe("seraphim");
+    expect(tierById("#1")?.id).toBe("seraphim");
+    expect(tierById("#tier-1")?.id).toBe("seraphim");
+    expect(tierById("#t1")?.id).toBe("seraphim");
+
+    expect(findingById("#f-01")?.id).toBe("F-01");
+    expect(findingById("#1")?.id).toBe("F-01");
+    expect(findingById("#fix-1")?.id).toBe("F-01");
+    expect(findingById("#cs-1")?.id).toBe("F-01");
+    expect(remediationById("#f-01")?.id).toBe("F-01");
+
+    expect(sourceById("#oaiAug")?.id).toBe("oaiAug");
+    expect(sourceById("#1")?.id).toBe("oaiAug");
+    expect(sourceById("#ref-oaiAug")?.id).toBe("oaiAug");
+
+    expect(incidentById("#openai-huggingface-2026")?.id).toBe("openai-huggingface-2026");
+    expect(incidentById("#01")?.id).toBe("openai-huggingface-2026");
+    expect(incidentById("#1")?.id).toBe("openai-huggingface-2026");
+    expect(incidentById("#case-01")?.id).toBe("openai-huggingface-2026");
+
+    expect(scenarioById("#legacy-internal-app")?.id).toBe("legacy-internal-app");
+    expect(scenarioById("#h1")?.id).toBe("legacy-internal-app");
+    expect(scenarioById("#1")?.id).toBe("legacy-internal-app");
+
+    expect(postBySlug("#when-the-test-subject-leaves-the-test")?.slug).toBe("when-the-test-subject-leaves-the-test");
+    expect(postBySlug("#1")?.slug).toBe("when-the-test-subject-leaves-the-test");
+    expect(postBySlug("#post-1")?.slug).toBe("when-the-test-subject-leaves-the-test");
+    expect(postBySlug("#article-1")?.slug).toBe("when-the-test-subject-leaves-the-test");
+  });
+
+  it("API routes support extended query aliases (?tag=, ?r=, ?finding_no=, ?h=, ?ref_id=, ?incidentNo=, ?blog=)", async () => {
+    const brandTagRes = brandEndpoint(req("/api/brand?tag=passive"));
+    expect(brandTagRes.status).toBe(200);
+    expect((await brandTagRes.json()).badge?.key).toBe("passive");
+
+    const brandNameRes = brandEndpoint(req("/api/brand?badge_name=passive"));
+    expect(brandNameRes.status).toBe(200);
+    expect((await brandNameRes.json()).badge?.key).toBe("passive");
+
+    const brandHashRes = brandEndpoint(req("/api/brand?badge=%23passive"));
+    expect(brandHashRes.status).toBe(200);
+    expect((await brandHashRes.json()).badge?.key).toBe("passive");
+
+    const tierRRes = tiersIndex(req("/api/tiers?r=1"));
+    expect(tierRRes.status).toBe(200);
+    expect((await tierRRes.json()).tiers[0].id).toBe("seraphim");
+
+    const tierRIdRes = tiersIndex(req("/api/tiers?r_id=1"));
+    expect(tierRIdRes.status).toBe(200);
+    expect((await tierRIdRes.json()).tiers[0].id).toBe("seraphim");
+
+    const tierRankNumRes = tiersIndex(req("/api/tiers?rank_num=1"));
+    expect(tierRankNumRes.status).toBe(200);
+    expect((await tierRankNumRes.json()).tiers[0].id).toBe("seraphim");
+
+    const tierHashRes = tiersIndex(req("/api/tiers?tier=%23seraphim"));
+    expect(tierHashRes.status).toBe(200);
+    expect((await tierHashRes.json()).tiers[0].id).toBe("seraphim");
+
+    const csFindingNoRes = caseStudiesIndex(req("/api/case-studies?finding_no=01"));
+    expect(csFindingNoRes.status).toBe(200);
+    expect((await csFindingNoRes.json()).findings[0].id).toBe("F-01");
+
+    const csIdAliasRes = caseStudiesIndex(req("/api/case-studies?case_study_id=f-01"));
+    expect(csIdAliasRes.status).toBe(200);
+    expect((await csIdAliasRes.json()).findings[0].id).toBe("F-01");
+
+    const csHashRes = caseStudiesIndex(req("/api/case-studies?id=%23f-01"));
+    expect(csHashRes.status).toBe(200);
+    expect((await csHashRes.json()).findings[0].id).toBe("F-01");
+
+    const scHRes = scenariosIndex(req("/api/scenarios?h=h1"));
+    expect(scHRes.status).toBe(200);
+    expect((await scHRes.json()).scenarios[0].id).toBe("legacy-internal-app");
+
+    const scHIdRes = scenariosIndex(req("/api/scenarios?h_id=1"));
+    expect(scHIdRes.status).toBe(200);
+    expect((await scHIdRes.json()).scenarios[0].id).toBe("legacy-internal-app");
+
+    const scNoRes = scenariosIndex(req("/api/scenarios?scenario_no=h1"));
+    expect(scNoRes.status).toBe(200);
+    expect((await scNoRes.json()).scenarios[0].id).toBe("legacy-internal-app");
+
+    const scHashRes = scenariosIndex(req("/api/scenarios?id=%23h1"));
+    expect(scHashRes.status).toBe(200);
+    expect((await scHashRes.json()).scenarios[0].id).toBe("legacy-internal-app");
+
+    const srcRefIdRes = sourcesIndex(req("/api/sources?ref_id=oaiAug"));
+    expect(srcRefIdRes.status).toBe(200);
+    expect((await srcRefIdRes.json()).sources[0].id).toBe("oaiAug");
+
+    const srcReferenceIdRes = sourcesIndex(req("/api/sources?reference_id=oaiAug"));
+    expect(srcReferenceIdRes.status).toBe(200);
+    expect((await srcReferenceIdRes.json()).sources[0].id).toBe("oaiAug");
+
+    const srcHashRes = sourcesIndex(req("/api/sources?id=%23oaiAug"));
+    expect(srcHashRes.status).toBe(200);
+    expect((await srcHashRes.json()).sources[0].id).toBe("oaiAug");
+
+    const incIncidentNoRes = incidentsIndex(req("/api/incidents?incidentNo=01"));
+    expect(incIncidentNoRes.status).toBe(200);
+    expect((await incIncidentNoRes.json()).incidents[0].id).toBe("openai-huggingface-2026");
+
+    const incCaseNoRes = incidentsIndex(req("/api/incidents?caseNo=01"));
+    expect(incCaseNoRes.status).toBe(200);
+    expect((await incCaseNoRes.json()).incidents[0].id).toBe("openai-huggingface-2026");
+
+    const incHashRes = incidentsIndex(req("/api/incidents?id=%23openai-huggingface-2026"));
+    expect(incHashRes.status).toBe(200);
+    expect((await incHashRes.json()).incidents[0].id).toBe("openai-huggingface-2026");
+
+    const postBlogRes = postsIndex(req("/api/posts?blog=when-the-test-subject-leaves-the-test"));
+    expect(postBlogRes.status).toBe(200);
+    expect((await postBlogRes.json()).posts[0].slug).toBe("when-the-test-subject-leaves-the-test");
+
+    const postBlogIdRes = postsIndex(req("/api/posts?blogId=1"));
+    expect(postBlogIdRes.status).toBe(200);
+    expect((await postBlogIdRes.json()).posts[0].slug).toBe("when-the-test-subject-leaves-the-test");
+
+    const postHashRes = postsIndex(req("/api/posts?slug=%23when-the-test-subject-leaves-the-test"));
+    expect(postHashRes.status).toBe(200);
+    expect((await postHashRes.json()).posts[0].slug).toBe("when-the-test-subject-leaves-the-test");
   });
 });
 

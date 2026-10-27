@@ -36,7 +36,7 @@ export function sourceById(id: string): Source | undefined {
   trimmed = trimmed.replace(/^\/+|\/+$/g, "");
   if (Object.prototype.hasOwnProperty.call(S, trimmed)) return S[trimmed];
   let target = trimmed.toLowerCase().replace(/\.(html|json)$/, "");
-  if (target.startsWith("+")) target = target.slice(1);
+  if (target.startsWith("+") || target.startsWith("#")) target = target.slice(1);
   if (target.startsWith("source-") || target.startsWith("source_")) target = target.slice(7);
   else if (target.startsWith("source") && /^\d+$/.test(target.slice(6))) target = target.slice(6);
   else if (target.startsWith("src-") || target.startsWith("src_")) target = target.slice(4);
@@ -47,7 +47,7 @@ export function sourceById(id: string): Source | undefined {
   else if (target.startsWith("reference") && /^\d+$/.test(target.slice(9))) target = target.slice(9);
   else if (target.startsWith("s-") || target.startsWith("s_")) target = target.slice(2);
   else if (target.startsWith("s") && /^\d+$/.test(target.slice(1))) target = target.slice(1);
-  if (target.startsWith("+")) target = target.slice(1);
+  if (target.startsWith("+") || target.startsWith("#")) target = target.slice(1);
   const numClean = target.replace(/^0+/, "");
   const num = parseInt(numClean || target, 10);
   if (!Number.isNaN(num) && num >= 1 && num <= sources.length && String(num) === (numClean || target)) {

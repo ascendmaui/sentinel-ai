@@ -33,6 +33,9 @@ export function GET(req?: Request): Response {
         parseSearchQuery(url.searchParams, "bKey") ||
         parseSearchQuery(url.searchParams, "b_id") ||
         parseSearchQuery(url.searchParams, "bId") ||
+        parseSearchQuery(url.searchParams, "badge_name") ||
+        parseSearchQuery(url.searchParams, "badgeName") ||
+        parseSearchQuery(url.searchParams, "tag") ||
         parseSearchQuery(url.searchParams, "key") ||
         parseSearchQuery(url.searchParams, "id") ||
         parseSearchQuery(url.searchParams, "slug") ||

@@ -17,10 +17,14 @@ export function GET(req?: Request): Response {
         parseSearchQuery(url.searchParams, "finding") ||
         parseSearchQuery(url.searchParams, "finding_id") ||
         parseSearchQuery(url.searchParams, "findingId") ||
+        parseSearchQuery(url.searchParams, "finding_no") ||
+        parseSearchQuery(url.searchParams, "findingNo") ||
         parseSearchQuery(url.searchParams, "finding_slug") ||
         parseSearchQuery(url.searchParams, "findingSlug") ||
         parseSearchQuery(url.searchParams, "case_study") ||
         parseSearchQuery(url.searchParams, "caseStudy") ||
+        parseSearchQuery(url.searchParams, "case_study_id") ||
+        parseSearchQuery(url.searchParams, "caseStudyId") ||
         parseSearchQuery(url.searchParams, "cs") ||
         parseSearchQuery(url.searchParams, "cs_id") ||
         parseSearchQuery(url.searchParams, "csId") ||
@@ -71,7 +75,7 @@ export function GET(req?: Request): Response {
       if (id) {
         const matched = findingById(id);
         let cleanId = id.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
-        if (cleanId.startsWith("+")) cleanId = cleanId.slice(1);
+        if (cleanId.startsWith("+") || cleanId.startsWith("#")) cleanId = cleanId.slice(1);
         if (cleanId.startsWith("fix-") || cleanId.startsWith("fix_")) cleanId = cleanId.slice(4);
         else if (cleanId.startsWith("fix") && /^\d+$/.test(cleanId.slice(3))) cleanId = cleanId.slice(3);
         else if (cleanId.startsWith("finding-") || cleanId.startsWith("finding_")) cleanId = cleanId.slice(8);
@@ -80,7 +84,7 @@ export function GET(req?: Request): Response {
         else if (cleanId.startsWith("casestudy") && /^\d+$/.test(cleanId.slice(9))) cleanId = cleanId.slice(9);
         else if (cleanId.startsWith("cs-") || cleanId.startsWith("cs_")) cleanId = cleanId.slice(3);
         else if (cleanId.startsWith("cs") && /^\d+$/.test(cleanId.slice(2))) cleanId = cleanId.slice(2);
-        if (cleanId.startsWith("+")) cleanId = cleanId.slice(1);
+        if (cleanId.startsWith("+") || cleanId.startsWith("#")) cleanId = cleanId.slice(1);
         const normalized = cleanId.replace(/[-_]/g, "");
         const numMatch = normalized.match(/^(?:f)?0*(\d+)$/);
         const withF = numMatch ? `f${numMatch[1].padStart(2, "0")}` : normalized;

@@ -864,21 +864,26 @@ describe("metadata routes", () => {
     expect(r.rules).toEqual([{ userAgent: "*", allow: "/" }]);
     expect(r.sitemap).toBe(`${SITE_URL}/sitemap.xml`);
     expect(r.sitemap).toMatch(/^https?:\/\/.*\/sitemap\.xml$/);
+    expect(r.host).toBe(SITE_URL);
 
     vi.stubEnv("SITE_URL", "https://seraphim.ai/");
     expect(robots().sitemap).toBe("https://seraphim.ai/sitemap.xml");
+    expect(robots().host).toBe("https://seraphim.ai");
 
     vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://override.seraphim.ai/");
     expect(robots().sitemap).toBe("https://override.seraphim.ai/sitemap.xml");
+    expect(robots().host).toBe("https://override.seraphim.ai");
 
     vi.unstubAllEnvs();
     vi.stubEnv("VERCEL_ENV", "production");
     vi.stubEnv("VERCEL_PROJECT_PRODUCTION_URL", "prod.seraphim.ai");
     expect(robots().sitemap).toBe("https://prod.seraphim.ai/sitemap.xml");
+    expect(robots().host).toBe("https://prod.seraphim.ai");
 
     vi.unstubAllEnvs();
     vi.stubEnv("VERCEL_URL", "preview-abc.vercel.app");
     expect(robots().sitemap).toBe("https://preview-abc.vercel.app/sitemap.xml");
+    expect(robots().host).toBe("https://preview-abc.vercel.app");
   });
 
   it("sitemap includes all main pages, home page, and every blog post with valid metadata", () => {

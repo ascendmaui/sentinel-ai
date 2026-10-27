@@ -224,7 +224,7 @@ export const findingById = (id: string): Finding | undefined => {
   }
   if (!target) return undefined;
   target = target.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
-  if (target.startsWith("+")) target = target.slice(1);
+  if (target.startsWith("+") || target.startsWith("#")) target = target.slice(1);
   if (target.startsWith("fix-") || target.startsWith("fix_")) target = target.slice(4);
   else if (target.startsWith("fix") && /^\d+$/.test(target.slice(3))) target = target.slice(3);
   else if (target.startsWith("finding-") || target.startsWith("finding_")) target = target.slice(8);
@@ -233,7 +233,7 @@ export const findingById = (id: string): Finding | undefined => {
   else if (target.startsWith("casestudy") && /^\d+$/.test(target.slice(9))) target = target.slice(9);
   else if (target.startsWith("cs-") || target.startsWith("cs_")) target = target.slice(3);
   else if (target.startsWith("cs") && /^\d+$/.test(target.slice(2))) target = target.slice(2);
-  if (target.startsWith("+")) target = target.slice(1);
+  if (target.startsWith("+") || target.startsWith("#")) target = target.slice(1);
   const normalized = target.replace(/[-_]/g, "");
   const numMatch = normalized.match(/^(?:f)?0*(\d+)$/);
   const withF = numMatch ? `f${numMatch[1].padStart(2, "0")}` : normalized;
@@ -255,7 +255,7 @@ export const remediationById = (id: string): Remediation | undefined => {
   }
   if (!target) return undefined;
   target = target.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
-  if (target.startsWith("+")) target = target.slice(1);
+  if (target.startsWith("+") || target.startsWith("#")) target = target.slice(1);
   if (target.startsWith("fix-") || target.startsWith("fix_")) target = target.slice(4);
   else if (target.startsWith("fix") && /^\d+$/.test(target.slice(3))) target = target.slice(3);
   else if (target.startsWith("finding-") || target.startsWith("finding_")) target = target.slice(8);
@@ -264,7 +264,7 @@ export const remediationById = (id: string): Remediation | undefined => {
   else if (target.startsWith("casestudy") && /^\d+$/.test(target.slice(9))) target = target.slice(9);
   else if (target.startsWith("cs-") || target.startsWith("cs_")) target = target.slice(3);
   else if (target.startsWith("cs") && /^\d+$/.test(target.slice(2))) target = target.slice(2);
-  if (target.startsWith("+")) target = target.slice(1);
+  if (target.startsWith("+") || target.startsWith("#")) target = target.slice(1);
   const normalized = target.replace(/[-_]/g, "");
   const numMatch = normalized.match(/^(?:f)?0*(\d+)$/);
   const withF = numMatch ? `f${numMatch[1].padStart(2, "0")}` : normalized;

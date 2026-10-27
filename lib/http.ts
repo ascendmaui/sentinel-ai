@@ -98,6 +98,14 @@ export function parseLimit(params: URLSearchParams, max = 100): number | undefin
     params.get("items") ??
     params.get("items_per_page") ??
     params.get("itemsPerPage") ??
+    params.get("item_count") ??
+    params.get("itemCount") ??
+    params.get("num_results") ??
+    params.get("numResults") ??
+    params.get("records") ??
+    params.get("records_per_page") ??
+    params.get("recordsPerPage") ??
+    params.get("top") ??
     params.get("results") ??
     params.get("max")
   )?.trim();
@@ -119,6 +127,8 @@ export function parsePage(params: URLSearchParams, max = 10000): number | undefi
     params.get("page") ??
     params.get("p") ??
     params.get("pg") ??
+    params.get("p_num") ??
+    params.get("pNum") ??
     params.get("pageNum") ??
     params.get("page_num") ??
     params.get("pageNumber") ??
@@ -162,6 +172,12 @@ export function parseOffset(params: URLSearchParams, max = 10000, pageSize?: num
     params.get("startIdx") ??
     params.get("from_index") ??
     params.get("fromIndex") ??
+    params.get("from_idx") ??
+    params.get("fromIdx") ??
+    params.get("offset_count") ??
+    params.get("offsetCount") ??
+    params.get("offset_idx") ??
+    params.get("offsetIdx") ??
     params.get("skip_count") ??
     params.get("skipCount")
   )?.trim();
@@ -200,6 +216,12 @@ export function parseSortOrder(params: URLSearchParams, paramName = "order"): So
     params.get("sortDir") ??
     params.get("sort_direction") ??
     params.get("sortDirection") ??
+    params.get("order_dir") ??
+    params.get("orderDir") ??
+    params.get("order_direction") ??
+    params.get("orderDirection") ??
+    params.get("sort_order_dir") ??
+    params.get("sortOrderDir") ??
     params.get("sort_by") ??
     params.get("sortBy") ??
     params.get("ordering") ??
@@ -207,8 +229,8 @@ export function parseSortOrder(params: URLSearchParams, paramName = "order"): So
     params.get("order_by")
   )?.trim().toLowerCase();
   if (!raw) return undefined;
-  if (raw === "asc" || raw === "ascending" || raw === "oldest" || raw === "earliest" || raw === "first" || raw === "forward" || raw === "up" || raw === "ascend" || raw === "older" || raw === "chronological" || raw === "1" || raw === "+1") return "asc";
-  if (raw === "desc" || raw === "descending" || raw === "newest" || raw === "latest" || raw === "last" || raw === "reverse" || raw === "recent" || raw === "backward" || raw === "backwards" || raw === "down" || raw === "descend" || raw === "newer" || raw === "reverse-chronological" || raw === "reverse_chronological" || raw === "-1") return "desc";
+  if (raw === "asc" || raw === "ascending" || raw === "oldest" || raw === "earliest" || raw === "first" || raw === "forward" || raw === "up" || raw === "ascend" || raw === "older" || raw === "chronological" || raw === "chrono" || raw === "1" || raw === "+1") return "asc";
+  if (raw === "desc" || raw === "descending" || raw === "newest" || raw === "latest" || raw === "last" || raw === "reverse" || raw === "reversed" || raw === "rev" || raw === "recent" || raw === "backward" || raw === "backwards" || raw === "down" || raw === "descend" || raw === "newer" || raw === "reverse-chronological" || raw === "reverse_chronological" || raw === "-1") return "desc";
   return undefined;
 }
 
@@ -219,8 +241,10 @@ export function parseSortOrder(params: URLSearchParams, paramName = "order"): So
  */
 export function parseSearchQuery(params: URLSearchParams, paramName = "q"): string | undefined {
   if (!params || typeof params.get !== "function" || !paramName || typeof paramName !== "string") return undefined;
-  let raw = params.get(paramName);
-  if (!raw && paramName === "q") {
+  const cleanParam = paramName.trim();
+  if (!cleanParam) return undefined;
+  let raw = params.get(cleanParam);
+  if (!raw && cleanParam === "q") {
     raw =
       params.get("query") ??
       params.get("search") ??
@@ -231,10 +255,17 @@ export function parseSearchQuery(params: URLSearchParams, paramName = "q"): stri
       params.get("lookup") ??
       params.get("q_term") ??
       params.get("qTerm") ??
+      params.get("query_term") ??
+      params.get("queryTerm") ??
       params.get("search_query") ??
       params.get("searchQuery") ??
       params.get("search_term") ??
       params.get("searchTerm") ??
+      params.get("search_text") ??
+      params.get("searchText") ??
+      params.get("text") ??
+      params.get("filter_text") ??
+      params.get("filterText") ??
       params.get("keywords");
   }
   if (!raw) return undefined;

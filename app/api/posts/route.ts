@@ -25,7 +25,12 @@ export function GET(req?: Request): Response {
         parseSearchQuery(url.searchParams, "article_id") ||
         parseSearchQuery(url.searchParams, "articleId") ||
         parseSearchQuery(url.searchParams, "article_slug") ||
-        parseSearchQuery(url.searchParams, "articleSlug");
+        parseSearchQuery(url.searchParams, "articleSlug") ||
+        parseSearchQuery(url.searchParams, "blog") ||
+        parseSearchQuery(url.searchParams, "blog_id") ||
+        parseSearchQuery(url.searchParams, "blogId") ||
+        parseSearchQuery(url.searchParams, "blog_slug") ||
+        parseSearchQuery(url.searchParams, "blogSlug");
       const title =
         parseSearchQuery(url.searchParams, "title") ||
         parseSearchQuery(url.searchParams, "name") ||
@@ -69,7 +74,8 @@ export function GET(req?: Request): Response {
 
       if (slug) {
         const matched = postBySlug(slug);
-        const cleanSlug = slug.replace(/^\/+|\/+$/g, "");
+        let cleanSlug = slug.replace(/^\/+|\/+$/g, "");
+        if (cleanSlug.startsWith("+") || cleanSlug.startsWith("#")) cleanSlug = cleanSlug.slice(1);
         const withoutExt = cleanSlug.replace(/\.(html|json)$/, "");
         list = list.filter(
           (p) =>

@@ -700,6 +700,93 @@ check(brandBIdAlias.badge && brandBIdAlias.badge.key === "passive", "GET /api/br
 const brandBIdCamelAlias = await (await get("/api/brand?bId=passive")).json();
 check(brandBIdCamelAlias.badge && brandBIdCamelAlias.badge.key === "passive", "GET /api/brand?bId=passive (bId alias)");
 
+const brandTagAlias = await (await get("/api/brand?tag=passive")).json();
+check(brandTagAlias.badge && brandTagAlias.badge.key === "passive", "GET /api/brand?tag=passive (tag alias)");
+
+const brandBadgeNameAlias = await (await get("/api/brand?badge_name=passive")).json();
+check(brandBadgeNameAlias.badge && brandBadgeNameAlias.badge.key === "passive", "GET /api/brand?badge_name=passive (badge_name alias)");
+
+const brandBadgeHash = await (await get("/api/brand?badge=%23passive")).json();
+check(brandBadgeHash.badge && brandBadgeHash.badge.key === "passive", "GET /api/brand?badge=%23passive (hash resilience)");
+
+const tierRAlias = await (await get("/api/tiers?r=1")).json();
+check(tierRAlias.count > 0 && tierRAlias.tiers[0].id === "seraphim", "GET /api/tiers?r=1 (r alias)");
+
+const tierRIdAlias = await (await get("/api/tiers?r_id=1")).json();
+check(tierRIdAlias.count > 0 && tierRIdAlias.tiers[0].id === "seraphim", "GET /api/tiers?r_id=1 (r_id alias)");
+
+const tierRankNumAlias = await (await get("/api/tiers?rank_num=1")).json();
+check(tierRankNumAlias.count > 0 && tierRankNumAlias.tiers[0].id === "seraphim", "GET /api/tiers?rank_num=1 (rank_num alias)");
+
+const tierHash = await (await get("/api/tiers?tier=%23seraphim")).json();
+check(tierHash.count > 0 && tierHash.tiers[0].id === "seraphim", "GET /api/tiers?tier=%23seraphim (hash resilience)");
+
+const csFindingNo = await (await get("/api/case-studies?finding_no=01")).json();
+check(csFindingNo.count > 0 && csFindingNo.findings[0].id === "F-01", "GET /api/case-studies?finding_no=01 (finding_no alias)");
+
+const csIdAlias = await (await get("/api/case-studies?case_study_id=f-01")).json();
+check(csIdAlias.count > 0 && csIdAlias.findings[0].id === "F-01", "GET /api/case-studies?case_study_id=f-01 (case_study_id alias)");
+
+const csHash = await (await get("/api/case-studies?id=%23f-01")).json();
+check(csHash.count > 0 && csHash.findings[0].id === "F-01", "GET /api/case-studies?id=%23f-01 (hash resilience)");
+
+const scHAlias = await (await get("/api/scenarios?h=h1")).json();
+check(scHAlias.count > 0 && scHAlias.scenarios[0].id === "legacy-internal-app", "GET /api/scenarios?h=h1 (h alias)");
+
+const scHIdAlias = await (await get("/api/scenarios?h_id=1")).json();
+check(scHIdAlias.count > 0 && scHIdAlias.scenarios[0].id === "legacy-internal-app", "GET /api/scenarios?h_id=1 (h_id alias)");
+
+const scScenarioNo = await (await get("/api/scenarios?scenario_no=h1")).json();
+check(scScenarioNo.count > 0 && scScenarioNo.scenarios[0].id === "legacy-internal-app", "GET /api/scenarios?scenario_no=h1 (scenario_no alias)");
+
+const scHash = await (await get("/api/scenarios?id=%23h1")).json();
+check(scHash.count > 0 && scHash.scenarios[0].id === "legacy-internal-app", "GET /api/scenarios?id=%23h1 (hash resilience)");
+
+const srcRefIdAlias = await (await get("/api/sources?ref_id=oaiAug")).json();
+check(srcRefIdAlias.count > 0 && srcRefIdAlias.sources[0].id === "oaiAug", "GET /api/sources?ref_id=oaiAug (ref_id alias)");
+
+const srcReferenceIdAlias = await (await get("/api/sources?reference_id=oaiAug")).json();
+check(srcReferenceIdAlias.count > 0 && srcReferenceIdAlias.sources[0].id === "oaiAug", "GET /api/sources?reference_id=oaiAug (reference_id alias)");
+
+const srcHash = await (await get("/api/sources?id=%23oaiAug")).json();
+check(srcHash.count > 0 && srcHash.sources[0].id === "oaiAug", "GET /api/sources?id=%23oaiAug (hash resilience)");
+
+const incIncidentNo = await (await get("/api/incidents?incidentNo=01")).json();
+check(incIncidentNo.count > 0 && incIncidentNo.incidents[0].id === "openai-huggingface-2026", "GET /api/incidents?incidentNo=01 (incidentNo alias)");
+
+const incCaseNo = await (await get("/api/incidents?caseNo=01")).json();
+check(incCaseNo.count > 0 && incCaseNo.incidents[0].id === "openai-huggingface-2026", "GET /api/incidents?caseNo=01 (caseNo alias)");
+
+const incHash = await (await get("/api/incidents?id=%23openai-huggingface-2026")).json();
+check(incHash.count > 0 && incHash.incidents[0].id === "openai-huggingface-2026", "GET /api/incidents?id=%23openai-huggingface-2026 (hash resilience)");
+
+const postBlogAlias = await (await get("/api/posts?blog=when-the-test-subject-leaves-the-test")).json();
+check(postBlogAlias.count > 0 && postBlogAlias.posts[0].slug === "when-the-test-subject-leaves-the-test", "GET /api/posts?blog=... (blog alias)");
+
+const postBlogIdAlias = await (await get("/api/posts?blogId=1")).json();
+check(postBlogIdAlias.count > 0 && postBlogIdAlias.posts[0].slug === "when-the-test-subject-leaves-the-test", "GET /api/posts?blogId=1 (blogId alias)");
+
+const postHash = await (await get("/api/posts?slug=%23when-the-test-subject-leaves-the-test")).json();
+check(postHash.count > 0 && postHash.posts[0].slug === "when-the-test-subject-leaves-the-test", "GET /api/posts?slug=%23... (hash resilience)");
+
+const postRecordsAlias = await (await get("/api/posts?records=2")).json();
+check(postRecordsAlias.count === 2 && postRecordsAlias.posts.length === 2, "GET /api/posts?records=2 (records alias)");
+
+const postTopAlias = await (await get("/api/posts?top=2")).json();
+check(postTopAlias.count === 2 && postTopAlias.posts.length === 2, "GET /api/posts?top=2 (top alias)");
+
+const postChronoSort = await (await get("/api/posts?sort=chrono")).json();
+check(postChronoSort.posts[0].date <= postChronoSort.posts[postChronoSort.posts.length - 1].date, "GET /api/posts?sort=chrono (chrono sort)");
+
+const postRevSort = await (await get("/api/posts?sort=rev")).json();
+check(postRevSort.posts[0].date >= postRevSort.posts[postRevSort.posts.length - 1].date, "GET /api/posts?sort=rev (rev sort)");
+
+const postQueryTerm = await (await get("/api/posts?query_term=openai")).json();
+check(postQueryTerm.count > 0, "GET /api/posts?query_term=openai (query_term alias)");
+
+const postSearchText = await (await get("/api/posts?search_text=openai")).json();
+check(postSearchText.count > 0, "GET /api/posts?search_text=openai (search_text alias)");
+
 // 9. Method Not Allowed on dynamic API endpoints (Next.js dynamic route handlers return 405 for unexported methods)
 const endpoints405 = [
   "/api/health",
