@@ -212,6 +212,11 @@ describe("TierStrip and TierEmblem components", () => {
     expect(TierEmblem({ id: "tier-1" as unknown as TierId })?.type).toBe("svg");
     expect(TierEmblem({ id: "t1" as unknown as TierId })?.type).toBe("svg");
     expect(TierEmblem({ id: "t-2" as unknown as TierId })?.type).toBe("svg");
+    expect(TierEmblem({ id: "rank-1" as unknown as TierId })?.type).toBe("svg");
+    expect(TierEmblem({ id: "rank1" as unknown as TierId })?.type).toBe("svg");
+    expect(TierEmblem({ id: "r-1" as unknown as TierId })?.type).toBe("svg");
+    expect(TierEmblem({ id: "r1" as unknown as TierId })?.type).toBe("svg");
+    expect(TierEmblem({ id: "+1" as unknown as TierId })?.type).toBe("svg");
     expect(TierEmblem({ id: "unknown" as unknown as TierId })).toBeNull();
     expect(TierEmblem({ id: null as unknown as TierId })).toBeNull();
   });
@@ -253,6 +258,12 @@ describe("TierStrip and TierEmblem components", () => {
     const prefixStrip = TierStrip({ activeTier: "tier-cherubim" });
     const prefixStripHtml = renderToStaticMarkup(prefixStrip);
     expect(prefixStripHtml).toContain('class="tier-strip-active"');
+
+    const rankStrip = TierStrip({ activeTier: "rank-2" });
+    expect(renderToStaticMarkup(rankStrip)).toContain('class="tier-strip-active"');
+
+    const plusStrip = TierStrip({ activeTier: "+2" });
+    expect(renderToStaticMarkup(plusStrip)).toContain('class="tier-strip-active"');
   });
 });
 
@@ -284,6 +295,12 @@ describe("TierCta component", () => {
 
     const prefixEl = TierCta({ tier: "tier-1" as unknown as TierId, lead: "Prefix." });
     expect(renderToStaticMarkup(prefixEl!)).toContain('href="/pricing#seraphim"');
+
+    const rankEl2 = TierCta({ tier: "rank-1" as unknown as TierId, lead: "Rank prefix." });
+    expect(renderToStaticMarkup(rankEl2!)).toContain('href="/pricing#seraphim"');
+
+    const plusEl = TierCta({ tier: "+1" as unknown as TierId, lead: "Plus." });
+    expect(renderToStaticMarkup(plusEl!)).toContain('href="/pricing#seraphim"');
   });
 
   it("returns null for an invalid tier", () => {
