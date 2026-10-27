@@ -4,6 +4,7 @@ on:
   pull_request:
   push:
     branches: [main]
+  workflow_dispatch:
 
 # Least privilege: CI only reads the repo. No secrets are used or required.
 permissions:

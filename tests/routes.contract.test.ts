@@ -292,6 +292,7 @@ describe("CI & Repository Hardening Contracts", () => {
   it(".github/workflows/ci.yml enforces least-privilege permissions, credential non-persistence, ignore-scripts, and full verification steps", () => {
     const ciYaml = readFileSync(join(ROOT_DIR, ".github", "workflows", "ci.yml"), "utf8");
     expect(ciYaml).toContain("contents: read");
+    expect(ciYaml).toContain("workflow_dispatch:");
     const checkoutCount = [...ciYaml.matchAll(/uses:\s*actions\/checkout@v4/g)].length;
     const persistFalseCount = [...ciYaml.matchAll(/persist-credentials:\s*false/g)].length;
     expect(checkoutCount).toBeGreaterThanOrEqual(2);
