@@ -94,7 +94,9 @@ export function mountHeroFigure(canvas: HTMLCanvasElement | null): (() => void) 
 
   const small = window.matchMedia("(max-width: 720px)").matches;
   const density = small ? 0.6 : 1;
-  const dpr = Math.min(window.devicePixelRatio || 1, small ? 1.5 : 2);
+  const rawDpr = typeof window !== "undefined" ? Number(window.devicePixelRatio) : 1;
+  const validDpr = Number.isFinite(rawDpr) && rawDpr > 0 ? rawDpr : 1;
+  const dpr = Math.min(Math.max(1, validDpr), small ? 1.5 : 2);
   const model = build(density);
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
 
@@ -157,7 +159,8 @@ export function mountHeroFigure(canvas: HTMLCanvasElement | null): (() => void) 
       const z1 = -x * sy + z * cy;
       const y2 = y * cp - z1 * sp;
       const z2 = y * sp + z1 * cp;
-      const persp = 3.2 / (3.2 + z2);
+      const denom = 3.2 + z2;
+      const persp = 3.2 / (denom > 0.1 ? denom : 0.1);
       proj[i] = { X: W / 2 + x1 * scale * persp, Y: H * 0.52 - y2 * scale * persp, d: persp, p };
     }
 

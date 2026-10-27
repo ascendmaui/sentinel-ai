@@ -858,6 +858,18 @@ describe("metadata routes", () => {
 
     vi.stubEnv("SITE_URL", "https://seraphim.ai/");
     expect(robots().sitemap).toBe("https://seraphim.ai/sitemap.xml");
+
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://override.seraphim.ai/");
+    expect(robots().sitemap).toBe("https://override.seraphim.ai/sitemap.xml");
+
+    vi.unstubAllEnvs();
+    vi.stubEnv("VERCEL_ENV", "production");
+    vi.stubEnv("VERCEL_PROJECT_PRODUCTION_URL", "prod.seraphim.ai");
+    expect(robots().sitemap).toBe("https://prod.seraphim.ai/sitemap.xml");
+
+    vi.unstubAllEnvs();
+    vi.stubEnv("VERCEL_URL", "preview-abc.vercel.app");
+    expect(robots().sitemap).toBe("https://preview-abc.vercel.app/sitemap.xml");
   });
 
   it("sitemap includes all main pages, home page, and every blog post with valid metadata", () => {
@@ -882,7 +894,16 @@ describe("metadata routes", () => {
     }
 
     vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://seraphim.ai/");
-    expect(sitemap()[0].url).toBe("https://seraphim.ai");
+    const customSiteEntries = sitemap();
+    expect(customSiteEntries[0].url).toBe("https://seraphim.ai");
+    expect(customSiteEntries.every((e) => e.url.startsWith("https://seraphim.ai"))).toBe(true);
+    expect(customSiteEntries).toHaveLength(5 + posts.length);
+
+    vi.unstubAllEnvs();
+    vi.stubEnv("VERCEL_URL", "branch-preview.vercel.app");
+    const previewEntries = sitemap();
+    expect(previewEntries[0].url).toBe("https://branch-preview.vercel.app");
+    expect(previewEntries.every((e) => e.url.startsWith("https://branch-preview.vercel.app"))).toBe(true);
   });
 });
 

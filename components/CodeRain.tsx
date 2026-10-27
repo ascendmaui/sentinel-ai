@@ -23,8 +23,8 @@ export function mountCodeRain(canvas: HTMLCanvasElement | null): (() => void) | 
   let H = 0;
   let cols: { y: number; v: number; c: number }[] = [];
   const resize = () => {
-    W = window.innerWidth;
-    H = window.innerHeight;
+    W = Math.max(1, window.innerWidth || 1);
+    H = Math.max(1, window.innerHeight || 1);
     canvas.width = W;
     canvas.height = H;
     const n = Math.ceil(W / (size * (small ? 2.6 : 2.2)));
@@ -37,7 +37,8 @@ export function mountCodeRain(canvas: HTMLCanvasElement | null): (() => void) | 
   let running = true;
   const step = (now: number) => {
     if (!running) return;
-    const dt = Math.max(0, Math.min(0.05, (now - last) / 1000));
+    const delta = (now - last) / 1000;
+    const dt = Number.isFinite(delta) ? Math.max(0, Math.min(0.05, delta)) : 0;
     last = now;
     ctx.fillStyle = "rgba(7,7,12,0.14)";
     ctx.globalCompositeOperation = "destination-out";

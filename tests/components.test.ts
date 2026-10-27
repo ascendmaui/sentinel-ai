@@ -586,6 +586,12 @@ describe("HeroFigure component", () => {
       reduceMatches = false;
       motionListener!();
 
+      // Handles non-finite or negative devicePixelRatio gracefully
+      ((globalThis as Record<string, unknown>).window as { devicePixelRatio: number }).devicePixelRatio = -1;
+      resizeListener!();
+      ((globalThis as Record<string, unknown>).window as { devicePixelRatio: number }).devicePixelRatio = Number.NaN;
+      resizeListener!();
+
       cleanup!();
       expect(stageClasses.has("is-3d")).toBe(false);
 
@@ -704,7 +710,16 @@ describe("CodeRain component", () => {
       }
       expect(fillTextCount).toBeGreaterThan(0);
 
-      // Pause and resume on visibilitychange, plus resize
+      // Frame with NaN or backwards timestamp does not throw or corrupt state
+      rafCallback!(Number.NaN);
+      rafCallback!(performance.now() - 5000);
+
+      // Pause and resume on visibilitychange, plus resize with zero or missing dimensions
+      ((globalThis as Record<string, unknown>).window as { innerWidth: number; innerHeight: number }).innerWidth = 0;
+      ((globalThis as Record<string, unknown>).window as { innerWidth: number; innerHeight: number }).innerHeight = 0;
+      resizeListener!();
+      ((globalThis as Record<string, unknown>).window as { innerWidth: number; innerHeight: number }).innerWidth = 640;
+      ((globalThis as Record<string, unknown>).window as { innerWidth: number; innerHeight: number }).innerHeight = 100;
       docHidden = true;
       visListener!();
       docHidden = false;
@@ -843,6 +858,20 @@ describe("ThemeSwitcher component", () => {
       // ArrowUp from default dark (index 0) -> wraps to high-contrast (index 2)
       const upEv = makeKeyEvent("ArrowUp");
       tree!.props.onKeyDown(upEv);
+      expect(currentAttr).toBe("high-contrast");
+      expect(focusedIndices.at(-1)).toBe(2);
+
+      // ArrowDown from default dark (index 0) -> light (index 1)
+      const downEv = makeKeyEvent("ArrowDown");
+      tree!.props.onKeyDown(downEv);
+      expect(downEv.prevented).toBe(true);
+      expect(currentAttr).toBe("light");
+      expect(focusedIndices.at(-1)).toBe(1);
+
+      // ArrowLeft from default dark (index 0) -> wraps to high-contrast (index 2)
+      const leftEv = makeKeyEvent("ArrowLeft");
+      tree!.props.onKeyDown(leftEv);
+      expect(leftEv.prevented).toBe(true);
       expect(currentAttr).toBe("high-contrast");
       expect(focusedIndices.at(-1)).toBe(2);
 
