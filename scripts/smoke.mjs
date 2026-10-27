@@ -909,6 +909,15 @@ for (const path of pages) {
   const html = await r.text();
   check(html.includes('rel="canonical"'), `GET ${path} includes canonical link`);
   check(html.includes('property="og:image"'), `GET ${path} includes og:image meta tag`);
+  check(html.includes('id="main"'), `GET ${path} includes #main skip target`);
+  const mains = [...html.matchAll(/<main\b/g)];
+  check(mains.length === 1, `GET ${path} has exactly 1 <main>`);
+  const h1s = [...html.matchAll(/<h1\b/g)];
+  check(h1s.length === 1, `GET ${path} has exactly 1 <h1>`);
+  const positiveTabindex = [...html.matchAll(/\btabindex="([1-9]\d*)"/gi)];
+  check(positiveTabindex.length === 0, `GET ${path} has zero positive tabindex elements`);
+  const emptyHeadings = [...html.matchAll(/<h([1-6])\b[^>]*>\s*<\/h\1>/gi)];
+  check(emptyHeadings.length === 0, `GET ${path} has zero empty headings`);
   pageIds.set(path, new Set([...html.matchAll(/\bid="([^"]+)"/g)].map(m => m[1])));
   for (const m of html.matchAll(/href="(\/[^"#?]*)(?:#([^"?]+))?(?:\?[^"]*)?"/g)) {
     links.add(m[1]);
