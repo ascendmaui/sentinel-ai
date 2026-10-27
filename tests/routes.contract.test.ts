@@ -206,6 +206,14 @@ describe.each(routes.map((r) => [r.path] as const))("route contract %s", (path) 
       if ("count" in extendedAliasesBody && "totalCount" in extendedAliasesBody) {
         expect(extendedAliasesBody.count).toBeLessThanOrEqual(1);
       }
+
+      const newAliasesRes = await mod.GET({ url: `${path}?records=1&from_idx=0&order_dir=asc&query_term=seraphim` } as unknown as Request);
+      expect(newAliasesRes.status).toBe(200);
+      expectHardenedJson(newAliasesRes, `${path} records/from_idx/order_dir/query_term url`);
+      const newAliasesBody = await newAliasesRes.json();
+      if ("count" in newAliasesBody && "totalCount" in newAliasesBody) {
+        expect(newAliasesBody.count).toBeLessThanOrEqual(1);
+      }
     });
   } else {
     it("is a dynamic route with generateStaticParams and dynamicParams enabled", () => {
@@ -218,10 +226,10 @@ describe.each(routes.map((r) => [r.path] as const))("route contract %s", (path) 
       expect(new Set(params.map((p) => p[key])).size).toBe(params.length);
     });
 
-    it("every generated param resolves to 200 hardened JSON, case-insensitively and with surrounding whitespace", async () => {
+    it("every generated param resolves to 200 hardened JSON, case-insensitively, with surrounding whitespace, and with leading hash (#)", async () => {
       const mod = modules[path];
       for (const p of mod.generateStaticParams!()) {
-        for (const value of [p[key], p[key].toUpperCase(), `  ${p[key]}  `]) {
+        for (const value of [p[key], p[key].toUpperCase(), `  ${p[key]}  `, `#${p[key]}`]) {
           const res = await mod.GET(new Request(`http://localhost${path}`), ctx(key, value));
           expect(res.status, `${path} ${value}`).toBe(200);
           expectHardenedJson(res, `${path} ${value}`);

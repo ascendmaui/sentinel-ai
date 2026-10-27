@@ -287,6 +287,13 @@ describe("TierStrip and TierEmblem components", () => {
 
     const extStrip = TierStrip({ activeTier: "cherubim.json" });
     expect(renderToStaticMarkup(extStrip)).toContain('class="tier-strip-active"');
+
+    const hashStrip = TierStrip({ activeTier: "#cherubim" });
+    expect(renderToStaticMarkup(hashStrip)).toContain('class="tier-strip-active"');
+
+    const hashEmblem = TierEmblem({ id: "#cherubim" });
+    expect(hashEmblem).not.toBeNull();
+    expect(renderToStaticMarkup(hashEmblem!)).toContain('class="tier-emblem"');
   });
 });
 
@@ -336,6 +343,10 @@ describe("TierCta component", () => {
 
     const extEl = TierCta({ tier: "seraphim.json" as unknown as TierId, lead: "Extension." });
     expect(renderToStaticMarkup(extEl!)).toContain('href="/pricing#seraphim"');
+
+    const hashEl = TierCta({ tier: "#thrones" as unknown as TierId, lead: "Hash." });
+    expect(renderToStaticMarkup(hashEl!)).toContain('href="/pricing#thrones"');
+    expect(hashEl?.props["aria-label"]).toBe("Thrones tier");
   });
 
   it("returns null for an invalid tier, empty string, or non-string", () => {
