@@ -853,6 +853,11 @@ describe("ThemeSwitcher component", () => {
       applyTheme("high-contrast", false);
       expect(currentTheme()).toBe("high-contrast");
 
+      // applyTheme with unknown theme falls back to DEFAULT_THEME
+      applyTheme("invalid-theme" as ThemeName, false);
+      expect(currentTheme()).toBe("dark");
+      expect(currentAttr).toBe("dark");
+
       currentAttr = "unknown";
       expect(currentTheme()).toBe("dark");
     } finally {
@@ -940,6 +945,15 @@ describe("ThemeSwitcher component", () => {
       contrastMatch = true;
       mqListeners[0]();
       expect(currentAttr).toBe("dark");
+
+      // Custom event with unknown detail is safely ignored
+      const prevLength = observedThemes.length;
+      eventListener?.({ detail: "invalid-custom-event" } as unknown as CustomEvent<ThemeName>);
+      expect(observedThemes.length).toBe(prevLength);
+
+      // Custom event with valid detail is accepted
+      eventListener?.({ detail: "high-contrast" } as unknown as CustomEvent<ThemeName>);
+      expect(observedThemes.at(-1)).toBe("high-contrast");
 
       cleanup();
     } finally {

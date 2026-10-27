@@ -16,16 +16,17 @@ export function current(): ThemeName {
 }
 
 export function apply(t: ThemeName, persist: boolean) {
-  document.documentElement.setAttribute("data-theme", t);
-  document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.setAttribute("content", META[t]));
+  const resolved: ThemeName = t === "dark" || t === "light" || t === "high-contrast" ? t : DEFAULT_THEME;
+  document.documentElement.setAttribute("data-theme", resolved);
+  document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.setAttribute("content", META[resolved]));
   if (persist) {
     try {
-      localStorage.setItem(THEME_KEY, t);
+      localStorage.setItem(THEME_KEY, resolved);
     } catch {
       /* private mode */
     }
   }
-  window.dispatchEvent(new CustomEvent(EVENT, { detail: t }));
+  window.dispatchEvent(new CustomEvent(EVENT, { detail: resolved }));
 }
 
 function Glyph({ id }: { id: ThemeName }) {
@@ -64,7 +65,12 @@ function Glyph({ id }: { id: ThemeName }) {
 
 export function mountThemeSync(setTheme: (t: ThemeName) => void): () => void {
   setTheme(current());
-  const onChange = (e: Event) => setTheme((e as CustomEvent<ThemeName>).detail);
+  const onChange = (e: Event) => {
+    const detail = (e as CustomEvent<ThemeName>).detail;
+    if (detail === "dark" || detail === "light" || detail === "high-contrast") {
+      setTheme(detail);
+    }
+  };
   window.addEventListener(EVENT, onChange);
   const mqs = [window.matchMedia("(prefers-color-scheme: light)"), window.matchMedia("(prefers-contrast: more)")];
   const onSystem = () => {
