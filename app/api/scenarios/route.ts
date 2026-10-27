@@ -129,11 +129,17 @@ export function GET(req?: Request): Response {
       }
 
       if (ref) {
-        const cleanRef = ref.replace(/^(source|src|ref|reference)[-_]/, "").replace(/\.(html|json)$/, "");
+        let cleanRef = ref.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
+        if (cleanRef.startsWith("+") || cleanRef.startsWith("#")) cleanRef = cleanRef.slice(1);
+        cleanRef = cleanRef.replace(/^(source|src|ref|reference)[-_]/, "");
+        if (cleanRef.startsWith("+") || cleanRef.startsWith("#")) cleanRef = cleanRef.slice(1);
         list = list.filter(
           (s) =>
             s.refs.some(
-              (r) => r.toLowerCase() === ref || (cleanRef && r.toLowerCase() === cleanRef)
+              (r) =>
+                r.toLowerCase() === ref ||
+                r.toLowerCase() === cleanRef ||
+                (cleanRef && r.toLowerCase().includes(cleanRef))
             )
         );
       }

@@ -787,6 +787,21 @@ check(postQueryTerm.count > 0, "GET /api/posts?query_term=openai (query_term ali
 const postSearchText = await (await get("/api/posts?search_text=openai")).json();
 check(postSearchText.count > 0, "GET /api/posts?search_text=openai (search_text alias)");
 
+const postTierHash = await (await get("/api/posts?tier=%23seraphim")).json();
+check(postTierHash.count > 0 && postTierHash.posts[0].tier === "seraphim", "GET /api/posts?tier=%23seraphim (tier hash resilience)");
+
+const postSourceHash = await (await get("/api/posts?source=%23oaiAug")).json();
+check(postSourceHash.count > 0, "GET /api/posts?source=%23oaiAug (source hash resilience)");
+
+const incSourceHash = await (await get("/api/incidents?source=%23oaiAug")).json();
+check(incSourceHash.count > 0, "GET /api/incidents?source=%23oaiAug (source hash resilience)");
+
+const scRefHash = await (await get("/api/scenarios?ref=%23hfTime")).json();
+check(scRefHash.count > 0, "GET /api/scenarios?ref=%23hfTime (ref hash resilience)");
+
+const csSevHash = await (await get("/api/case-studies?severity=%23high")).json();
+check(csSevHash.count > 0 && csSevHash.findings.every(f => f.severity.toLowerCase() === "high"), "GET /api/case-studies?severity=%23high (severity hash resilience)");
+
 // 9. Method Not Allowed on dynamic API endpoints (Next.js dynamic route handlers return 405 for unexported methods)
 const endpoints405 = [
   "/api/health",

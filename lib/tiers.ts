@@ -154,7 +154,15 @@ export const tierById = (id: string): Tier | undefined => {
 export const tierHref = (id: TierId | string) => {
   if (typeof id !== "string") return "/pricing#";
   const matched = tierById(id);
-  const target = matched ? matched.id : id.trim().toLowerCase().replace(/^\/+|\/+$/g, "");
+  const target = matched
+    ? matched.id
+    : id
+        .trim()
+        .toLowerCase()
+        .replace(/^\/+|\/+$/g, "")
+        .replace(/\.(html|json)$/, "")
+        .replace(/^[#+]+/, "")
+        .replace(/[#+]+$/, "");
   return `/pricing#${target}`;
 };
 

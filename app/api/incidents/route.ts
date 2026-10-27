@@ -123,11 +123,17 @@ export function GET(req?: Request): Response {
       }
 
       if (source) {
-        const cleanSource = source.replace(/^(source|src|ref|reference)[-_]/, "").replace(/\.(html|json)$/, "");
+        let cleanSource = source.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
+        if (cleanSource.startsWith("+") || cleanSource.startsWith("#")) cleanSource = cleanSource.slice(1);
+        cleanSource = cleanSource.replace(/^(source|src|ref|reference)[-_]/, "");
+        if (cleanSource.startsWith("+") || cleanSource.startsWith("#")) cleanSource = cleanSource.slice(1);
         list = list.filter(
           (i) =>
             i.sources.some(
-              (s) => s.toLowerCase() === source || (cleanSource && s.toLowerCase() === cleanSource)
+              (s) =>
+                s.toLowerCase() === source ||
+                s.toLowerCase() === cleanSource ||
+                (cleanSource && s.toLowerCase().includes(cleanSource))
             )
         );
       }

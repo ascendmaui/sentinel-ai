@@ -3564,6 +3564,133 @@ describe("Entity query aliases, numeric indexing, and helper extensions", () => 
     const postHashRes = postsIndex(req("/api/posts?slug=%23when-the-test-subject-leaves-the-test"));
     expect(postHashRes.status).toBe(200);
     expect((await postHashRes.json()).posts[0].slug).toBe("when-the-test-subject-leaves-the-test");
+
+    const postTierHashRes = postsIndex(req("/api/posts?tier=%23seraphim"));
+    expect(postTierHashRes.status).toBe(200);
+    expect((await postTierHashRes.json()).count).toBeGreaterThan(0);
+
+    const postTierNumRes = postsIndex(req("/api/posts?tier=1"));
+    expect(postTierNumRes.status).toBe(200);
+    expect((await postTierNumRes.json()).count).toBeGreaterThan(0);
+
+    const postSrcHashRes = postsIndex(req("/api/posts?source=%23oaiAug"));
+    expect(postSrcHashRes.status).toBe(200);
+    expect((await postSrcHashRes.json()).count).toBeGreaterThan(0);
+
+    const incSrcHashRes = incidentsIndex(req("/api/incidents?source=%23oaiAug"));
+    expect(incSrcHashRes.status).toBe(200);
+    expect((await incSrcHashRes.json()).count).toBeGreaterThan(0);
+
+    const incSrcPlusRes = incidentsIndex(req("/api/incidents?source=+oaiAug"));
+    expect(incSrcPlusRes.status).toBe(200);
+    expect((await incSrcPlusRes.json()).count).toBeGreaterThan(0);
+
+    const scRefHashRes = scenariosIndex(req("/api/scenarios?ref=%23hfTime"));
+    expect(scRefHashRes.status).toBe(200);
+    expect((await scRefHashRes.json()).count).toBeGreaterThan(0);
+
+    const scRefPlusRes = scenariosIndex(req("/api/scenarios?ref=+hfTime"));
+    expect(scRefPlusRes.status).toBe(200);
+    expect((await scRefPlusRes.json()).count).toBeGreaterThan(0);
+
+    const csSevHashRes = caseStudiesIndex(req("/api/case-studies?severity=%23high"));
+    expect(csSevHashRes.status).toBe(200);
+    expect((await csSevHashRes.json()).count).toBeGreaterThan(0);
+
+    const csSevPlusRes = caseStudiesIndex(req("/api/case-studies?severity=+high"));
+    expect(csSevPlusRes.status).toBe(200);
+    expect((await csSevPlusRes.json()).count).toBeGreaterThan(0);
+  });
+
+  it("End-to-end cross-route relational integrity flow connects all entities and API routes", async () => {
+    // 1. Fetch posts index and drill down into each post
+    const postsRes = postsIndex(req("/api/posts"));
+    expect(postsRes.status).toBe(200);
+    const postsBody = await postsRes.json();
+    for (const summary of postsBody.posts) {
+      const detailRes = await postOne(req(`/api/posts/${summary.slug}`), slugCtx(summary.slug));
+      expect(detailRes.status).toBe(200);
+      const detail = await detailRes.json();
+      expect(detail.slug).toBe(summary.slug);
+      expect(detail.title).toBe(summary.title);
+      expect(detail.tier).toBe(summary.tier);
+      expect(Array.isArray(detail.body)).toBe(true);
+
+      // Verify each referenced source exists in the sources API
+      for (const src of detail.sources) {
+        const srcRes = await sourceOne(req(`/api/sources/${src.id}`), idCtx(src.id));
+        expect(srcRes.status).toBe(200);
+        const srcData = await srcRes.json();
+        expect(srcData.id).toBe(src.id);
+        expect(srcData.url).toBe(src.url);
+      }
+
+      // Verify the post's tier exists in the tiers API
+      const tierRes = await tierOne(req(`/api/tiers/${summary.tier}`), idCtx(summary.tier));
+      expect(tierRes.status).toBe(200);
+      const tierData = await tierRes.json();
+      expect(tierData.id).toBe(summary.tier);
+    }
+
+    // 2. Fetch incidents index and drill down into each incident
+    const incRes = incidentsIndex(req("/api/incidents"));
+    expect(incRes.status).toBe(200);
+    const incBody = await incRes.json();
+    for (const incSummary of incBody.incidents) {
+      const incDetailRes = await incidentOne(req(`/api/incidents/${incSummary.id}`), idCtx(incSummary.id));
+      expect(incDetailRes.status).toBe(200);
+      const incDetail = await incDetailRes.json();
+      expect(incDetail.id).toBe(incSummary.id);
+      expect(incDetail.n).toBe(incSummary.n);
+      expect(Array.isArray(incDetail.timeline)).toBe(true);
+
+      for (const src of incDetail.sources) {
+        const srcRes = await sourceOne(req(`/api/sources/${src.id}`), idCtx(src.id));
+        expect(srcRes.status).toBe(200);
+        expect((await srcRes.json()).id).toBe(src.id);
+      }
+    }
+
+    // 3. Fetch scenarios index and drill down into each scenario
+    const scRes = scenariosIndex(req("/api/scenarios"));
+    expect(scRes.status).toBe(200);
+    const scBody = await scRes.json();
+    for (const scSummary of scBody.scenarios) {
+      const scDetailRes = await scenarioOne(req(`/api/scenarios/${scSummary.id}`), idCtx(scSummary.id));
+      expect(scDetailRes.status).toBe(200);
+      const scDetail = await scDetailRes.json();
+      expect(scDetail.id).toBe(scSummary.id);
+      for (const ref of scDetail.refs) {
+        const srcRes = await sourceOne(req(`/api/sources/${ref.id}`), idCtx(ref.id));
+        expect(srcRes.status).toBe(200);
+        expect((await srcRes.json()).id).toBe(ref.id);
+      }
+    }
+
+    // 4. Fetch case studies index and drill down into each finding
+    const csRes = caseStudiesIndex(req("/api/case-studies"));
+    expect(csRes.status).toBe(200);
+    const csBody = await csRes.json();
+    for (const fSummary of csBody.findings) {
+      const fDetailRes = await caseStudyOne(req(`/api/case-studies/${fSummary.id}`), idCtx(fSummary.id));
+      expect(fDetailRes.status).toBe(200);
+      const fDetail = await fDetailRes.json();
+      expect(fDetail.id).toBe(fSummary.id);
+      expect(fDetail.severity).toBe(fSummary.severity);
+      expect(fDetail.remediation).not.toBeNull();
+      expect(fDetail.remediation.id).toBe(fSummary.id);
+    }
+
+    // 5. Fetch brand endpoint and check trust badges and siteUrl
+    const brandRes = brandEndpoint(req("/api/brand"));
+    expect(brandRes.status).toBe(200);
+    const brandData = await brandRes.json();
+    expect(brandData.badges).toHaveLength(5);
+    for (const badge of brandData.badges) {
+      const bRes = brandEndpoint(req(`/api/brand?badge=${badge.key}`));
+      expect(bRes.status).toBe(200);
+      expect((await bRes.json()).badge?.key).toBe(badge.key);
+    }
   });
 });
 

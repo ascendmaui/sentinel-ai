@@ -554,7 +554,16 @@ describe("tiers", () => {
     expect(tierHref("t-1")).toBe("/pricing#seraphim");
     expect(tierHref("tier-1")).toBe("/pricing#seraphim");
     expect(tierHref("tier_02")).toBe("/pricing#cherubim");
+    expect(tierHref("#cherubim")).toBe("/pricing#cherubim");
+    expect(tierHref("+cherubim")).toBe("/pricing#cherubim");
+    expect(tierHref("#unknown")).toBe("/pricing#unknown");
+    expect(tierHref("+unknown")).toBe("/pricing#unknown");
+    expect(tierHref("unknown.json")).toBe("/pricing#unknown");
+    expect(tierHref("#")).toBe("/pricing#");
+    expect(tierHref("")).toBe("/pricing#");
     expect(tierHref(null as unknown as (typeof tiers)[0]["id"])).toBe("/pricing#");
+    expect(tierHref(undefined as unknown as string)).toBe("/pricing#");
+    expect(tierHref(123 as unknown as string)).toBe("/pricing#");
   });
 });
 

@@ -100,7 +100,11 @@ export function GET(req?: Request): Response {
         list = list.filter((f) => f.title.toLowerCase().includes(title));
       }
       if (severity) {
-        list = list.filter((f) => f.severity.toLowerCase() === severity);
+        let cleanSev = severity.replace(/^\/+|\/+$/g, "");
+        if (cleanSev.startsWith("+") || cleanSev.startsWith("#")) cleanSev = cleanSev.slice(1);
+        list = list.filter(
+          (f) => f.severity.toLowerCase() === severity || f.severity.toLowerCase() === cleanSev
+        );
       }
       if (status) {
         list = list.filter((f) => f.status.toLowerCase().includes(status));

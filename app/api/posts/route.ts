@@ -1,5 +1,6 @@
 import { json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
 import { postBySlug, posts, postWords } from "../../../lib/posts";
+import { tierById } from "../../../lib/tiers";
 
 /** Blog index as JSON: post metadata only (no body). Newest first by default. Supports ?slug=, ?id=, ?n=, ?num=, ?post=, ?post_id=, ?postId=, ?post_slug=, ?postSlug=, ?article=, ?article_id=, ?articleId=, ?title=, ?tier=, ?service_tier=, ?source=, ?source_id=, ?sourceId=, ?src=, ?ref=, ?reference=, ?year=, ?date=, ?readMins=, ?mins=, ?min=, ?read_mins=, ?read_time=, ?reading_time=, ?q=, ?order=, ?sort=, ?offset=, ?limit=, ?take=, and ?page=. */
 export function GET(): Response;
@@ -87,17 +88,30 @@ export function GET(req?: Request): Response {
       }
 
       if (tier) {
-        const cleanTier = tier.replace(/^(tier[-_]|\+)/, "");
+        const matchedTier = tierById(tier);
+        let cleanTier = tier.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
+        if (cleanTier.startsWith("+") || cleanTier.startsWith("#")) cleanTier = cleanTier.slice(1);
+        cleanTier = cleanTier.replace(/^(tier|rank|r|t)[-_]?/, "");
+        if (cleanTier.startsWith("+") || cleanTier.startsWith("#")) cleanTier = cleanTier.slice(1);
         list = list.filter(
-          (p) => p.tier.toLowerCase() === tier || (cleanTier && p.tier.toLowerCase() === cleanTier)
+          (p) =>
+            p.tier.toLowerCase() === tier ||
+            (cleanTier && p.tier.toLowerCase() === cleanTier) ||
+            (matchedTier && p.tier.toLowerCase() === matchedTier.id.toLowerCase())
         );
       }
       if (source) {
-        const cleanSource = source.replace(/^(source|src|ref|reference)[-_]/, "").replace(/\.(html|json)$/, "");
+        let cleanSource = source.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
+        if (cleanSource.startsWith("+") || cleanSource.startsWith("#")) cleanSource = cleanSource.slice(1);
+        cleanSource = cleanSource.replace(/^(source|src|ref|reference)[-_]/, "");
+        if (cleanSource.startsWith("+") || cleanSource.startsWith("#")) cleanSource = cleanSource.slice(1);
         list = list.filter(
           (p) =>
             p.sources.some(
-              (s) => s.toLowerCase() === source || (cleanSource && s.toLowerCase() === cleanSource)
+              (s) =>
+                s.toLowerCase() === source ||
+                s.toLowerCase() === cleanSource ||
+                (cleanSource && s.toLowerCase().includes(cleanSource))
             )
         );
       }
