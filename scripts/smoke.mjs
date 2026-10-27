@@ -802,6 +802,49 @@ check(scRefHash.count > 0, "GET /api/scenarios?ref=%23hfTime (ref hash resilienc
 const csSevHash = await (await get("/api/case-studies?severity=%23high")).json();
 check(csSevHash.count > 0 && csSevHash.findings.every(f => f.severity.toLowerCase() === "high"), "GET /api/case-studies?severity=%23high (severity hash resilience)");
 
+const brandBadgeDoubleHash = await (await get("/api/brand?badge=%23%23passive")).json();
+check(brandBadgeDoubleHash.badge && brandBadgeDoubleHash.badge.key === "passive", "GET /api/brand?badge=%23%23passive (double-hash resilience)");
+
+const tierDoubleHash = await (await get("/api/tiers?tier=%23%23seraphim")).json();
+check(tierDoubleHash.count > 0 && tierDoubleHash.tiers[0].id === "seraphim", "GET /api/tiers?tier=%23%23seraphim (double-hash resilience)");
+
+const csDoubleHash = await (await get("/api/case-studies?id=%23%23f-01")).json();
+check(csDoubleHash.count > 0 && csDoubleHash.findings[0].id === "F-01", "GET /api/case-studies?id=%23%23f-01 (double-hash resilience)");
+
+const scDoubleHash = await (await get("/api/scenarios?id=%23%23h1")).json();
+check(scDoubleHash.count > 0 && scDoubleHash.scenarios[0].id === "legacy-internal-app", "GET /api/scenarios?id=%23%23h1 (double-hash resilience)");
+
+const srcDoubleHash = await (await get("/api/sources?id=%23%23oaiAug")).json();
+check(srcDoubleHash.count > 0 && srcDoubleHash.sources[0].id === "oaiAug", "GET /api/sources?id=%23%23oaiAug (double-hash resilience)");
+
+const incDoubleHash = await (await get("/api/incidents?id=%23%23openai-huggingface-2026")).json();
+check(incDoubleHash.count > 0 && incDoubleHash.incidents[0].id === "openai-huggingface-2026", "GET /api/incidents?id=%23%23openai-huggingface-2026 (double-hash resilience)");
+
+const postDoubleHash = await (await get("/api/posts?slug=%23%23when-the-test-subject-leaves-the-test")).json();
+check(postDoubleHash.count > 0 && postDoubleHash.posts[0].slug === "when-the-test-subject-leaves-the-test", "GET /api/posts?slug=%23%23... (double-hash resilience)");
+
+// Pagination continuity and disjointness check across all 6 index endpoints
+const pageCheckEndpoints = [
+  { path: "/api/posts", field: "posts", idKey: "slug" },
+  { path: "/api/incidents", field: "incidents", idKey: "id" },
+  { path: "/api/case-studies", field: "findings", idKey: "id" },
+  { path: "/api/scenarios", field: "scenarios", idKey: "id" },
+  { path: "/api/sources", field: "sources", idKey: "id" },
+  { path: "/api/tiers", field: "tiers", idKey: "id" },
+];
+for (const { path, field, idKey } of pageCheckEndpoints) {
+  const p1Res = await (await get(`${path}?page=1&limit=2`)).json();
+  const p2Res = await (await get(`${path}?page=2&limit=2`)).json();
+  check(p1Res.count <= 2 && p2Res.count <= 2, `${path} page 1 & 2 count bounded`);
+  if (p1Res.totalCount > 2) {
+    const p1Ids = new Set(p1Res[field].map(item => item[idKey]));
+    const overlap = p2Res[field].some(item => p1Ids.has(item[idKey]));
+    check(!overlap, `${path} page 1 and page 2 are disjoint sets`);
+  }
+  const oobRes = await (await get(`${path}?offset=${p1Res.totalCount + 10}&limit=2`)).json();
+  check(oobRes.count === 0 && oobRes[field].length === 0 && oobRes.totalCount === p1Res.totalCount, `${path} out-of-bounds offset returns count 0 with preserved totalCount`);
+}
+
 // 9. Method Not Allowed on dynamic API endpoints (Next.js dynamic route handlers return 405 for unexported methods)
 const endpoints405 = [
   "/api/health",
