@@ -965,11 +965,15 @@ describe("ThemeSwitcher component", () => {
 
       // Custom event with unknown detail is safely ignored
       const prevLength = observedThemes.length;
-      eventListener?.({ detail: "invalid-custom-event" } as unknown as CustomEvent<ThemeName>);
+      ((globalThis as unknown as { window: { dispatchEvent: (ev: unknown) => void } }).window).dispatchEvent({
+        detail: "invalid-custom-event",
+      });
       expect(observedThemes.length).toBe(prevLength);
 
       // Custom event with valid detail is accepted
-      eventListener?.({ detail: "high-contrast" } as unknown as CustomEvent<ThemeName>);
+      ((globalThis as unknown as { window: { dispatchEvent: (ev: unknown) => void } }).window).dispatchEvent({
+        detail: "high-contrast",
+      });
       expect(observedThemes.at(-1)).toBe("high-contrast");
 
       cleanup();
