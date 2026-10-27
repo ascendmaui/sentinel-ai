@@ -23,7 +23,7 @@ import { GET as incidentsApi } from "../app/api/incidents/route";
 import { GET as scenariosApi } from "../app/api/scenarios/route";
 import { GET as caseStudiesApi } from "../app/api/case-studies/route";
 import { GET as tiersApi } from "../app/api/tiers/route";
-import { BRAND_EMAIL, BRAND_NAME, SITE_URL } from "../lib/brand";
+import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, SITE_URL } from "../lib/brand";
 import { findings, remediation, severityCounts } from "../lib/caseStudies";
 import { INCIDENTS_DISCLAIMER, incidents, scenarios, unverified } from "../lib/incidents";
 import * as postsModule from "../lib/posts";
@@ -32,13 +32,29 @@ import * as sourcesModule from "../lib/sources";
 import { tiers } from "../lib/tiers";
 
 describe("Home Page", () => {
-  it("renders HomePage without error and outputs valid markup", () => {
+  it("renders HomePage without error and outputs valid markup across all sections", () => {
     const el = HomePage();
     expect(el).toBeDefined();
     expect(el.type).toBe("main");
     expect(el.props.className).toBe("home");
     const html = renderToStaticMarkup(el);
     expect(html).toContain(BRAND_NAME);
+    expect(html).toContain('id="phases"');
+    expect(html).toContain('id="who"');
+    expect(html).toContain('id="tiers"');
+    expect(html).toContain('id="incidents"');
+    expect(html).toContain('id="how"');
+    expect(html).toContain('id="contact"');
+    expect(html).toContain("Recon");
+    expect(html).toContain("Scoped Assessment");
+    expect(html).toContain("Remediation and Retest");
+    expect(html).toContain("Security and AppSec teams");
+    expect(html).toContain("Founders and product leads");
+    expect(html).toContain("Compliance and risk owners");
+    expect(html).toContain("Define scope");
+    expect(html).toContain("Run the three phases");
+    expect(html).toContain("Verify and hand off");
+    expect(html).toContain(`mailto:${BRAND_EMAIL}?subject=${BRAND_MAIL}%20inquiry`);
     expect(html).toContain("Ready to see what an attacker would see first?");
   });
 });
