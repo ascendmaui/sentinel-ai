@@ -3803,6 +3803,146 @@ describe("Entity query aliases, numeric indexing, and helper extensions", () => 
     const brandData = await brandRes.json();
     expect(brandData.badge?.key).toBe("passive");
   });
+
+  it("Bidirectional relational query flow verifies foreign key indexing across all entities", async () => {
+    // 1. Tiers -> Posts relational indexing
+    for (const t of tiers) {
+      const res = postsIndex(req(`/api/posts?tier=${t.id}`));
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.posts.every((p: { tier: string }) => p.tier === t.id)).toBe(true);
+
+      const hashRes = postsIndex(req(`/api/posts?tier=%23${t.id}`));
+      expect(hashRes.status).toBe(200);
+      const hashData = await hashRes.json();
+      expect(hashData.count).toBe(data.count);
+
+      for (const p of data.posts) {
+        const detailRes = await postOne(req(`/api/posts/${p.slug}`), slugCtx(p.slug));
+        expect(detailRes.status).toBe(200);
+        const detail = await detailRes.json();
+        expect(detail.tier).toBe(t.id);
+      }
+    }
+
+    // 2. Sources -> Posts, Incidents, and Scenarios relational indexing
+    for (const src of sources) {
+      // Posts referencing this source
+      const postRes = postsIndex(req(`/api/posts?source=${src.id}`));
+      expect(postRes.status).toBe(200);
+      const postData = await postRes.json();
+      const expectedPosts = posts.filter((p) => p.sources.includes(src.id));
+      expect(postData.count).toBe(expectedPosts.length);
+
+      // Incidents referencing this source
+      const incRes = incidentsIndex(req(`/api/incidents?source=${src.id}`));
+      expect(incRes.status).toBe(200);
+      const incData = await incRes.json();
+      const expectedIncs = incidents.filter((i) => i.sources.includes(src.id));
+      expect(incData.count).toBe(expectedIncs.length);
+
+      // Scenarios referencing this source
+      const scRes = scenariosIndex(req(`/api/scenarios?ref=${src.id}`));
+      expect(scRes.status).toBe(200);
+      const scData = await scRes.json();
+      const expectedScs = scenarios.filter((s) => s.refs.includes(src.id));
+      expect(scData.count).toBe(expectedScs.length);
+    }
+
+    // 3. Case study findings -> Remediation linking
+    for (const f of findings) {
+      const csRes = await caseStudyOne(req(`/api/case-studies/${f.id}`), idCtx(f.id));
+      expect(csRes.status).toBe(200);
+      const csData = await csRes.json();
+      expect(csData.id).toBe(f.id);
+      expect(csData.remediation).not.toBeNull();
+      expect(csData.remediation.id).toBe(f.id);
+      expect(csData.remediation.severity).toBe(f.severity);
+
+      const sevRes = caseStudiesIndex(req(`/api/case-studies?severity=${f.severity}`));
+      expect(sevRes.status).toBe(200);
+      const sevData = await sevRes.json();
+      expect(sevData.findings.some((item: { id: string }) => item.id === f.id)).toBe(true);
+    }
+
+    // 4. Brand trust badges individual query matching
+    for (const badge of TRUE_BADGES) {
+      const bRes = brandEndpoint(req(`/api/brand?badge=${badge.key}`));
+      expect(bRes.status).toBe(200);
+      const bData = await bRes.json();
+      expect(bData.badge).toEqual(badge);
+
+      const tagRes = brandEndpoint(req(`/api/brand?tag=${badge.key}`));
+      expect(tagRes.status).toBe(200);
+      expect((await tagRes.json()).badge).toEqual(badge);
+    }
+  });
+
+  it("Multi-field orthogonal combination filters, negative sanitization, and sorting consistency", async () => {
+    // 1. Posts combination filters and date sort parity
+    const descPostsRes = postsIndex(req("/api/posts?tier=seraphim&year=2026&order=desc&limit=2"));
+    expect(descPostsRes.status).toBe(200);
+    const descData = await descPostsRes.json();
+    expect(descData.count).toBeGreaterThan(0);
+    expect(descData.posts.every((p: { tier: string; date: string }) => p.tier === "seraphim" && p.date.includes("2026"))).toBe(true);
+    if (descData.posts.length > 1) {
+      expect(descData.posts[0].date >= descData.posts[1].date).toBe(true);
+    }
+
+    const ascPostsRes = postsIndex(req("/api/posts?tier=seraphim&year=2026&order=asc&limit=2"));
+    expect(ascPostsRes.status).toBe(200);
+    const ascData = await ascPostsRes.json();
+    expect(ascData.count).toBe(descData.count);
+    if (ascData.posts.length > 1) {
+      expect(ascData.posts[0].date <= ascData.posts[1].date).toBe(true);
+    }
+
+    // 2. Incidents combination filter
+    const incRes = incidentsIndex(req("/api/incidents?standing=documented&year=2026&order=desc"));
+    expect(incRes.status).toBe(200);
+    const incData = await incRes.json();
+    expect(incData.count).toBeGreaterThan(0);
+    expect(incData.incidents.every((i: { standing: string; date: string }) => i.standing.toLowerCase().includes("documented") && i.date.includes("2026"))).toBe(true);
+
+    // 3. Case studies severity and status combination filter
+    const csRes = caseStudiesIndex(req("/api/case-studies?severity=High&status=fixed"));
+    expect(csRes.status).toBe(200);
+    const csData = await csRes.json();
+    expect(csData.count).toBeGreaterThan(0);
+    expect(csData.findings.every((f: { severity: string; status: string }) => f.severity.toLowerCase() === "high" && f.status.toLowerCase().includes("fixed"))).toBe(true);
+
+    // 4. Scenarios weakness and approach combination filter
+    const scRes = scenariosIndex(req("/api/scenarios?weakness=credentials&approach=adversary"));
+    expect(scRes.status).toBe(200);
+    const scData = await scRes.json();
+    expect(scData.count).toBeGreaterThan(0);
+    expect(scData.scenarios.every((s: { weaknessClass: string[] }) => s.weaknessClass.some((w) => w.toLowerCase().includes("credentials")))).toBe(true);
+    for (const scItem of scData.scenarios) {
+      const detailRes = await scenarioOne(req(`/api/scenarios/${scItem.id}`), idCtx(scItem.id));
+      expect(detailRes.status).toBe(200);
+      const detail = await detailRes.json();
+      expect(detail.approach.toLowerCase()).toContain("adversary");
+    }
+
+    // 5. Negative sanitization: non-numeric limits/offsets/pages are safely ignored
+    const nonNumericRes = postsIndex(req("/api/posts?limit=abc&offset=xyz&page=foo"));
+    expect(nonNumericRes.status).toBe(200);
+    const nonNumericData = await nonNumericRes.json();
+    expect(nonNumericData.count).toBe(posts.length);
+    expect(nonNumericData.totalCount).toBe(posts.length);
+
+    // 6. Decimal and exponential strings are rejected by integer parsers rather than truncated
+    const decimalRes = postsIndex(req("/api/posts?limit=1.9&offset=2.5&page=3.14"));
+    expect(decimalRes.status).toBe(200);
+    const decimalData = await decimalRes.json();
+    expect(decimalData.count).toBe(posts.length);
+
+    // 7. Surrounding whitespace and URL-encoded query normalization
+    const wsRes = postsIndex(req("/api/posts?q=%20%20openai%20%20"));
+    expect(wsRes.status).toBe(200);
+    const wsData = await wsRes.json();
+    expect(wsData.count).toBeGreaterThan(0);
+  });
 });
 
 
