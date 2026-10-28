@@ -360,4 +360,37 @@ describe("CI & Repository Hardening Contracts", () => {
       expect(existsSync(join(ROOT_DIR, "tests", file))).toBe(true);
     }
   });
+
+  it("enforces static asset budgets and client bundle performance budgets", () => {
+    // 1. Static source asset budgets
+    const iconStat = statSync(join(ROOT_DIR, "app", "icon.svg"));
+    expect(iconStat.size, "icon.svg size budget (<= 4 KB)").toBeLessThanOrEqual(4096);
+
+    const tokensStat = statSync(join(ROOT_DIR, "app", "tokens.css"));
+    expect(tokensStat.size, "tokens.css size budget (<= 25 KB)").toBeLessThanOrEqual(25600);
+
+    const globalsStat = statSync(join(ROOT_DIR, "app", "globals.css"));
+    expect(globalsStat.size, "globals.css size budget (<= 65 KB)").toBeLessThanOrEqual(66560);
+
+    const tokensJsonStat = statSync(join(ROOT_DIR, "lib", "tokens.json"));
+    expect(tokensJsonStat.size, "tokens.json size budget (<= 15 KB)").toBeLessThanOrEqual(15360);
+
+    // 2. Post-build client bundle performance budget (if .next exists)
+    const appManifestPath = join(ROOT_DIR, ".next", "app-build-manifest.json");
+    if (existsSync(appManifestPath)) {
+      const manifest = JSON.parse(readFileSync(appManifestPath, "utf8")) as {
+        pages: Record<string, string[]>;
+      };
+      for (const [pagePath, chunks] of Object.entries(manifest.pages)) {
+        expect(chunks.length, `${pagePath} chunk count budget (<= 10)`).toBeLessThanOrEqual(10);
+        for (const chunk of chunks) {
+          const chunkPath = join(ROOT_DIR, ".next", chunk);
+          if (existsSync(chunkPath)) {
+            const chunkSize = statSync(chunkPath).size;
+            expect(chunkSize, `${chunk} single-chunk budget (<= 200 KB)`).toBeLessThanOrEqual(204800);
+          }
+        }
+      }
+    }
+  });
 });
