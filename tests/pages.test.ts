@@ -1,3 +1,4 @@
+import React from "react";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -17,6 +18,10 @@ import PostPage, { generateMetadata as postMeta, generateStaticParams as blogSta
 import CaseStudiesPage, { metadata as csMeta } from "../app/case-studies/page";
 import IncidentCaseStudiesPage, { metadata as incMeta } from "../app/incident-case-studies/page";
 import NotFound from "../app/not-found";
+import Loading from "../app/loading";
+import ErrorBoundary from "../app/error";
+import GlobalError from "../app/global-error";
+import BlogPostNotFound from "../app/blog/[slug]/not-found";
 import RootLayout, { metadata as rootMeta, viewport as rootViewport } from "../app/layout";
 import { GET as postsApi } from "../app/api/posts/route";
 import { GET as incidentsApi } from "../app/api/incidents/route";
@@ -463,7 +468,7 @@ describe("Incident Case Studies Page", () => {
   });
 });
 
-describe("Not Found Page", () => {
+describe("Not Found and Boundary Recovery States", () => {
   it("renders NotFound page with recovery links and markup", () => {
     const el = NotFound();
     expect(el.type).toBe("main");
@@ -478,6 +483,62 @@ describe("Not Found Page", () => {
     expect(html).toContain("Page not found");
     expect(html).toContain('href="/"');
     expect(html).toContain('href="/pricing"');
+  });
+
+  it("renders Loading state with aria-busy, aria-live, and progress indicator", () => {
+    const el = Loading();
+    expect(el.type).toBe("main");
+    expect(el.props["aria-busy"]).toBe("true");
+    expect(el.props["aria-live"]).toBe("polite");
+    const html = renderToStaticMarkup(el);
+    expect(html).toContain("Loading assessment content...");
+    expect(html).toContain('role="status"');
+    expect(html).toContain(`Loading ${BRAND_NAME}...`);
+    expect(html).toContain("<h1");
+  });
+
+  it("renders ErrorBoundary with error details, reset trigger, and safe actions", () => {
+    let resetCalled = false;
+    const reset = () => {
+      resetCalled = true;
+    };
+    const err = new Error("Simulated client error");
+    const html = renderToStaticMarkup(React.createElement(ErrorBoundary, { error: err, reset }));
+    expect(html).toContain("500 · Unexpected condition");
+    expect(html).toContain("Assessment <span class=\"gold-text\">interrupted</span>");
+    expect(html).toContain("Try again");
+    expect(html).toContain('href="/"');
+    expect(html).toContain('href="/pricing"');
+    expect(html).toContain(`mailto:${BRAND_EMAIL}`);
+  });
+
+  it("renders GlobalError with root html and body structure and reset trigger", () => {
+    let resetCalled = false;
+    const reset = () => {
+      resetCalled = true;
+    };
+    const err = new Error("Simulated root error");
+    const html = renderToStaticMarkup(React.createElement(GlobalError, { error: err, reset }));
+    expect(html).toContain("<body");
+    expect(html).toContain("500 · Root layout failure");
+    expect(html).toContain("System boundary error");
+    expect(html).toContain("Try again");
+    expect(html).toContain('href="/"');
+  });
+
+  it("renders BlogPostNotFound with article listing and recovery paths", () => {
+    const el = BlogPostNotFound();
+    expect(el.type).toBe("main");
+    const html = renderToStaticMarkup(el);
+    expect(html).toContain("404 · Article not found");
+    expect(html).toContain("Post <span class=\"gold-text\">out of scope</span>");
+    expect(html).toContain('href="/blog"');
+    expect(html).toContain('href="/"');
+    expect(html).toContain('href="/incident-case-studies"');
+    for (const post of posts) {
+      expect(html).toContain(`href="/blog/${post.slug}"`);
+      expect(html).toContain(post.title);
+    }
   });
 });
 
@@ -672,6 +733,9 @@ describe("Cross-page internal link, anchor (#id), and unique DOM id integrity", 
     routeHtml.set("/case-studies", renderToStaticMarkup(RootLayout({ children: CaseStudiesPage() })));
     routeHtml.set("/incident-case-studies", renderToStaticMarkup(RootLayout({ children: IncidentCaseStudiesPage() })));
     routeHtml.set("/_not-found", renderToStaticMarkup(RootLayout({ children: NotFound() })));
+    routeHtml.set("/_loading", renderToStaticMarkup(RootLayout({ children: Loading() })));
+    routeHtml.set("/_error", renderToStaticMarkup(RootLayout({ children: React.createElement(ErrorBoundary, { error: new Error("Test"), reset: () => {} }) })));
+    routeHtml.set("/blog/_not-found", renderToStaticMarkup(RootLayout({ children: BlogPostNotFound() })));
 
     for (const post of posts) {
       const postEl = await PostPage({ params: Promise.resolve({ slug: post.slug }) });
@@ -878,14 +942,23 @@ describe("App Router page and layout export contracts", () => {
     for (const name of readdirSync(dir)) {
       const full = join(dir, name);
       if (statSync(full).isDirectory()) out.push(...findSegmentFiles(full));
-      else if (name === "page.tsx" || name === "layout.tsx" || name === "not-found.tsx") out.push(full);
+      else if (
+        name === "page.tsx" ||
+        name === "layout.tsx" ||
+        name === "not-found.tsx" ||
+        name === "loading.tsx" ||
+        name === "error.tsx" ||
+        name === "global-error.tsx"
+      ) {
+        out.push(full);
+      }
     }
     return out;
   }
 
-  it("every page, layout, and not-found module exports a default component and only Next.js allowed segment fields", async () => {
+  it("every page, layout, loading, error, and not-found module exports a default component and only Next.js allowed segment fields", async () => {
     const files = findSegmentFiles(APP_DIR);
-    expect(files.length).toBeGreaterThanOrEqual(8);
+    expect(files.length).toBeGreaterThanOrEqual(12);
     for (const file of files) {
       const mod = (await import(pathToFileURL(file).href)) as Record<string, unknown>;
       expect(typeof mod.default, `${file} default export`).toBe("function");
@@ -933,6 +1006,9 @@ describe("WCAG 2.1 AA Accessibility & Landmark Integrity across all routes", () 
     routeHtml.set("/case-studies", renderToStaticMarkup(RootLayout({ children: CaseStudiesPage() })));
     routeHtml.set("/incident-case-studies", renderToStaticMarkup(RootLayout({ children: IncidentCaseStudiesPage() })));
     routeHtml.set("/_not-found", renderToStaticMarkup(RootLayout({ children: NotFound() })));
+    routeHtml.set("/_loading", renderToStaticMarkup(RootLayout({ children: Loading() })));
+    routeHtml.set("/_error", renderToStaticMarkup(RootLayout({ children: React.createElement(ErrorBoundary, { error: new Error("Test"), reset: () => {} }) })));
+    routeHtml.set("/blog/_not-found", renderToStaticMarkup(RootLayout({ children: BlogPostNotFound() })));
 
     for (const post of posts) {
       const postEl = await PostPage({ params: Promise.resolve({ slug: post.slug }) });
