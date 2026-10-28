@@ -47,14 +47,15 @@ All endpoints export HTTP/REST JSON contracts with security headers (`X-Content-
 - `GET /robots.txt`: Generated dynamically via `app/robots.ts`, referencing the XML sitemap.
 - `GET /sitemap.xml`: Generated dynamically via `app/sitemap.ts` including all main pages and blog posts.
 - `/_not-found`: Branded custom 404 handler (`app/not-found.tsx`) with helpful navigation links.
+- **Structured Data & Social Cards**: Valid Schema.org JSON-LD schemas (`Organization`, `WebSite`, `Service`, `Blog`, `BlogPosting`, `TechArticle`, `CollectionPage`) and full OpenGraph / Twitter `summary_large_image` metadata parity across all routes.
 
 ## Verification & Testing
 
-- `npm test`: Run 390 unit, component, page, content integrity, route contract, and API integration tests via Vitest across 5 test suites.
+- `npm test`: Run 405+ unit, component, page, content integrity, route contract, and API integration tests via Vitest across 5 test suites.
 - `npm run test:contract`: Run API route contract discovery and security header verification tests.
 - `npm run test:integration`: Run API endpoint integration tests.
 - `npm run test:components`: Run UI component tests (icons, emblems, logo mark, trust badges, nav, footer).
-- `npm run test:pages`: Run React Server Component page tests and metadata tests.
+- `npm run test:pages`: Run React Server Component page tests, metadata parity, and JSON-LD structured data verification.
 - `npm run test:content`: Run content integrity and relationship verification tests.
 - `npm run typecheck`: Strict TypeScript typecheck across all routes, components, and tests (`tsc --noEmit`).
 - `npm run smoke`: Black-box smoke test validating running server endpoints, API contracts, query filtering, 404 responses, and internal link resolution.

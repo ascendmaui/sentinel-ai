@@ -48,6 +48,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: BRAND_NAME,
     description,
+    images: OG_IMAGES,
   },
 };
 

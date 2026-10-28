@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Icon } from "../../components/Icons";
 import { TierEmblem } from "../../components/TierEmblem";
 import { TrustBadges } from "../../components/TrustBadges";
-import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, OG_IMAGES } from "../../lib/brand";
+import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, OG_IMAGES, SITE_URL } from "../../lib/brand";
 import { ENGAGEMENT_TERMS, helper, matrix, tierById, tierHref, tiers, type TierId } from "../../lib/tiers";
 
 const title = "Services and tiers";
@@ -14,6 +14,12 @@ export const metadata: Metadata = {
   description,
   alternates: { canonical: "/pricing" },
   openGraph: { type: "website", siteName: BRAND_NAME, title: `${BRAND_NAME}: ${title}`, description, url: "/pricing", images: OG_IMAGES },
+  twitter: {
+    card: "summary_large_image",
+    title: `${BRAND_NAME}: ${title}`,
+    description,
+    images: OG_IMAGES,
+  },
 };
 
 const order: TierId[] = ["seraphim", "cherubim", "thrones", "angels"];
@@ -29,6 +35,34 @@ export default function PricingPage() {
   const rest = tiers.filter((t) => t.id !== flagship.id);
   return (
     <main className="home cs">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Service",
+            name: `${BRAND_NAME} Services & Tiers`,
+            serviceType: "Security Assessment",
+            provider: {
+              "@type": "Organization",
+              name: BRAND_NAME,
+              url: SITE_URL,
+            },
+            description,
+            hasOfferCatalog: {
+              "@type": "OfferCatalog",
+              name: "Assessment Tiers",
+              itemListElement: tiers.map((t, idx) => ({
+                "@type": "Offer",
+                position: idx + 1,
+                name: t.name,
+                description: t.summary,
+                url: `${SITE_URL}${tierHref(t.id)}`,
+              })),
+            },
+          }),
+        }}
+      />
       <header className="cs-head">
         <p className="eyebrow">Services</p>
         <h1>

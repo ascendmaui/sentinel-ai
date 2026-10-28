@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Icon, type IconName } from "../components/Icons";
 import { TrustBadges } from "../components/TrustBadges";
 import { TierStrip } from "../components/TierStrip";
-import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, BRAND_PARENT } from "../lib/brand";
+import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, BRAND_PARENT, BRAND_TAGLINE, SITE_URL } from "../lib/brand";
 
 const phases: { icon: IconName; n: string; title: string; body: string }[] = [
   {
@@ -65,6 +65,43 @@ const steps = [
 export default function HomePage() {
   return (
     <main className="home">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@graph": [
+              {
+                "@type": "Organization",
+                "@id": `${SITE_URL}#organization`,
+                name: BRAND_NAME,
+                url: SITE_URL,
+                logo: `${SITE_URL}/icon.svg`,
+                description: `${BRAND_NAME} runs scoped security assessments in three phases: passive recon of public information, a Scoped Assessment within an agreed scope and written client authorization, and remediation with retest.`,
+                parentOrganization: {
+                  "@type": "Organization",
+                  name: BRAND_PARENT,
+                },
+                contactPoint: {
+                  "@type": "ContactPoint",
+                  email: BRAND_EMAIL,
+                  contactType: "customer service",
+                },
+              },
+              {
+                "@type": "WebSite",
+                "@id": `${SITE_URL}#website`,
+                url: SITE_URL,
+                name: BRAND_NAME,
+                description: `${BRAND_NAME}: ${BRAND_TAGLINE.toLowerCase()}`,
+                publisher: {
+                  "@id": `${SITE_URL}#organization`,
+                },
+              },
+            ],
+          }),
+        }}
+      />
       <section className="hero" aria-labelledby="hero-h">
         <div className="hero-copy">
           <p className="eyebrow">

@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { Fragment } from "react";
 import { Icon } from "../../../components/Icons";
 import { TierCta } from "../../../components/TierCta";
-import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, OG_IMAGES } from "../../../lib/brand";
+import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, OG_IMAGES, SITE_URL } from "../../../lib/brand";
 import { postBySlug, posts } from "../../../lib/posts";
 import { sourceById } from "../../../lib/sources";
 
@@ -21,6 +21,12 @@ export async function generateMetadata(ctx: { params: Promise<{ slug: string }> 
     description: p.description,
     alternates: { canonical: `/blog/${p.slug}` },
     openGraph: { type: "article", siteName: BRAND_NAME, title: p.title, description: p.description, url: `/blog/${p.slug}`, publishedTime: p.date, images: OG_IMAGES },
+    twitter: {
+      card: "summary_large_image",
+      title: p.title,
+      description: p.description,
+      images: OG_IMAGES,
+    },
   };
 }
 
@@ -31,6 +37,33 @@ export default async function PostPage(ctx: { params: Promise<{ slug: string }> 
   const resolvedSources = p.sources.map((id) => sourceById(id)).filter((s): s is NonNullable<typeof s> => Boolean(s));
   return (
     <main className="home cs">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BlogPosting",
+            headline: p.title,
+            description: p.description,
+            datePublished: p.date,
+            dateModified: p.date,
+            mainEntityOfPage: {
+              "@type": "WebPage",
+              "@id": `${SITE_URL}/blog/${p.slug}`,
+            },
+            author: {
+              "@type": "Organization",
+              name: BRAND_NAME,
+              url: SITE_URL,
+            },
+            publisher: {
+              "@type": "Organization",
+              name: BRAND_NAME,
+              url: SITE_URL,
+            },
+          }),
+        }}
+      />
       <article className="post">
         <header className="cs-head">
           <p className="eyebrow">

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { TierCta } from "../../components/TierCta";
 import { Icon } from "../../components/Icons";
-import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, BRAND_PARENT, OG_IMAGES } from "../../lib/brand";
+import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, BRAND_PARENT, OG_IMAGES, SITE_URL } from "../../lib/brand";
 import { findings, remediation, severityCounts } from "../../lib/caseStudies";
 
 const title = "Case studies";
@@ -18,6 +18,12 @@ export const metadata: Metadata = {
     title: "Case study 01: Self-engagement, airport ride platform",
     description,
     url: "/case-studies",
+    images: OG_IMAGES,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Case study 01: Self-engagement, airport ride platform",
+    description,
     images: OG_IMAGES,
   },
 };
@@ -66,6 +72,31 @@ const summary: { k: string; v: string }[] = [
 export default function CaseStudiesPage() {
   return (
     <main className="home cs">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "TechArticle",
+            headline: "Case study 01: Self-engagement, airport ride platform",
+            description,
+            mainEntityOfPage: {
+              "@type": "WebPage",
+              "@id": `${SITE_URL}/case-studies`,
+            },
+            author: {
+              "@type": "Organization",
+              name: BRAND_NAME,
+              url: SITE_URL,
+            },
+            publisher: {
+              "@type": "Organization",
+              name: BRAND_NAME,
+              url: SITE_URL,
+            },
+          }),
+        }}
+      />
       <header className="cs-head">
         <p className="eyebrow">Case studies</p>
         <h1>

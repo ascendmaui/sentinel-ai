@@ -517,6 +517,101 @@ describe("Root Layout and Shell Metadata", () => {
       expect(meta.openGraph?.images, `${route} og:image`).toEqual([
         { url: "/og.png", width: 1200, height: 630, alt: BRAND_NAME },
       ]);
+      const twitterObj = meta.twitter as Record<string, unknown> | undefined;
+      expect(twitterObj?.card, `${route} twitter:card`).toBe("summary_large_image");
+      expect(typeof twitterObj?.title, `${route} twitter:title`).toBe("string");
+      expect(twitterObj?.description, `${route} twitter:description`).toBe(meta.description);
+      expect(twitterObj?.images, `${route} twitter:image`).toEqual([
+        { url: "/og.png", width: 1200, height: 630, alt: BRAND_NAME },
+      ]);
+    }
+  });
+
+  it("renders valid Schema.org JSON-LD structured data across all pages with correct types and schemas", async () => {
+    // 1. Home page Schema.org Organization and WebSite graph
+    const homeHtml = renderToStaticMarkup(HomePage());
+    const homeLdMatch = homeHtml.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
+    expect(homeLdMatch, "HomePage has JSON-LD script").not.toBeNull();
+    const homeLd = JSON.parse(homeLdMatch![1]);
+    expect(homeLd["@context"]).toBe("https://schema.org");
+    expect(Array.isArray(homeLd["@graph"])).toBe(true);
+    expect(homeLd["@graph"]).toHaveLength(2);
+    const orgEntity = homeLd["@graph"].find((e: { [key: string]: unknown }) => e["@type"] === "Organization");
+    expect(orgEntity).toBeDefined();
+    expect(orgEntity.name).toBe(BRAND_NAME);
+    expect(orgEntity.url).toBe(SITE_URL);
+    expect(orgEntity.contactPoint.email).toBe(BRAND_EMAIL);
+    const siteEntity = homeLd["@graph"].find((e: { [key: string]: unknown }) => e["@type"] === "WebSite");
+    expect(siteEntity).toBeDefined();
+    expect(siteEntity.name).toBe(BRAND_NAME);
+    expect(siteEntity.url).toBe(SITE_URL);
+
+    // 2. Pricing page Service and OfferCatalog schema
+    const pricingHtml = renderToStaticMarkup(PricingPage());
+    const pricingLdMatch = pricingHtml.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
+    expect(pricingLdMatch, "PricingPage has JSON-LD script").not.toBeNull();
+    const pricingLd = JSON.parse(pricingLdMatch![1]);
+    expect(pricingLd["@context"]).toBe("https://schema.org");
+    expect(pricingLd["@type"]).toBe("Service");
+    expect(pricingLd.hasOfferCatalog["@type"]).toBe("OfferCatalog");
+    expect(pricingLd.hasOfferCatalog.itemListElement).toHaveLength(tiers.length);
+    for (let i = 0; i < tiers.length; i++) {
+      expect(pricingLd.hasOfferCatalog.itemListElement[i].name).toBe(tiers[i].name);
+      expect(pricingLd.hasOfferCatalog.itemListElement[i].url).toBe(`${SITE_URL}${tierHref(tiers[i].id)}`);
+    }
+
+    // 3. Blog index Blog schema
+    const blogHtml = renderToStaticMarkup(BlogIndex());
+    const blogLdMatch = blogHtml.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
+    expect(blogLdMatch, "BlogIndex has JSON-LD script").not.toBeNull();
+    const blogLd = JSON.parse(blogLdMatch![1]);
+    expect(blogLd["@context"]).toBe("https://schema.org");
+    expect(blogLd["@type"]).toBe("Blog");
+    expect(blogLd.blogPost).toHaveLength(posts.length);
+    for (let i = 0; i < posts.length; i++) {
+      expect(blogLd.blogPost[i].headline).toBe(posts[i].title);
+      expect(blogLd.blogPost[i].url).toBe(`${SITE_URL}/blog/${posts[i].slug}`);
+    }
+
+    // 4. Individual Blog Posts BlogPosting schema
+    for (const post of posts) {
+      const postEl = await PostPage({ params: Promise.resolve({ slug: post.slug }) });
+      const postHtml = renderToStaticMarkup(postEl);
+      const postLdMatch = postHtml.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
+      expect(postLdMatch, `Post ${post.slug} has JSON-LD script`).not.toBeNull();
+      const postLd = JSON.parse(postLdMatch![1]);
+      expect(postLd["@context"]).toBe("https://schema.org");
+      expect(postLd["@type"]).toBe("BlogPosting");
+      expect(postLd.headline).toBe(post.title);
+      expect(postLd.description).toBe(post.description);
+      expect(postLd.datePublished).toBe(post.date);
+      expect(postLd.mainEntityOfPage["@id"]).toBe(`${SITE_URL}/blog/${post.slug}`);
+      expect(postLd.author.name).toBe(BRAND_NAME);
+    }
+
+    // 5. Case studies TechArticle schema
+    const csHtml = renderToStaticMarkup(CaseStudiesPage());
+    const csLdMatch = csHtml.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
+    expect(csLdMatch, "CaseStudiesPage has JSON-LD script").not.toBeNull();
+    const csLd = JSON.parse(csLdMatch![1]);
+    expect(csLd["@context"]).toBe("https://schema.org");
+    expect(csLd["@type"]).toBe("TechArticle");
+    expect(csLd.headline).toBe("Case study 01: Self-engagement, airport ride platform");
+    expect(csLd.mainEntityOfPage["@id"]).toBe(`${SITE_URL}/case-studies`);
+
+    // 6. Incident case studies CollectionPage and ItemList schema
+    const incHtml = renderToStaticMarkup(IncidentCaseStudiesPage());
+    const incLdMatch = incHtml.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
+    expect(incLdMatch, "IncidentCaseStudiesPage has JSON-LD script").not.toBeNull();
+    const incLd = JSON.parse(incLdMatch![1]);
+    expect(incLd["@context"]).toBe("https://schema.org");
+    expect(incLd["@type"]).toBe("CollectionPage");
+    expect(incLd.mainEntity["@type"]).toBe("ItemList");
+    expect(incLd.mainEntity.numberOfItems).toBe(incidents.length);
+    expect(incLd.mainEntity.itemListElement).toHaveLength(incidents.length);
+    for (let i = 0; i < incidents.length; i++) {
+      expect(incLd.mainEntity.itemListElement[i].name).toBe(incidents[i].title);
+      expect(incLd.mainEntity.itemListElement[i].url).toBe(`${SITE_URL}/incident-case-studies#${incidents[i].id}`);
     }
   });
 

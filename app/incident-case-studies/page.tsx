@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Icon } from "../../components/Icons";
 import { TierCta } from "../../components/TierCta";
 import { TrustBadges } from "../../components/TrustBadges";
-import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, OG_IMAGES } from "../../lib/brand";
+import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, OG_IMAGES, SITE_URL } from "../../lib/brand";
 import { INCIDENTS_DISCLAIMER, incidents, scenarios, unverified } from "../../lib/incidents";
 import { sourceById } from "../../lib/sources";
 
@@ -15,6 +15,12 @@ export const metadata: Metadata = {
   description,
   alternates: { canonical: "/incident-case-studies" },
   openGraph: { type: "article", siteName: BRAND_NAME, title: `${title}: rogue agent investigations`, description, url: "/incident-case-studies", images: OG_IMAGES },
+  twitter: {
+    card: "summary_large_image",
+    title: `${title}: rogue agent investigations`,
+    description,
+    images: OG_IMAGES,
+  },
 };
 
 function SrcList({ ids, label = "Sources" }: { ids: string[]; label?: string }) {
@@ -53,6 +59,28 @@ function Block({ label, tag, children }: { label: string; tag: "known" | "inferr
 export default function IncidentCaseStudiesPage() {
   return (
     <main className="home cs">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            name: `${title}: rogue agent investigations`,
+            description,
+            url: `${SITE_URL}/incident-case-studies`,
+            mainEntity: {
+              "@type": "ItemList",
+              numberOfItems: incidents.length,
+              itemListElement: incidents.map((inc, index) => ({
+                "@type": "ListItem",
+                position: index + 1,
+                name: inc.title,
+                url: `${SITE_URL}/incident-case-studies#${inc.id}`,
+              })),
+            },
+          }),
+        }}
+      />
       <header className="cs-head">
         <p className="eyebrow">Incident Case Studies</p>
         <h1>
