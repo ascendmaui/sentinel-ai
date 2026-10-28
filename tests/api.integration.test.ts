@@ -4050,6 +4050,104 @@ describe("Cross-route end-to-end user journeys and relational data integrity", (
       expect(detail.fix.length).toBeGreaterThan(0);
     }
   });
+
+  it("Threat modeling journey: scenario exploration -> citation verification -> incident cross-linkage -> tier selection", async () => {
+    // 1. Defender filters conceptual threat scenarios targeting AI agents or credentials
+    const scnRes = scenariosIndex(req("/api/scenarios?weakness=credentials"));
+    expect(scnRes.status).toBe(200);
+    const scnData = await scnRes.json();
+    expect(scnData.scenarios.length).toBeGreaterThan(0);
+
+    // 2. Fetch full scenario details for the first matching threat model
+    const firstScenario = scnData.scenarios[0];
+    const scnDetailRes = await scenarioOne(req(`/api/scenarios/${firstScenario.id}`), idCtx(firstScenario.id));
+    expect(scnDetailRes.status).toBe(200);
+    const scnDetail = await scnDetailRes.json();
+    expect(scnDetail.id).toBe(firstScenario.id);
+    expect(scnDetail.controls.length).toBeGreaterThan(0);
+    expect(scnDetail.seraphim.length).toBeGreaterThan(0);
+    expect(scnDetail.refs.length).toBeGreaterThan(0);
+
+    // 3. Follow all scenario references to the source registry
+    for (const ref of scnDetail.refs) {
+      const srcRes = await sourceOne(req(`/api/sources/${ref.id}`), idCtx(ref.id));
+      expect(srcRes.status).toBe(200);
+      const src = await srcRes.json();
+      expect(src.id).toBe(ref.id);
+      expect(src.url.startsWith("https://")).toBe(true);
+
+      // 4. Check if any real-world incident in the database cites this exact source
+      const incRes = incidentsIndex(req(`/api/incidents?source=${ref.id}`));
+      expect(incRes.status).toBe(200);
+      const incData = await incRes.json();
+      expect(Array.isArray(incData.incidents)).toBe(true);
+    }
+
+    // 5. Select appropriate tier from the matrix that addresses AI agent assessment
+    const tiersRes = tiersIndex(req("/api/tiers?q=agent"));
+    expect(tiersRes.status).toBe(200);
+    const tiersData = await tiersRes.json();
+    expect(tiersData.tiers.length).toBeGreaterThan(0);
+
+    // 6. Verify comparison matrix defines AI agent review across tiers
+    const agentRow = tiersData.matrix.find((r: { row: string }) => r.row.toLowerCase().includes("ai agent review"));
+    expect(agentRow).toBeDefined();
+    expect(agentRow.values.seraphim).toBe(true);
+    expect(agentRow.values.thrones).toBe("If in scope");
+  });
+
+  it("Empty-state and pagination boundary resilience across all API endpoints", async () => {
+    // 1. Non-matching queries across all endpoints return 200 with count 0 and empty collections
+    const endpoints = [
+      { handler: postsIndex, path: "/api/posts", prop: "posts" },
+      { handler: incidentsIndex, path: "/api/incidents", prop: "incidents" },
+      { handler: scenariosIndex, path: "/api/scenarios", prop: "scenarios" },
+      { handler: caseStudiesIndex, path: "/api/case-studies", prop: "findings" },
+      { handler: tiersIndex, path: "/api/tiers", prop: "tiers" },
+      { handler: sourcesIndex, path: "/api/sources", prop: "sources" },
+    ];
+
+    for (const { handler, path, prop } of endpoints) {
+      const res = handler(req(`${path}?q=__nonexistent_search_query_xyz__`));
+      expect(res.status).toBe(200);
+      expect(res.headers.get("x-content-type-options")).toBe("nosniff");
+      const data = await res.json();
+      expect(data.count).toBe(0);
+      expect(data.totalCount).toBeGreaterThan(0);
+      expect(data[prop]).toEqual([]);
+    }
+
+    // 2. High offset exceeding item counts returns count 0 cleanly without out-of-bounds error
+    for (const { handler, path, prop } of endpoints) {
+      const res = handler(req(`${path}?offset=9999`));
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.count).toBe(0);
+      expect(data[prop]).toEqual([]);
+    }
+
+    // 3. High page exceeding page count returns count 0 cleanly
+    for (const { handler, path, prop } of endpoints) {
+      const res = handler(req(`${path}?page=9999&limit=10`));
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.count).toBe(0);
+      expect(data[prop]).toEqual([]);
+    }
+
+    // 4. URL-encoded emoji and special Unicode query strings are safely filtered without 500 error
+    for (const { handler, path } of endpoints) {
+      const res = handler(req(`${path}?q=%F0%9F%94%92%20test`));
+      expect(res.status).toBe(200);
+      expect(res.headers.get("content-type")).toContain("application/json");
+    }
+
+    // 5. Brand endpoint unknown badge returns 200 with badge: null
+    const brandRes = brandEndpoint(req("/api/brand?badge=nonexistent_badge_key"));
+    expect(brandRes.status).toBe(200);
+    const brandData = await brandRes.json();
+    expect(brandData.badge).toBeNull();
+  });
 });
 
 
