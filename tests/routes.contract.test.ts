@@ -294,6 +294,7 @@ describe("CI & Repository Hardening Contracts", () => {
     expect(ciYaml).toContain("contents: read");
     expect(ciYaml).toContain("workflow_dispatch:");
     expect(ciYaml).toContain("cancel-in-progress: true");
+    expect(ciYaml).toContain('NEXT_TELEMETRY_DISABLED: "1"');
     expect(ciYaml).toContain("node-version: 22");
     expect(ciYaml).toContain("cache: npm");
 
