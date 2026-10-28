@@ -2,11 +2,10 @@ import { BRAND_NAME } from "../lib/brand";
 
 export default function Loading() {
   return (
-    <main className="home cs" aria-busy="true" aria-live="polite">
-      <h1 id="loading-h" className="sr-only">Loading {BRAND_NAME}</h1>
+    <div className="home cs" aria-busy="true" aria-live="polite">
       <section
         className="section"
-        aria-labelledby="loading-h"
+        aria-label={`Loading ${BRAND_NAME}...`}
         style={{
           minHeight: "50vh",
           display: "flex",
@@ -35,6 +34,6 @@ export default function Loading() {
           Loading assessment content...
         </p>
       </section>
-    </main>
+    </div>
   );
 }

@@ -487,14 +487,13 @@ describe("Not Found and Boundary Recovery States", () => {
 
   it("renders Loading state with aria-busy, aria-live, and progress indicator", () => {
     const el = Loading();
-    expect(el.type).toBe("main");
+    expect(el.type).toBe("div");
     expect(el.props["aria-busy"]).toBe("true");
     expect(el.props["aria-live"]).toBe("polite");
     const html = renderToStaticMarkup(el);
     expect(html).toContain("Loading assessment content...");
     expect(html).toContain('role="status"');
     expect(html).toContain(`Loading ${BRAND_NAME}...`);
-    expect(html).toContain("<h1");
   });
 
   it("renders ErrorBoundary with error details, reset trigger, and safe actions", () => {
@@ -733,7 +732,6 @@ describe("Cross-page internal link, anchor (#id), and unique DOM id integrity", 
     routeHtml.set("/case-studies", renderToStaticMarkup(RootLayout({ children: CaseStudiesPage() })));
     routeHtml.set("/incident-case-studies", renderToStaticMarkup(RootLayout({ children: IncidentCaseStudiesPage() })));
     routeHtml.set("/_not-found", renderToStaticMarkup(RootLayout({ children: NotFound() })));
-    routeHtml.set("/_loading", renderToStaticMarkup(RootLayout({ children: Loading() })));
     routeHtml.set("/_error", renderToStaticMarkup(RootLayout({ children: React.createElement(ErrorBoundary, { error: new Error("Test"), reset: () => {} }) })));
     routeHtml.set("/blog/_not-found", renderToStaticMarkup(RootLayout({ children: BlogPostNotFound() })));
 
@@ -1006,7 +1004,6 @@ describe("WCAG 2.1 AA Accessibility & Landmark Integrity across all routes", () 
     routeHtml.set("/case-studies", renderToStaticMarkup(RootLayout({ children: CaseStudiesPage() })));
     routeHtml.set("/incident-case-studies", renderToStaticMarkup(RootLayout({ children: IncidentCaseStudiesPage() })));
     routeHtml.set("/_not-found", renderToStaticMarkup(RootLayout({ children: NotFound() })));
-    routeHtml.set("/_loading", renderToStaticMarkup(RootLayout({ children: Loading() })));
     routeHtml.set("/_error", renderToStaticMarkup(RootLayout({ children: React.createElement(ErrorBoundary, { error: new Error("Test"), reset: () => {} }) })));
     routeHtml.set("/blog/_not-found", renderToStaticMarkup(RootLayout({ children: BlogPostNotFound() })));
 

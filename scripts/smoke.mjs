@@ -193,6 +193,14 @@ checkSecurityHeaders(missingPost, "404 unknown post");
 const missingBlogPage = await get("/blog/does-not-exist");
 check(missingBlogPage.status === 404, "unknown blog page -> 404");
 checkSecurityHeaders(missingBlogPage, "404 unknown blog page");
+const blog404Html = await missingBlogPage.text();
+check(blog404Html.includes("out of scope"), "unknown blog page renders not-found boundary");
+
+const missingRootPage = await get("/nonexistent-root-path-xyz");
+check(missingRootPage.status === 404, "unknown root page -> 404");
+checkSecurityHeaders(missingRootPage, "404 unknown root page");
+const root404Html = await missingRootPage.text();
+check(root404Html.includes("Target") && root404Html.includes("out of scope"), "unknown root page renders root not-found boundary");
 
 // 3. Incidents API
 const headIncs = await get("/api/incidents", { method: "HEAD" });
@@ -907,23 +915,24 @@ for (const path of pages) {
   check(r.status === 200, `GET ${path} -> 200`);
   checkSecurityHeaders(r, `GET ${path}`);
   const html = await r.text();
+  const markup = html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "");
   check(html.includes('rel="canonical"'), `GET ${path} includes canonical link`);
   check(html.includes('property="og:image"'), `GET ${path} includes og:image meta tag`);
   check(html.includes('id="main"'), `GET ${path} includes #main skip target`);
-  const mains = [...html.matchAll(/<main\b/g)];
+  const mains = [...markup.matchAll(/<main\b/g)];
   check(mains.length === 1, `GET ${path} has exactly 1 <main>`);
-  const h1s = [...html.matchAll(/<h1\b/g)];
+  const h1s = [...markup.matchAll(/<h1\b/g)];
   check(h1s.length === 1, `GET ${path} has exactly 1 <h1>`);
-  const positiveTabindex = [...html.matchAll(/\btabindex="([1-9]\d*)"/gi)];
+  const positiveTabindex = [...markup.matchAll(/\btabindex="([1-9]\d*)"/gi)];
   check(positiveTabindex.length === 0, `GET ${path} has zero positive tabindex elements`);
-  const emptyHeadings = [...html.matchAll(/<h([1-6])\b[^>]*>\s*<\/h\1>/gi)];
+  const emptyHeadings = [...markup.matchAll(/<h([1-6])\b[^>]*>\s*<\/h\1>/gi)];
   check(emptyHeadings.length === 0, `GET ${path} has zero empty headings`);
-  pageIds.set(path, new Set([...html.matchAll(/\bid="([^"]+)"/g)].map(m => m[1])));
-  for (const m of html.matchAll(/href="(\/[^"#?]*)(?:#([^"?]+))?(?:\?[^"]*)?"/g)) {
+  pageIds.set(path, new Set([...markup.matchAll(/\bid="([^"]+)"/g)].map(m => m[1])));
+  for (const m of markup.matchAll(/href="(\/[^"#?]*)(?:#([^"?]+))?(?:\?[^"]*)?"/g)) {
     links.add(m[1]);
     if (m[2]) hashLinks.push({ from: path, targetPath: m[1], hash: m[2] });
   }
-  for (const m of html.matchAll(/href="#([^"]+)"/g)) {
+  for (const m of markup.matchAll(/href="#([^"]+)"/g)) {
     hashLinks.push({ from: path, targetPath: path, hash: m[1] });
   }
 }

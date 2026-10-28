@@ -8,6 +8,8 @@ import { BRAND_EMAIL, BRAND_MAIL, BRAND_NAME, OG_IMAGES, SITE_URL } from "../../
 import { postBySlug, posts } from "../../../lib/posts";
 import { sourceById } from "../../../lib/sources";
 
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return posts.map((p) => ({ slug: p.slug }));
 }
