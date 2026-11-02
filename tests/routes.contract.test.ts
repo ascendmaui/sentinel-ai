@@ -214,6 +214,26 @@ describe.each(routes.map((r) => [r.path] as const))("route contract %s", (path) 
       if ("count" in newAliasesBody && "totalCount" in newAliasesBody) {
         expect(newAliasesBody.count).toBeLessThanOrEqual(1);
       }
+
+      const invalidLimitFallbackRes = await mod.GET({ url: `${path}?limit=0&take=1` } as unknown as Request);
+      expect(invalidLimitFallbackRes.status).toBe(200);
+      expectHardenedJson(invalidLimitFallbackRes, `${path} limit=0&take=1 url`);
+      const invalidLimitFallbackBody = await invalidLimitFallbackRes.json();
+      if ("count" in invalidLimitFallbackBody && "totalCount" in invalidLimitFallbackBody) {
+        expect(invalidLimitFallbackBody.count).toBe(1);
+      }
+
+      const invalidPageFallbackRes = await mod.GET({ url: `${path}?page=0&p=1&take=1` } as unknown as Request);
+      expect(invalidPageFallbackRes.status).toBe(200);
+      expectHardenedJson(invalidPageFallbackRes, `${path} page=0&p=1&take=1 url`);
+      const invalidPageFallbackBody = await invalidPageFallbackRes.json();
+      if ("count" in invalidPageFallbackBody && "totalCount" in invalidPageFallbackBody) {
+        expect(invalidPageFallbackBody.count).toBe(1);
+      }
+
+      const invalidSortFallbackRes = await mod.GET({ url: `${path}?order=invalid&dir=asc` } as unknown as Request);
+      expect(invalidSortFallbackRes.status).toBe(200);
+      expectHardenedJson(invalidSortFallbackRes, `${path} order=invalid&dir=asc url`);
     });
   } else {
     it("is a dynamic route with generateStaticParams and dynamicParams enabled", () => {
@@ -359,6 +379,23 @@ describe("CI & Repository Hardening Contracts", () => {
       ).toBe(true);
       expect(existsSync(join(ROOT_DIR, "tests", file))).toBe(true);
     }
+  });
+
+  it(".gitignore and tsconfig.json enforce repository security invariants and strict type checking", () => {
+    const gitignore = readFileSync(join(ROOT_DIR, ".gitignore"), "utf8");
+    expect(gitignore).toContain(".env*");
+    expect(gitignore).toContain("node_modules");
+    expect(gitignore).toContain(".next");
+    expect(gitignore).toContain("coverage");
+    expect(gitignore).toContain("*.log");
+
+    const tsconfig = JSON.parse(readFileSync(join(ROOT_DIR, "tsconfig.json"), "utf8")) as {
+      compilerOptions: Record<string, unknown>;
+    };
+    expect(tsconfig.compilerOptions.strict).toBe(true);
+    expect(tsconfig.compilerOptions.noEmit).toBe(true);
+    expect(tsconfig.compilerOptions.isolatedModules).toBe(true);
+    expect(tsconfig.compilerOptions.moduleResolution).toBe("bundler");
   });
 
   it("enforces static asset budgets and client bundle performance budgets", () => {
