@@ -53,5 +53,12 @@ export function sourceById(id: string): Source | undefined {
   if (!Number.isNaN(num) && num >= 1 && num <= sources.length && String(num) === (numClean || target)) {
     return sources[num - 1];
   }
+  if (target.startsWith("http://") || target.startsWith("https://")) {
+    const cleanUrl = target.replace(/\/+$/, "");
+    const match = sources.find(
+      (s) => s.url.toLowerCase() === target || s.url.toLowerCase().replace(/\/+$/, "") === cleanUrl
+    );
+    if (match) return match;
+  }
   return sources.find((s) => s.id.toLowerCase() === target);
 }

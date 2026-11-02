@@ -82,6 +82,8 @@ export function GET(req?: Request): Response {
         else if (cleanId.startsWith("finding") && /^\d+$/.test(cleanId.slice(7))) cleanId = cleanId.slice(7);
         else if (cleanId.startsWith("case-study-") || cleanId.startsWith("case_study_")) cleanId = cleanId.slice(11);
         else if (cleanId.startsWith("casestudy") && /^\d+$/.test(cleanId.slice(9))) cleanId = cleanId.slice(9);
+        else if (cleanId.startsWith("case-") || cleanId.startsWith("case_")) cleanId = cleanId.slice(5);
+        else if (cleanId.startsWith("case") && /^\d+$/.test(cleanId.slice(4))) cleanId = cleanId.slice(4);
         else if (cleanId.startsWith("cs-") || cleanId.startsWith("cs_")) cleanId = cleanId.slice(3);
         else if (cleanId.startsWith("cs") && /^\d+$/.test(cleanId.slice(2))) cleanId = cleanId.slice(2);
         cleanId = cleanId.replace(/^[#+]+/, "").replace(/[#+]+$/, "");

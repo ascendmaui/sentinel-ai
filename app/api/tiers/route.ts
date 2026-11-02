@@ -1,4 +1,4 @@
-import { json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
+import { getFirstParam, json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
 import { tiers, tierById, tierHref, matrix, helper, ENGAGEMENT_TERMS } from "../../../lib/tiers";
 
 /** Service tiers index as JSON: all four engagement tiers and comparison matrix. Supports ?id=, ?tier=, ?name=, ?cadence=, ?positioning=, ?rank=, ?feature=, ?included=, ?deliverable=, ?q=, ?order=, ?sort=, ?offset=, ?limit=, ?take=, and ?page=. */
@@ -44,19 +44,20 @@ export function GET(req?: Request): Response {
         parseSearchQuery(url.searchParams, "included") ||
         parseSearchQuery(url.searchParams, "deliverable") ||
         parseSearchQuery(url.searchParams, "service");
-      const rankParam = (
-        url.searchParams.get("rank") ??
-        url.searchParams.get("rank_id") ??
-        url.searchParams.get("rankId") ??
-        url.searchParams.get("r") ??
-        url.searchParams.get("r_id") ??
-        url.searchParams.get("rId") ??
-        url.searchParams.get("rank_num") ??
-        url.searchParams.get("rankNum") ??
-        url.searchParams.get("tier_rank") ??
-        url.searchParams.get("tierRank") ??
-        url.searchParams.get("order_rank")
-      )?.trim();
+      const rankParam = getFirstParam(
+        url.searchParams,
+        "rank",
+        "rank_id",
+        "rankId",
+        "r",
+        "r_id",
+        "rId",
+        "rank_num",
+        "rankNum",
+        "tier_rank",
+        "tierRank",
+        "order_rank"
+      );
       let cleanRank = rankParam;
       if (cleanRank) {
         cleanRank = cleanRank.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
@@ -71,7 +72,8 @@ export function GET(req?: Request): Response {
         cleanRank = cleanRank.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         cleanRank = cleanRank.replace(/^0+/, "");
       }
-      const rank = cleanRank && /^\d+$/.test(cleanRank) ? Number(cleanRank) : undefined;
+      const rankFromTier = cleanRank ? tierById(cleanRank)?.rank : undefined;
+      const rank = cleanRank && /^\d+$/.test(cleanRank) ? Number(cleanRank) : rankFromTier;
       const limit = parseLimit(url.searchParams);
       const offset = parseOffset(url.searchParams, 10000, limit);
       const order = parseSortOrder(url.searchParams);
@@ -121,7 +123,8 @@ export function GET(req?: Request): Response {
         list = list.filter(
           (t) =>
             t.included.some((item) => item.toLowerCase().includes(feature)) ||
-            t.summary.toLowerCase().includes(feature)
+            t.summary.toLowerCase().includes(feature) ||
+            matrix.some((m) => m.row.toLowerCase().includes(feature) && m.values[t.id] !== false)
         );
       }
 

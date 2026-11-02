@@ -108,7 +108,10 @@ export function badgeByKey(key: string): TrustBadge | undefined {
   if (!Number.isNaN(num) && num >= 1 && num <= TRUE_BADGES.length && String(num) === (numClean || target)) {
     return TRUE_BADGES[num - 1];
   }
-  return TRUE_BADGES.find((b) => b.key.toLowerCase() === target || b.label.toLowerCase() === target);
+  return (
+    TRUE_BADGES.find((b) => b.key.toLowerCase() === target || b.label.toLowerCase() === target) ??
+    TRUE_BADGES.find((b) => b.label.toLowerCase().includes(target) || b.note.toLowerCase().includes(target))
+  );
 }
 
 

@@ -42,7 +42,10 @@ export function GET(req?: Request): Response {
         parseSearchQuery(url.searchParams, "name") ||
         parseSearchQuery(url.searchParams, "n") ||
         parseSearchQuery(url.searchParams, "num") ||
-        parseSearchQuery(url.searchParams, "number");
+        parseSearchQuery(url.searchParams, "number") ||
+        parseSearchQuery(url.searchParams, "q") ||
+        parseSearchQuery(url.searchParams, "query") ||
+        parseSearchQuery(url.searchParams, "search");
       if (badgeKey) {
         badgeMatch = badgeByKey(badgeKey) ?? null;
       }

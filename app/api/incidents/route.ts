@@ -75,6 +75,24 @@ export function GET(req?: Request): Response {
         parseSearchQuery(url.searchParams, "severity") ||
         parseSearchQuery(url.searchParams, "consequence") ||
         parseSearchQuery(url.searchParams, "effect");
+      const timeline =
+        parseSearchQuery(url.searchParams, "timeline") ||
+        parseSearchQuery(url.searchParams, "event") ||
+        parseSearchQuery(url.searchParams, "milestone");
+      const did =
+        parseSearchQuery(url.searchParams, "did") ||
+        parseSearchQuery(url.searchParams, "action") ||
+        parseSearchQuery(url.searchParams, "behavior");
+      const howIn =
+        parseSearchQuery(url.searchParams, "howIn") ||
+        parseSearchQuery(url.searchParams, "how_in") ||
+        parseSearchQuery(url.searchParams, "entry") ||
+        parseSearchQuery(url.searchParams, "initial_access") ||
+        parseSearchQuery(url.searchParams, "initialAccess");
+      const seraphim =
+        parseSearchQuery(url.searchParams, "seraphim") ||
+        parseSearchQuery(url.searchParams, "assessment") ||
+        parseSearchQuery(url.searchParams, "remediation");
       const limit = parseLimit(url.searchParams);
       const offset = parseOffset(url.searchParams, 10000, limit);
       const order = parseSortOrder(url.searchParams);
@@ -163,6 +181,27 @@ export function GET(req?: Request): Response {
 
       if (impact) {
         list = list.filter((i) => i.impact.some((im) => im.toLowerCase().includes(impact)));
+      }
+
+      if (timeline) {
+        list = list.filter((i) => i.timeline.some((t) => t.d.toLowerCase().includes(timeline) || t.t.toLowerCase().includes(timeline)));
+      }
+
+      if (did) {
+        list = list.filter((i) => i.did.some((d) => d.toLowerCase().includes(did)));
+      }
+
+      if (howIn) {
+        list = list.filter((i) => i.howIn.some((h) => h.toLowerCase().includes(howIn)));
+      }
+
+      if (seraphim) {
+        list = list.filter(
+          (i) =>
+            i.seraphim.flag.some((sf) => sf.toLowerCase().includes(seraphim)) ||
+            i.seraphim.prepare.some((sp) => sp.toLowerCase().includes(seraphim)) ||
+            i.seraphim.limits.toLowerCase().includes(seraphim)
+        );
       }
 
       if (q) {

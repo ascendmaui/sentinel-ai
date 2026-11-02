@@ -1,9 +1,9 @@
-import { json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
+import { getFirstParam, json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
 import { postBySlug, posts, postWords } from "../../../lib/posts";
 import { sourceById } from "../../../lib/sources";
 import { tierById } from "../../../lib/tiers";
 
-/** Blog index as JSON: post metadata only (no body). Newest first by default. Supports ?slug=, ?id=, ?n=, ?num=, ?post=, ?post_id=, ?postId=, ?post_slug=, ?postSlug=, ?article=, ?article_id=, ?articleId=, ?title=, ?tier=, ?service_tier=, ?source=, ?source_id=, ?sourceId=, ?src=, ?ref=, ?reference=, ?year=, ?date=, ?readMins=, ?mins=, ?min=, ?read_mins=, ?read_time=, ?reading_time=, ?q=, ?order=, ?sort=, ?offset=, ?limit=, ?take=, and ?page=. */
+/** Blog index as JSON: post metadata only (no body). Newest first by default. Supports ?slug=, ?id=, ?n=, ?num=, ?post=, ?post_id=, ?postId=, ?post_slug=, ?postSlug=, ?article=, ?article_id=, ?articleId=, ?title=, ?tier=, ?service_tier=, ?source=, ?source_id=, ?sourceId=, ?src=, ?ref=, ?reference=, ?year=, ?date=, ?description=, ?summary=, ?lead=, ?readMins=, ?mins=, ?min=, ?read_mins=, ?read_time=, ?reading_time=, ?q=, ?order=, ?sort=, ?offset=, ?limit=, ?take=, and ?page=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -54,21 +54,27 @@ export function GET(req?: Request): Response {
         parseSearchQuery(url.searchParams, "ref") ||
         parseSearchQuery(url.searchParams, "reference");
       const year = parseSearchQuery(url.searchParams, "year") || parseSearchQuery(url.searchParams, "date");
+      const desc =
+        parseSearchQuery(url.searchParams, "description") ||
+        parseSearchQuery(url.searchParams, "summary") ||
+        parseSearchQuery(url.searchParams, "lead") ||
+        parseSearchQuery(url.searchParams, "subtitle");
       const q = parseSearchQuery(url.searchParams);
-      const readMinsParam = (
-        url.searchParams.get("readMins") ??
-        url.searchParams.get("mins") ??
-        url.searchParams.get("min") ??
-        url.searchParams.get("minute") ??
-        url.searchParams.get("minutes") ??
-        url.searchParams.get("read_mins") ??
-        url.searchParams.get("read_time") ??
-        url.searchParams.get("readTime") ??
-        url.searchParams.get("reading_time") ??
-        url.searchParams.get("readingTime") ??
-        url.searchParams.get("reading_mins") ??
-        url.searchParams.get("readingMins")
-      )?.trim();
+      const readMinsParam = getFirstParam(
+        url.searchParams,
+        "readMins",
+        "mins",
+        "min",
+        "minute",
+        "minutes",
+        "read_mins",
+        "read_time",
+        "readTime",
+        "reading_time",
+        "readingTime",
+        "reading_mins",
+        "readingMins"
+      );
       const readMins = readMinsParam && /^\+?\d+$/.test(readMinsParam) ? Number(readMinsParam) : undefined;
       const limit = parseLimit(url.searchParams);
       const offset = parseOffset(url.searchParams, 10000, limit);
@@ -120,6 +126,9 @@ export function GET(req?: Request): Response {
       }
       if (title) {
         list = list.filter((p) => p.title.toLowerCase().includes(title));
+      }
+      if (desc) {
+        list = list.filter((p) => p.description.toLowerCase().includes(desc) || p.ctaLead.toLowerCase().includes(desc));
       }
       if (year) {
         list = list.filter((p) => p.date.toLowerCase().includes(year));

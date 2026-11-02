@@ -99,6 +99,9 @@ describe("brand", () => {
     expect(badgeByKey("#passive#")).toEqual(TRUE_BADGES[0]);
     expect(badgeByKey("Passive recon only")).toEqual(TRUE_BADGES[0]);
     expect(badgeByKey("Written client authorization required")).toEqual(TRUE_BADGES[1]);
+    expect(badgeByKey("probing")).toEqual(TRUE_BADGES[0]);
+    expect(badgeByKey("hardware")).toEqual(TRUE_BADGES[4]);
+    expect(badgeByKey("private local models")).toEqual(TRUE_BADGES[4]);
   });
 });
 
@@ -336,6 +339,8 @@ describe("sources registry", () => {
     expect(sourceById("##oaiAug")).toBe(sources[0]);
     expect(sourceById("++oaiAug")).toBe(sources[0]);
     expect(sourceById("#oaiAug#")).toBe(sources[0]);
+    expect(sourceById("https://openai.com/index/hugging-face-incident-and-the-road-ahead/")).toBe(sources[0]);
+    expect(sourceById("https://openai.com/index/hugging-face-incident-and-the-road-ahead")).toBe(sources[0]);
     expect(sourceById("")).toBeUndefined();
     expect(sourceById("   ")).toBeUndefined();
     expect(sourceById(undefined as unknown as string)).toBeUndefined();
@@ -805,6 +810,11 @@ describe("case studies / findings", () => {
     expect(findingById("cs01")?.id).toBe("F-01");
     expect(findingById("finding1")?.id).toBe("F-01");
     expect(findingById("finding01")?.id).toBe("F-01");
+    expect(findingById("case-01")?.id).toBe("F-01");
+    expect(findingById("case-1")?.id).toBe("F-01");
+    expect(findingById("case_01")?.id).toBe("F-01");
+    expect(findingById("case_1")?.id).toBe("F-01");
+    expect(findingById("case1")?.id).toBe("F-01");
     expect(findingById("case-study-01")?.id).toBe("F-01");
     expect(findingById("case_study_01")?.id).toBe("F-01");
     expect(findingById("/f-01/")?.id).toBe("F-01");
@@ -828,6 +838,11 @@ describe("case studies / findings", () => {
     expect(remediationById("cs01")?.id).toBe("F-01");
     expect(remediationById("finding1")?.id).toBe("F-01");
     expect(remediationById("finding01")?.id).toBe("F-01");
+    expect(remediationById("case-01")?.id).toBe("F-01");
+    expect(remediationById("case-1")?.id).toBe("F-01");
+    expect(remediationById("case_01")?.id).toBe("F-01");
+    expect(remediationById("case_1")?.id).toBe("F-01");
+    expect(remediationById("case1")?.id).toBe("F-01");
     expect(remediationById("case-study-01")?.id).toBe("F-01");
     expect(remediationById("case_study_01")?.id).toBe("F-01");
     expect(remediationById("/f-01/")?.id).toBe("F-01");

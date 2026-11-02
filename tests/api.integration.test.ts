@@ -23,7 +23,7 @@ import * as caseStudiesModule from "../lib/caseStudies";
 import { findingById, findings, remediationById } from "../lib/caseStudies";
 import { tierById, tiers } from "../lib/tiers";
 import { S, sourceById, sources } from "../lib/sources";
-import { badRequest, json, methodNotAllowed, notFound, parseLimit, parseOffset, parsePage, parseSearchQuery, parseSortOrder, SECURITY_HEADERS } from "../lib/http";
+import { badRequest, getFirstParam, json, methodNotAllowed, notFound, parseLimit, parseOffset, parsePage, parseSearchQuery, parseSortOrder, SECURITY_HEADERS } from "../lib/http";
 
 const slugCtx = (slug: string) => ({ params: Promise.resolve({ slug }) });
 const idCtx = (id: string) => ({ params: Promise.resolve({ id }) });
@@ -4224,6 +4224,164 @@ describe("Cross-route end-to-end user journeys and relational data integrity", (
     expect(brandRes.status).toBe(200);
     const brandData = await brandRes.json();
     expect(brandData.badge).toBeNull();
+  });
+
+  it("getFirstParam safely retrieves the first non-empty parameter across aliases and duplicate keys", () => {
+    // 1. Basic fallback across multiple keys when leading keys are empty
+    const p1 = new URLSearchParams("limit=&take=7");
+    expect(getFirstParam(p1, "limit", "take")).toBe("7");
+
+    // 2. Duplicate keys where first occurrence is empty string
+    const p2 = new URLSearchParams("limit=&limit=15");
+    expect(getFirstParam(p2, "limit")).toBe("15");
+
+    // 3. All keys present but empty
+    const p3 = new URLSearchParams("a=&b=&c=   ");
+    expect(getFirstParam(p3, "a", "b", "c")).toBeUndefined();
+
+    // 4. Missing parameters
+    const p4 = new URLSearchParams("other=value");
+    expect(getFirstParam(p4, "limit", "take")).toBeUndefined();
+
+    // 5. Defensive against nullish URLSearchParams or invalid arguments
+    expect(getFirstParam(null as unknown as URLSearchParams, "limit")).toBeUndefined();
+    expect(getFirstParam(undefined as unknown as URLSearchParams, "limit")).toBeUndefined();
+    expect(getFirstParam(new URLSearchParams(), "")).toBeUndefined();
+  });
+
+  it("parseLimit, parsePage, parseOffset, parseSortOrder, and parseSearchQuery resolve non-empty aliases when primary keys are empty", () => {
+    // parseLimit
+    expect(parseLimit(new URLSearchParams("limit=&take=5"))).toBe(5);
+    expect(parseLimit(new URLSearchParams("pageSize=&rows=8"))).toBe(8);
+
+    // parsePage
+    expect(parsePage(new URLSearchParams("page=&p=3"))).toBe(3);
+    expect(parsePage(new URLSearchParams("p=&pageNum=4"))).toBe(4);
+
+    // parseOffset
+    expect(parseOffset(new URLSearchParams("offset=&skip=12"))).toBe(12);
+    expect(parseOffset(new URLSearchParams("start=&from=20"))).toBe(20);
+
+    // parseSortOrder
+    expect(parseSortOrder(new URLSearchParams("order=&dir=asc"))).toBe("asc");
+    expect(parseSortOrder(new URLSearchParams("sort=&direction=desc"))).toBe("desc");
+
+    // parseSearchQuery
+    expect(parseSearchQuery(new URLSearchParams("q=&search=openai"))).toBe("openai");
+    expect(parseSearchQuery(new URLSearchParams("query=&filter=agent"))).toBe("agent");
+  });
+
+  it("API endpoints handle empty-string parameter fallback and extended filters gracefully", async () => {
+    // 1. GET /api/posts handles ?limit=&take=2, ?order=&dir=asc, and ?q=&search=openai
+    const postRes1 = postsIndex(req("/api/posts?limit=&take=2"));
+    expect(postRes1.status).toBe(200);
+    const postData1 = await postRes1.json();
+    expect(postData1.count).toBe(2);
+
+    const postRes2 = postsIndex(req("/api/posts?order=&dir=asc"));
+    expect(postRes2.status).toBe(200);
+    const postData2 = await postRes2.json();
+    expect(postData2.posts[0].date <= postData2.posts[postData2.posts.length - 1].date).toBe(true);
+
+    const postRes3 = postsIndex(req("/api/posts?q=&search=openai"));
+    expect(postRes3.status).toBe(200);
+    const postData3 = await postRes3.json();
+    expect(postData3.count).toBeGreaterThan(0);
+
+    const postRes4 = postsIndex(req("/api/posts?readMins=&mins=8"));
+    expect(postRes4.status).toBe(200);
+    const postData4 = await postRes4.json();
+    expect(postData4.count).toBeGreaterThan(0);
+    expect(postData4.posts.every((p: { readMins: number }) => p.readMins === 8)).toBe(true);
+
+    const postRes5 = postsIndex(req("/api/posts?description=sandbox"));
+    expect(postRes5.status).toBe(200);
+    const postData5 = await postRes5.json();
+    expect(postData5.count).toBeGreaterThan(0);
+
+    // 2. GET /api/tiers handles ?rank=&tier_rank=1, ?rank=seraphim, and matrix-based ?feature=advisory
+    const tierRes1 = tiersIndex(req("/api/tiers?rank=&tier_rank=1"));
+    expect(tierRes1.status).toBe(200);
+    const tierData1 = await tierRes1.json();
+    expect(tierData1.count).toBe(1);
+    expect(tierData1.tiers[0].id).toBe("seraphim");
+
+    const tierRes2 = tiersIndex(req("/api/tiers?rank=seraphim"));
+    expect(tierRes2.status).toBe(200);
+    const tierData2 = await tierRes2.json();
+    expect(tierData2.count).toBe(1);
+    expect(tierData2.tiers[0].id).toBe("seraphim");
+
+    const tierRes3 = tiersIndex(req("/api/tiers?feature=advisory"));
+    expect(tierRes3.status).toBe(200);
+    const tierData3 = await tierRes3.json();
+    expect(tierData3.count).toBeGreaterThanOrEqual(2);
+    expect(tierData3.tiers.some((t: { id: string }) => t.id === "seraphim")).toBe(true);
+    expect(tierData3.tiers.some((t: { id: string }) => t.id === "cherubim")).toBe(true);
+
+    // 3. GET /api/incidents handles ?timeline=, ?did=, ?how_in=, and ?seraphim= filters
+    const incRes1 = incidentsIndex(req("/api/incidents?timeline=modal"));
+    expect(incRes1.status).toBe(200);
+    const incData1 = await incRes1.json();
+    expect(incData1.count).toBe(1);
+    expect(incData1.incidents[0].id).toBe("openai-huggingface-2026");
+
+    const incRes2 = incidentsIndex(req("/api/incidents?did=actions"));
+    expect(incRes2.status).toBe(200);
+    const incData2 = await incRes2.json();
+    expect(incData2.count).toBeGreaterThan(0);
+
+    const incRes3 = incidentsIndex(req("/api/incidents?how_in=dataset"));
+    expect(incRes3.status).toBe(200);
+    const incData3 = await incRes3.json();
+    expect(incData3.count).toBe(1);
+    expect(incData3.incidents[0].id).toBe("openai-huggingface-2026");
+
+    const incRes4 = incidentsIndex(req("/api/incidents?seraphim=recon"));
+    expect(incRes4.status).toBe(200);
+    const incData4 = await incRes4.json();
+    expect(incData4.count).toBeGreaterThan(0);
+
+    // 4. Case studies handles case-01, case-1, case1 prefix on both collection and single-item
+    const csItemRes1 = await caseStudyOne(req("/api/case-studies/case-01"), idCtx("case-01"));
+    expect(csItemRes1.status).toBe(200);
+    const csItemData1 = await csItemRes1.json();
+    expect(csItemData1.id).toBe("F-01");
+
+    const csItemRes2 = await caseStudyOne(req("/api/case-studies/case1"), idCtx("case1"));
+    expect(csItemRes2.status).toBe(200);
+    const csItemData2 = await csItemRes2.json();
+    expect(csItemData2.id).toBe("F-01");
+
+    const csFilterRes = caseStudiesIndex(req("/api/case-studies?id=case-1"));
+    expect(csFilterRes.status).toBe(200);
+    const csFilterData = await csFilterRes.json();
+    expect(csFilterData.count).toBe(1);
+    expect(csFilterData.findings[0].id).toBe("F-01");
+
+    // 5. Source lookup by URL resolves on /api/sources/[id] and /api/sources?id=
+    const sourceUrl = S.oaiAug.url;
+    const srcUrlRes = await sourceOne(req(`/api/sources/${encodeURIComponent(sourceUrl)}`), idCtx(encodeURIComponent(sourceUrl)));
+    expect(srcUrlRes.status).toBe(200);
+    const srcUrlData = await srcUrlRes.json();
+    expect(srcUrlData.id).toBe("oaiAug");
+
+    const srcUrlFilter = sourcesIndex(req(`/api/sources?id=${encodeURIComponent(sourceUrl)}`));
+    expect(srcUrlFilter.status).toBe(200);
+    const srcUrlFilterData = await srcUrlFilter.json();
+    expect(srcUrlFilterData.count).toBe(1);
+    expect(srcUrlFilterData.sources[0].id).toBe("oaiAug");
+
+    // 6. Brand search query via ?q= resolves trust badges by key, label, or note
+    const brandQRes1 = brandEndpoint(req("/api/brand?q=passive"));
+    expect(brandQRes1.status).toBe(200);
+    const brandQData1 = await brandQRes1.json();
+    expect(brandQData1.badge.key).toBe("passive");
+
+    const brandQRes2 = brandEndpoint(req("/api/brand?query=probing"));
+    expect(brandQRes2.status).toBe(200);
+    const brandQData2 = await brandQRes2.json();
+    expect(brandQData2.badge.key).toBe("passive");
   });
 });
 

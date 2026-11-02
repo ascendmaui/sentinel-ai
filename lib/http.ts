@@ -69,6 +69,24 @@ export function methodNotAllowed(allowed: string[] = ["GET", "HEAD"]): Response 
 export const PUBLIC_CACHE = "public, max-age=0, s-maxage=300, stale-while-revalidate=600";
 
 /**
+ * Retrieves the first non-empty string value for any of the provided parameter keys.
+ * Handles duplicate parameters and falls back gracefully when early keys are present but empty (e.g. ?limit=&take=5).
+ */
+export function getFirstParam(params: URLSearchParams, ...keys: string[]): string | undefined {
+  if (!params || typeof params.get !== "function") return undefined;
+  for (const k of keys) {
+    if (!k || typeof k !== "string") continue;
+    const values = typeof params.getAll === "function" ? params.getAll(k) : [params.get(k)];
+    for (const raw of values) {
+      if (typeof raw !== "string") continue;
+      const v = raw.trim();
+      if (v.length > 0) return v;
+    }
+  }
+  return undefined;
+}
+
+/**
  * Safely parses an optional integer limit from URL search parameters.
  * Accepts "limit", "take", "pageSize", "page_size", "per_page", "size", "count", or "max".
  * Returns undefined if missing, non-numeric, or <= 0. Bounded by max.
@@ -79,36 +97,37 @@ export function parseLimit(params: URLSearchParams, max = 100): number | undefin
   if (!params || typeof params.get !== "function") return undefined;
   const cap = Math.floor(max);
   if (!Number.isFinite(max) || cap <= 0) return undefined;
-  const raw = (
-    params.get("limit") ??
-    params.get("take") ??
-    params.get("pageSize") ??
-    params.get("page_size") ??
-    params.get("per_page") ??
-    params.get("perPage") ??
-    params.get("size") ??
-    params.get("count") ??
-    params.get("page_limit") ??
-    params.get("pageLimit") ??
-    params.get("rows") ??
-    params.get("rows_per_page") ??
-    params.get("rowsPerPage") ??
-    params.get("limit_count") ??
-    params.get("limitCount") ??
-    params.get("items") ??
-    params.get("items_per_page") ??
-    params.get("itemsPerPage") ??
-    params.get("item_count") ??
-    params.get("itemCount") ??
-    params.get("num_results") ??
-    params.get("numResults") ??
-    params.get("records") ??
-    params.get("records_per_page") ??
-    params.get("recordsPerPage") ??
-    params.get("top") ??
-    params.get("results") ??
-    params.get("max")
-  )?.trim();
+  const raw = getFirstParam(
+    params,
+    "limit",
+    "take",
+    "pageSize",
+    "page_size",
+    "per_page",
+    "perPage",
+    "size",
+    "count",
+    "page_limit",
+    "pageLimit",
+    "rows",
+    "rows_per_page",
+    "rowsPerPage",
+    "limit_count",
+    "limitCount",
+    "items",
+    "items_per_page",
+    "itemsPerPage",
+    "item_count",
+    "itemCount",
+    "num_results",
+    "numResults",
+    "records",
+    "records_per_page",
+    "recordsPerPage",
+    "top",
+    "results",
+    "max"
+  );
   if (!raw || !/^\+?\d+$/.test(raw)) return undefined;
   const num = Number(raw);
   if (!(num > 0)) return undefined;
@@ -123,25 +142,26 @@ export function parsePage(params: URLSearchParams, max = 10000): number | undefi
   if (!params || typeof params.get !== "function") return undefined;
   const cap = Math.floor(max);
   if (!Number.isFinite(max) || cap <= 0) return undefined;
-  const raw = (
-    params.get("page") ??
-    params.get("p") ??
-    params.get("pg") ??
-    params.get("p_num") ??
-    params.get("pNum") ??
-    params.get("pageNum") ??
-    params.get("page_num") ??
-    params.get("pageNumber") ??
-    params.get("page_number") ??
-    params.get("pageNo") ??
-    params.get("page_no") ??
-    params.get("page_id") ??
-    params.get("pageId") ??
-    params.get("page_idx") ??
-    params.get("pageIdx") ??
-    params.get("page_index") ??
-    params.get("pageIndex")
-  )?.trim();
+  const raw = getFirstParam(
+    params,
+    "page",
+    "p",
+    "pg",
+    "p_num",
+    "pNum",
+    "pageNum",
+    "page_num",
+    "pageNumber",
+    "page_number",
+    "pageNo",
+    "page_no",
+    "page_id",
+    "pageId",
+    "page_idx",
+    "pageIdx",
+    "page_index",
+    "pageIndex"
+  );
   if (!raw || !/^\+?\d+$/.test(raw)) return undefined;
   const num = Number(raw);
   if (!(num > 0)) return undefined;
@@ -159,28 +179,29 @@ export function parseOffset(params: URLSearchParams, max = 10000, pageSize?: num
   if (!params || typeof params.get !== "function") return undefined;
   const cap = Math.floor(max);
   if (!Number.isFinite(max) || cap < 0) return undefined;
-  const raw = (
-    params.get("offset") ??
-    params.get("skip") ??
-    params.get("start") ??
-    params.get("from") ??
-    params.get("start_at") ??
-    params.get("startAt") ??
-    params.get("start_index") ??
-    params.get("startIndex") ??
-    params.get("start_idx") ??
-    params.get("startIdx") ??
-    params.get("from_index") ??
-    params.get("fromIndex") ??
-    params.get("from_idx") ??
-    params.get("fromIdx") ??
-    params.get("offset_count") ??
-    params.get("offsetCount") ??
-    params.get("offset_idx") ??
-    params.get("offsetIdx") ??
-    params.get("skip_count") ??
-    params.get("skipCount")
-  )?.trim();
+  const raw = getFirstParam(
+    params,
+    "offset",
+    "skip",
+    "start",
+    "from",
+    "start_at",
+    "startAt",
+    "start_index",
+    "startIndex",
+    "start_idx",
+    "startIdx",
+    "from_index",
+    "fromIndex",
+    "from_idx",
+    "fromIdx",
+    "offset_count",
+    "offsetCount",
+    "offset_idx",
+    "offsetIdx",
+    "skip_count",
+    "skipCount"
+  );
   if (raw) {
     if (!/^\+?\d+$/.test(raw)) return undefined;
     const num = Number(raw);
@@ -205,29 +226,30 @@ export type SortOrder = "asc" | "desc";
  */
 export function parseSortOrder(params: URLSearchParams, paramName = "order"): SortOrder | undefined {
   if (!params || typeof params.get !== "function" || !paramName || typeof paramName !== "string") return undefined;
-  const raw = (
-    params.get(paramName) ??
-    params.get("sort") ??
-    params.get("sort_order") ??
-    params.get("sortOrder") ??
-    params.get("dir") ??
-    params.get("direction") ??
-    params.get("sort_dir") ??
-    params.get("sortDir") ??
-    params.get("sort_direction") ??
-    params.get("sortDirection") ??
-    params.get("order_dir") ??
-    params.get("orderDir") ??
-    params.get("order_direction") ??
-    params.get("orderDirection") ??
-    params.get("sort_order_dir") ??
-    params.get("sortOrderDir") ??
-    params.get("sort_by") ??
-    params.get("sortBy") ??
-    params.get("ordering") ??
-    params.get("orderBy") ??
-    params.get("order_by")
-  )?.trim().toLowerCase();
+  const raw = getFirstParam(
+    params,
+    paramName,
+    "sort",
+    "sort_order",
+    "sortOrder",
+    "dir",
+    "direction",
+    "sort_dir",
+    "sortDir",
+    "sort_direction",
+    "sortDirection",
+    "order_dir",
+    "orderDir",
+    "order_direction",
+    "orderDirection",
+    "sort_order_dir",
+    "sortOrderDir",
+    "sort_by",
+    "sortBy",
+    "ordering",
+    "orderBy",
+    "order_by"
+  )?.toLowerCase();
   if (!raw) return undefined;
   if (raw === "asc" || raw === "ascending" || raw === "oldest" || raw === "earliest" || raw === "first" || raw === "forward" || raw === "up" || raw === "ascend" || raw === "older" || raw === "chronological" || raw === "chrono" || raw === "1" || raw === "+1") return "asc";
   if (raw === "desc" || raw === "descending" || raw === "newest" || raw === "latest" || raw === "last" || raw === "reverse" || raw === "reversed" || raw === "rev" || raw === "recent" || raw === "backward" || raw === "backwards" || raw === "down" || raw === "descend" || raw === "newer" || raw === "reverse-chronological" || raw === "reverse_chronological" || raw === "-1") return "desc";
@@ -243,33 +265,36 @@ export function parseSearchQuery(params: URLSearchParams, paramName = "q"): stri
   if (!params || typeof params.get !== "function" || !paramName || typeof paramName !== "string") return undefined;
   const cleanParam = paramName.trim();
   if (!cleanParam) return undefined;
-  let raw = params.get(cleanParam);
-  if (!raw && cleanParam === "q") {
-    raw =
-      params.get("query") ??
-      params.get("search") ??
-      params.get("keyword") ??
-      params.get("term") ??
-      params.get("filter") ??
-      params.get("find") ??
-      params.get("lookup") ??
-      params.get("q_term") ??
-      params.get("qTerm") ??
-      params.get("query_term") ??
-      params.get("queryTerm") ??
-      params.get("search_query") ??
-      params.get("searchQuery") ??
-      params.get("search_term") ??
-      params.get("searchTerm") ??
-      params.get("search_text") ??
-      params.get("searchText") ??
-      params.get("text") ??
-      params.get("filter_text") ??
-      params.get("filterText") ??
-      params.get("keywords");
-  }
+  const keys =
+    cleanParam === "q"
+      ? [
+          "q",
+          "query",
+          "search",
+          "keyword",
+          "term",
+          "filter",
+          "find",
+          "lookup",
+          "q_term",
+          "qTerm",
+          "query_term",
+          "queryTerm",
+          "search_query",
+          "searchQuery",
+          "search_term",
+          "searchTerm",
+          "search_text",
+          "searchText",
+          "text",
+          "filter_text",
+          "filterText",
+          "keywords",
+        ]
+      : [cleanParam];
+  const raw = getFirstParam(params, ...keys);
   if (!raw) return undefined;
-  let trimmed = raw.trim();
+  let trimmed = raw;
   try {
     trimmed = decodeURIComponent(trimmed);
   } catch {

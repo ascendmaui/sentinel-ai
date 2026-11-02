@@ -901,6 +901,56 @@ for (const ep of ["/api/posts", "/api/incidents", "/api/case-studies", "/api/sce
   checkSecurityHeaders(hostileRes, `hostile query on ${ep}`);
 }
 
+// 10b. Empty-string parameter fallback and extended filters resilience
+const postEmptyFallback = await (await get("/api/posts?limit=&take=2")).json();
+check(postEmptyFallback.count === 2, "GET /api/posts?limit=&take=2 (empty-param fallback)");
+
+const postDirFallback = await (await get("/api/posts?order=&dir=asc")).json();
+check(postDirFallback.posts[0].date <= postDirFallback.posts[postDirFallback.posts.length - 1].date, "GET /api/posts?order=&dir=asc (empty-param fallback)");
+
+const postSearchFallback = await (await get("/api/posts?q=&search=openai")).json();
+check(postSearchFallback.count > 0, "GET /api/posts?q=&search=openai (empty-param fallback)");
+
+const postReadMinsFallback = await (await get("/api/posts?readMins=&mins=8")).json();
+check(postReadMinsFallback.count > 0 && postReadMinsFallback.posts.every(p => p.readMins === 8), "GET /api/posts?readMins=&mins=8 (empty-param fallback)");
+
+const postDesc = await (await get("/api/posts?description=sandbox")).json();
+check(postDesc.count > 0, "GET /api/posts?description=sandbox filter");
+
+const tierRankFallback = await (await get("/api/tiers?rank=&tier_rank=1")).json();
+check(tierRankFallback.count === 1 && tierRankFallback.tiers[0].id === "seraphim", "GET /api/tiers?rank=&tier_rank=1 (empty-param fallback)");
+
+const tierRankByName = await (await get("/api/tiers?rank=seraphim")).json();
+check(tierRankByName.count === 1 && tierRankByName.tiers[0].id === "seraphim", "GET /api/tiers?rank=seraphim (rank by name)");
+
+const tierFeatureAdvisory = await (await get("/api/tiers?feature=advisory")).json();
+check(tierFeatureAdvisory.count >= 2, "GET /api/tiers?feature=advisory matrix match");
+
+const incTimeline = await (await get("/api/incidents?timeline=modal")).json();
+check(incTimeline.count === 1 && incTimeline.incidents[0].id === "openai-huggingface-2026", "GET /api/incidents?timeline=modal filter");
+
+const incDid = await (await get("/api/incidents?did=actions")).json();
+check(incDid.count > 0, "GET /api/incidents?did=actions filter");
+
+const incHowIn = await (await get("/api/incidents?how_in=dataset")).json();
+check(incHowIn.count === 1 && incHowIn.incidents[0].id === "openai-huggingface-2026", "GET /api/incidents?how_in=dataset filter");
+
+const incSeraphim = await (await get("/api/incidents?seraphim=recon")).json();
+check(incSeraphim.count > 0, "GET /api/incidents?seraphim=recon filter");
+
+const csCase01 = await get("/api/case-studies/case-01");
+check(csCase01.status === 200 && (await csCase01.json()).id === "F-01", "GET /api/case-studies/case-01 (case- prefix)");
+
+const csCaseIdFilter = await (await get("/api/case-studies?id=case-1")).json();
+check(csCaseIdFilter.count === 1 && csCaseIdFilter.findings[0].id === "F-01", "GET /api/case-studies?id=case-1 filter");
+
+const brandQFilter = await (await get("/api/brand?q=passive")).json();
+check(brandQFilter.badge && brandQFilter.badge.key === "passive", "GET /api/brand?q=passive query filter");
+
+const srcUrlParam = encodeURIComponent("https://openai.com/index/hugging-face-incident-and-the-road-ahead/");
+const srcItemByUrl = await get(`/api/sources/${srcUrlParam}`);
+check(srcItemByUrl.status === 200 && (await srcItemByUrl.json()).id === "oaiAug", "GET /api/sources/[url] URL lookup");
+
 // 11. Robots, Sitemap, and Static Assets
 const headRobots = await get("/robots.txt", { method: "HEAD" });
 check(headRobots.status === 200, "HEAD /robots.txt -> 200");
