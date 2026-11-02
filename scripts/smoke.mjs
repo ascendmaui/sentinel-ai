@@ -33,6 +33,10 @@ try {
   console.error(`Endpoint /api/health at ${base} did not return JSON. Is another service on this port?\nStatus: ${h.status}`);
   process.exit(1);
 }
+if (h.status !== 200 || hBody?.status !== "ok" || typeof hBody?.timestamp !== "string") {
+  console.error(`Endpoint /api/health at ${base} did not return status ok (status: ${h.status}, body: ${JSON.stringify(hBody)}). Is another service on this port?`);
+  process.exit(1);
+}
 check(h.status === 200 && hBody.status === "ok" && typeof hBody.timestamp === "string", "GET /api/health ok with timestamp");
 check(h.headers.get("cache-control") === "no-store", "/api/health is not cacheable");
 checkSecurityHeaders(h, "GET /api/health");
@@ -54,7 +58,10 @@ const postsRes = await get("/api/posts");
 checkSecurityHeaders(postsRes, "GET /api/posts");
 const posts = await postsRes.json();
 check(Array.isArray(posts.posts) && posts.count === posts.posts.length && posts.count > 0, "GET /api/posts shape");
-for (const p of posts.posts) { pages.push(p.url); seen.add(p.url); }
+for (const p of posts.posts || []) { pages.push(p.url); seen.add(p.url); }
+
+const sourceNumPosts = await (await get("/api/posts?source=1")).json();
+check(sourceNumPosts.count > 0, "GET /api/posts?source=1 numeric source resolution");
 
 const headPostOne = await get(`/api/posts/${posts.posts[0].slug}`, { method: "HEAD" });
 check(headPostOne.status === 200, `HEAD /api/posts/${posts.posts[0].slug} -> 200`);
@@ -231,6 +238,9 @@ check(yearIncs2024.count > 0 && yearIncs2024.incidents.every(i => i.date.include
 const sourceIncs = await (await get("/api/incidents?source=oaiAug")).json();
 check(sourceIncs.count > 0, "GET /api/incidents?source=oaiAug filter");
 
+const sourceNumIncs = await (await get("/api/incidents?source=1")).json();
+check(sourceNumIncs.count > 0, "GET /api/incidents?source=1 numeric source resolution");
+
 const standingIncs = await (await get("/api/incidents?standing=documented")).json();
 check(standingIncs.count > 0, "GET /api/incidents?standing=documented filter");
 
@@ -344,6 +354,9 @@ check(csByN.count === 1 && csByN.findings[0].id === "F-01", "GET /api/case-studi
 const csFindingAlias = await (await get("/api/case-studies?finding=f-01")).json();
 check(csFindingAlias.count === 1 && csFindingAlias.findings[0].id === "F-01", "GET /api/case-studies?finding=f-01 alias filter");
 
+const csSevMed = await (await get("/api/case-studies?sev=med")).json();
+check(csSevMed.count > 0 && csSevMed.findings.every(f => f.severity === "Medium"), "GET /api/case-studies?sev=med prefix filter");
+
 const csOne = await get("/api/case-studies/f-01");
 const csOneBody = await csOne.json();
 check(csOne.status === 200 && csOneBody.id === "F-01" && csOneBody.remediation?.id === "F-01", "GET /api/case-studies/f-01 (case-insensitive with remediation)");
@@ -424,6 +437,9 @@ check(tierAlias.count === 1 && tierAlias.tiers[0].id === "seraphim", "GET /api/t
 const tierNameFilter = await (await get("/api/tiers?name=Seraphim")).json();
 check(tierNameFilter.count === 1 && tierNameFilter.tiers[0].id === "seraphim", "GET /api/tiers?name=Seraphim filter");
 
+const tierFeatureFilter = await (await get("/api/tiers?feature=recon")).json();
+check(tierFeatureFilter.count > 0, "GET /api/tiers?feature=recon filter");
+
 const tierOne = await get("/api/tiers/seraphim");
 check(tierOne.status === 200 && (await tierOne.json()).name === "Seraphim", "GET /api/tiers/seraphim");
 const tierUpper = await get("/api/tiers/SERAPHIM");
@@ -499,6 +515,9 @@ check(weakSc.count > 0, "GET /api/scenarios?weakness=credentials filter");
 
 const refSc = await (await get("/api/scenarios?ref=cs26")).json();
 check(refSc.count > 0, "GET /api/scenarios?ref=cs26 filter");
+
+const refNumSc = await (await get("/api/scenarios?ref=1")).json();
+check(refNumSc.count > 0, "GET /api/scenarios?ref=1 numeric ref resolution");
 
 const limitedSc = await (await get("/api/scenarios?limit=2")).json();
 check(limitedSc.count === 2 && limitedSc.scenarios.length === 2, "GET /api/scenarios?limit=2");

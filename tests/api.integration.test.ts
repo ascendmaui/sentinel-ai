@@ -222,6 +222,21 @@ describe("GET /api/posts", () => {
     expect((await noneRes.json()).count).toBe(0);
   });
 
+  it("filters posts by numeric source index and source prefix aliases", async () => {
+    const numRes = postsIndex(req("/api/posts?source=1"));
+    expect(numRes.status).toBe(200);
+    const numBody = await numRes.json();
+    expect(numBody.count).toBeGreaterThan(0);
+
+    const prefixRes = postsIndex(req("/api/posts?source=src-1"));
+    expect(prefixRes.status).toBe(200);
+    expect((await prefixRes.json()).count).toBe(numBody.count);
+
+    const refRes = postsIndex(req("/api/posts?ref=1"));
+    expect(refRes.status).toBe(200);
+    expect((await refRes.json()).count).toBe(numBody.count);
+  });
+
   it("supports offset and skip parameters and matches tier and sources in q search", async () => {
     const offRes = postsIndex(req("/api/posts?offset=1&limit=2"));
     expect(offRes.status).toBe(200);
@@ -616,6 +631,21 @@ describe("GET /api/incidents", () => {
     expect((await noneRes.json()).count).toBe(0);
   });
 
+  it("filters incidents by numeric source index and prefix aliases", async () => {
+    const numRes = incidentsIndex(req("/api/incidents?source=1"));
+    expect(numRes.status).toBe(200);
+    const numBody = await numRes.json();
+    expect(numBody.count).toBeGreaterThan(0);
+
+    const prefixRes = incidentsIndex(req("/api/incidents?source=src-1"));
+    expect(prefixRes.status).toBe(200);
+    expect((await prefixRes.json()).count).toBe(numBody.count);
+
+    const refRes = incidentsIndex(req("/api/incidents?ref=1"));
+    expect(refRes.status).toBe(200);
+    expect((await refRes.json()).count).toBe(numBody.count);
+  });
+
   it("filters incidents by standing, kicker, and supports offset / skip", async () => {
     const standRes = incidentsIndex(req("/api/incidents?standing=Documented"));
     expect(standRes.status).toBe(200);
@@ -922,6 +952,22 @@ describe("GET /api/case-studies", () => {
     const statusRes = caseStudiesIndex(req("/api/case-studies?status=fixed"));
     const statusBody = await statusRes.json();
     expect(statusBody.count).toBeGreaterThan(0);
+  });
+
+  it("filters findings by severity prefix abbreviations like med and crit", async () => {
+    const medRes = caseStudiesIndex(req("/api/case-studies?severity=med"));
+    expect(medRes.status).toBe(200);
+    const medBody = await medRes.json();
+    expect(medBody.count).toBeGreaterThan(0);
+    expect(medBody.findings.every((f: { severity: string }) => f.severity === "Medium")).toBe(true);
+
+    const sevMedRes = caseStudiesIndex(req("/api/case-studies?sev=med"));
+    expect(sevMedRes.status).toBe(200);
+    expect((await sevMedRes.json()).count).toBe(medBody.count);
+
+    const critRes = caseStudiesIndex(req("/api/case-studies?sev=crit"));
+    expect(critRes.status).toBe(200);
+    expect((await critRes.json()).count).toBe(0);
   });
 
   it("filters findings by search query q", async () => {
@@ -1350,6 +1396,22 @@ describe("GET /api/tiers", () => {
     const noneIdRes = tiersIndex(req("/api/tiers?id=nonexistent"));
     expect(noneIdRes.status).toBe(200);
     expect((await noneIdRes.json()).count).toBe(0);
+  });
+
+  it("filters tiers by feature, included deliverable, and service keyword", async () => {
+    const featRes = tiersIndex(req("/api/tiers?feature=retest"));
+    expect(featRes.status).toBe(200);
+    const featBody = await featRes.json();
+    expect(featBody.count).toBeGreaterThan(0);
+
+    const incRes = tiersIndex(req("/api/tiers?included=recon"));
+    expect(incRes.status).toBe(200);
+    const incBody = await incRes.json();
+    expect(incBody.count).toBeGreaterThan(0);
+
+    const delivRes = tiersIndex(req("/api/tiers?deliverable=advisory"));
+    expect(delivRes.status).toBe(200);
+    expect((await delivRes.json()).count).toBeGreaterThan(0);
   });
 
   it("supports order/sort descending and page-based pagination", async () => {
@@ -1893,6 +1955,21 @@ describe("GET /api/scenarios", () => {
     const offBody = await offRes.json();
     expect(offBody.count).toBe(2);
     expect(offBody.totalCount).toBe(scenarios.length);
+  });
+
+  it("filters scenarios by numeric source index and ref aliases", async () => {
+    const numRes = scenariosIndex(req("/api/scenarios?ref=1"));
+    expect(numRes.status).toBe(200);
+    const numBody = await numRes.json();
+    expect(numBody.count).toBeGreaterThan(0);
+
+    const srcNumRes = scenariosIndex(req("/api/scenarios?source=1"));
+    expect(srcNumRes.status).toBe(200);
+    expect((await srcNumRes.json()).count).toBe(numBody.count);
+
+    const prefixRes = scenariosIndex(req("/api/scenarios?ref=src-1"));
+    expect(prefixRes.status).toBe(200);
+    expect((await prefixRes.json()).count).toBe(numBody.count);
   });
 
   it("filters scenarios by id or n parameter with prefix and code flexibility", async () => {

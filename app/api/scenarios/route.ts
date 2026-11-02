@@ -1,5 +1,6 @@
 import { json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
 import { scenarioById, scenarios } from "../../../lib/incidents";
+import { sourceById } from "../../../lib/sources";
 
 /** Hypothetical scenarios index as JSON. Lists conceptual threat models and controls. Supports ?id=, ?n=, ?num=, ?scenario=, ?ref=, ?source=, ?weakness=, ?target=, ?control=, ?speed=, ?approach=, ?seraphim=, ?analysis=, ?q=, ?order=, ?sort=, ?offset=, ?limit=, ?take=, and ?page=. */
 export function GET(): Response;
@@ -129,6 +130,7 @@ export function GET(req?: Request): Response {
       }
 
       if (ref) {
+        const matchedRef = sourceById(ref);
         let cleanRef = ref.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
         cleanRef = cleanRef.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         cleanRef = cleanRef.replace(/^(source|src|ref|reference)[-_]/, "");
@@ -139,7 +141,8 @@ export function GET(req?: Request): Response {
               (r) =>
                 r.toLowerCase() === ref ||
                 r.toLowerCase() === cleanRef ||
-                (cleanRef && r.toLowerCase().includes(cleanRef))
+                (cleanRef && r.toLowerCase().includes(cleanRef)) ||
+                (matchedRef && r.toLowerCase() === matchedRef.id.toLowerCase())
             )
         );
       }

@@ -103,7 +103,10 @@ export function GET(req?: Request): Response {
         let cleanSev = severity.replace(/^\/+|\/+$/g, "");
         cleanSev = cleanSev.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         list = list.filter(
-          (f) => f.severity.toLowerCase() === severity || f.severity.toLowerCase() === cleanSev
+          (f) =>
+            f.severity.toLowerCase() === severity ||
+            f.severity.toLowerCase() === cleanSev ||
+            f.severity.toLowerCase().startsWith(cleanSev)
         );
       }
       if (status) {

@@ -1,7 +1,7 @@
 import { json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
 import { tiers, tierById, tierHref, matrix, helper, ENGAGEMENT_TERMS } from "../../../lib/tiers";
 
-/** Service tiers index as JSON: all four engagement tiers and comparison matrix. Supports ?id=, ?tier=, ?name=, ?cadence=, ?positioning=, ?rank=, ?q=, ?order=, ?sort=, ?offset=, ?limit=, ?take=, and ?page=. */
+/** Service tiers index as JSON: all four engagement tiers and comparison matrix. Supports ?id=, ?tier=, ?name=, ?cadence=, ?positioning=, ?rank=, ?feature=, ?included=, ?deliverable=, ?q=, ?order=, ?sort=, ?offset=, ?limit=, ?take=, and ?page=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -39,6 +39,11 @@ export function GET(req?: Request): Response {
         parseSearchQuery(url.searchParams, "price") ||
         parseSearchQuery(url.searchParams, "pricing") ||
         parseSearchQuery(url.searchParams, "level");
+      const feature =
+        parseSearchQuery(url.searchParams, "feature") ||
+        parseSearchQuery(url.searchParams, "included") ||
+        parseSearchQuery(url.searchParams, "deliverable") ||
+        parseSearchQuery(url.searchParams, "service");
       const rankParam = (
         url.searchParams.get("rank") ??
         url.searchParams.get("rank_id") ??
@@ -110,6 +115,14 @@ export function GET(req?: Request): Response {
 
       if (rank !== undefined) {
         list = list.filter((t) => t.rank === rank);
+      }
+
+      if (feature) {
+        list = list.filter(
+          (t) =>
+            t.included.some((item) => item.toLowerCase().includes(feature)) ||
+            t.summary.toLowerCase().includes(feature)
+        );
       }
 
       if (q) {

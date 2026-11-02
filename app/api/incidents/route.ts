@@ -1,5 +1,6 @@
 import { json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
 import { incidentById, incidents, scenarios, unverified, INCIDENTS_DISCLAIMER } from "../../../lib/incidents";
+import { sourceById } from "../../../lib/sources";
 
 /** Incident case studies index as JSON. Lists incidents, summaries, counts, and disclaimer. Supports ?id=, ?n=, ?num=, ?incident=, ?case=, ?source=, ?ref=, ?year=, ?date=, ?title=, ?standing=, ?kicker=, ?vuln=, ?cve=, ?impact=, ?q=, ?order=, ?sort=, ?offset=, ?limit=, ?take=, and ?page=. */
 export function GET(): Response;
@@ -123,6 +124,7 @@ export function GET(req?: Request): Response {
       }
 
       if (source) {
+        const matchedSource = sourceById(source);
         let cleanSource = source.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
         cleanSource = cleanSource.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         cleanSource = cleanSource.replace(/^(source|src|ref|reference)[-_]/, "");
@@ -133,7 +135,8 @@ export function GET(req?: Request): Response {
               (s) =>
                 s.toLowerCase() === source ||
                 s.toLowerCase() === cleanSource ||
-                (cleanSource && s.toLowerCase().includes(cleanSource))
+                (cleanSource && s.toLowerCase().includes(cleanSource)) ||
+                (matchedSource && s.toLowerCase() === matchedSource.id.toLowerCase())
             )
         );
       }
