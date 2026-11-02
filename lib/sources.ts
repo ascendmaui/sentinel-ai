@@ -37,6 +37,10 @@ export function sourceById(id: string): Source | undefined {
   if (Object.prototype.hasOwnProperty.call(S, trimmed)) return S[trimmed];
   let target = trimmed.toLowerCase().replace(/\.(html|json)$/, "");
   target = target.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
+  if (!target.startsWith("http://") && !target.startsWith("https://")) {
+    target = target.replace(/^(?:sources|source|refs|ref)\//, "");
+    target = target.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
+  }
   if (target.startsWith("source-") || target.startsWith("source_")) target = target.slice(7);
   else if (target.startsWith("source") && /^\d+$/.test(target.slice(6))) target = target.slice(6);
   else if (target.startsWith("src-") || target.startsWith("src_")) target = target.slice(4);

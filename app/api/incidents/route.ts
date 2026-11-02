@@ -12,87 +12,123 @@ export function GET(req?: Request): Response {
     try {
       const url = new URL(req.url, "http://localhost");
       const q = parseSearchQuery(url.searchParams);
-      const id =
-        parseSearchQuery(url.searchParams, "id") ||
-        parseSearchQuery(url.searchParams, "incident") ||
-        parseSearchQuery(url.searchParams, "incident_id") ||
-        parseSearchQuery(url.searchParams, "incidentId") ||
-        parseSearchQuery(url.searchParams, "incident_slug") ||
-        parseSearchQuery(url.searchParams, "incidentSlug") ||
-        parseSearchQuery(url.searchParams, "case") ||
-        parseSearchQuery(url.searchParams, "case_id") ||
-        parseSearchQuery(url.searchParams, "caseId") ||
-        parseSearchQuery(url.searchParams, "case_slug") ||
-        parseSearchQuery(url.searchParams, "caseSlug") ||
-        parseSearchQuery(url.searchParams, "inc") ||
-        parseSearchQuery(url.searchParams, "inc_id") ||
-        parseSearchQuery(url.searchParams, "incId") ||
-        parseSearchQuery(url.searchParams, "slug");
-      const n =
-        parseSearchQuery(url.searchParams, "n") ||
-        parseSearchQuery(url.searchParams, "num") ||
-        parseSearchQuery(url.searchParams, "number") ||
-        parseSearchQuery(url.searchParams, "no") ||
-        parseSearchQuery(url.searchParams, "incident_no") ||
-        parseSearchQuery(url.searchParams, "incidentNo") ||
-        parseSearchQuery(url.searchParams, "case_no") ||
-        parseSearchQuery(url.searchParams, "caseNo");
-      const source =
-        parseSearchQuery(url.searchParams, "source") ||
-        parseSearchQuery(url.searchParams, "source_id") ||
-        parseSearchQuery(url.searchParams, "sourceId") ||
-        parseSearchQuery(url.searchParams, "src") ||
-        parseSearchQuery(url.searchParams, "src_id") ||
-        parseSearchQuery(url.searchParams, "srcId") ||
-        parseSearchQuery(url.searchParams, "ref") ||
-        parseSearchQuery(url.searchParams, "reference");
-      const year =
-        parseSearchQuery(url.searchParams, "year") ||
-        parseSearchQuery(url.searchParams, "date") ||
-        parseSearchQuery(url.searchParams, "timeframe") ||
-        parseSearchQuery(url.searchParams, "period");
-      const title =
-        parseSearchQuery(url.searchParams, "title") ||
-        parseSearchQuery(url.searchParams, "name") ||
-        parseSearchQuery(url.searchParams, "headline");
-      const standing =
-        parseSearchQuery(url.searchParams, "standing") ||
-        parseSearchQuery(url.searchParams, "status") ||
-        parseSearchQuery(url.searchParams, "credibility");
-      const kicker =
-        parseSearchQuery(url.searchParams, "kicker") ||
-        parseSearchQuery(url.searchParams, "tag") ||
-        parseSearchQuery(url.searchParams, "badge") ||
-        parseSearchQuery(url.searchParams, "category");
-      const vuln =
-        parseSearchQuery(url.searchParams, "vuln") ||
-        parseSearchQuery(url.searchParams, "vulnerability") ||
-        parseSearchQuery(url.searchParams, "cve") ||
-        parseSearchQuery(url.searchParams, "weakness") ||
-        parseSearchQuery(url.searchParams, "flaw");
-      const impact =
-        parseSearchQuery(url.searchParams, "impact") ||
-        parseSearchQuery(url.searchParams, "severity") ||
-        parseSearchQuery(url.searchParams, "consequence") ||
-        parseSearchQuery(url.searchParams, "effect");
-      const timeline =
-        parseSearchQuery(url.searchParams, "timeline") ||
-        parseSearchQuery(url.searchParams, "event") ||
-        parseSearchQuery(url.searchParams, "milestone");
-      const did =
-        parseSearchQuery(url.searchParams, "did") ||
-        parseSearchQuery(url.searchParams, "action") ||
-        parseSearchQuery(url.searchParams, "behavior");
-      const howIn =
-        parseSearchQuery(url.searchParams, "howIn") ||
-        parseSearchQuery(url.searchParams, "how_in") ||
-        parseSearchQuery(url.searchParams, "entry") ||
-        parseSearchQuery(url.searchParams, "initial_access") ||
-        parseSearchQuery(url.searchParams, "initialAccess");
-      const seraphim =
-        parseSearchQuery(url.searchParams, "seraphim") ||
-        parseSearchQuery(url.searchParams, "assessment") ||
-        parseSearchQuery(url.searchParams, "remediation");
+      const id = parseSearchQuery(
+        url.searchParams,
+        "id",
+        "incident",
+        "incident_id",
+        "incidentId",
+        "incident_slug",
+        "incidentSlug",
+        "case",
+        "case_id",
+        "caseId",
+        "case_slug",
+        "caseSlug",
+        "inc",
+        "inc_id",
+        "incId",
+        "slug"
+      );
+      const n = parseSearchQuery(
+        url.searchParams,
+        "n",
+        "num",
+        "number",
+        "no",
+        "incident_no",
+        "incidentNo",
+        "case_no",
+        "caseNo"
+      );
+      const source = parseSearchQuery(
+        url.searchParams,
+        "source",
+        "source_id",
+        "sourceId",
+        "src",
+        "src_id",
+        "srcId",
+        "ref",
+        "ref_id",
+        "refId",
+        "reference"
+      );
+      const year = parseSearchQuery(
+        url.searchParams,
+        "year",
+        "date",
+        "timeframe",
+        "period"
+      );
+      const title = parseSearchQuery(
+        url.searchParams,
+        "title",
+        "name",
+        "headline"
+      );
+      const standing = parseSearchQuery(
+        url.searchParams,
+        "standing",
+        "status",
+        "credibility",
+        "state"
+      );
+      const kicker = parseSearchQuery(
+        url.searchParams,
+        "kicker",
+        "tag",
+        "badge",
+        "category"
+      );
+      const vuln = parseSearchQuery(
+        url.searchParams,
+        "vuln",
+        "vulnerability",
+        "cve",
+        "weakness",
+        "flaw"
+      );
+      const impact = parseSearchQuery(
+        url.searchParams,
+        "impact",
+        "severity",
+        "consequence",
+        "effect"
+      );
+      const timeline = parseSearchQuery(
+        url.searchParams,
+        "timeline",
+        "event",
+        "milestone",
+        "chronology"
+      );
+      const did = parseSearchQuery(
+        url.searchParams,
+        "did",
+        "action",
+        "actions",
+        "behavior",
+        "activity"
+      );
+      const howIn = parseSearchQuery(
+        url.searchParams,
+        "howIn",
+        "how_in",
+        "entry",
+        "initial_access",
+        "initialAccess",
+        "vector"
+      );
+      const seraphim = parseSearchQuery(
+        url.searchParams,
+        "seraphim",
+        "analysis",
+        "assessment",
+        "remediation",
+        "remediation_guidance",
+        "limits"
+      );
       const limit = parseLimit(url.searchParams);
       const offset = parseOffset(url.searchParams, 10000, limit);
       const order = parseSortOrder(url.searchParams);

@@ -22,30 +22,30 @@ export function GET(req?: Request): Response {
   if (req?.url) {
     try {
       const url = new URL(req.url, "http://localhost");
-      const badgeKey =
-        parseSearchQuery(url.searchParams, "badge") ||
-        parseSearchQuery(url.searchParams, "badge_key") ||
-        parseSearchQuery(url.searchParams, "badgeKey") ||
-        parseSearchQuery(url.searchParams, "badge_id") ||
-        parseSearchQuery(url.searchParams, "badgeId") ||
-        parseSearchQuery(url.searchParams, "b") ||
-        parseSearchQuery(url.searchParams, "b_key") ||
-        parseSearchQuery(url.searchParams, "bKey") ||
-        parseSearchQuery(url.searchParams, "b_id") ||
-        parseSearchQuery(url.searchParams, "bId") ||
-        parseSearchQuery(url.searchParams, "badge_name") ||
-        parseSearchQuery(url.searchParams, "badgeName") ||
-        parseSearchQuery(url.searchParams, "tag") ||
-        parseSearchQuery(url.searchParams, "key") ||
-        parseSearchQuery(url.searchParams, "id") ||
-        parseSearchQuery(url.searchParams, "slug") ||
-        parseSearchQuery(url.searchParams, "name") ||
-        parseSearchQuery(url.searchParams, "n") ||
-        parseSearchQuery(url.searchParams, "num") ||
-        parseSearchQuery(url.searchParams, "number") ||
-        parseSearchQuery(url.searchParams, "q") ||
-        parseSearchQuery(url.searchParams, "query") ||
-        parseSearchQuery(url.searchParams, "search");
+      const badgeKey = parseSearchQuery(
+        url.searchParams,
+        "badge",
+        "badge_key",
+        "badgeKey",
+        "badge_id",
+        "badgeId",
+        "b",
+        "b_key",
+        "bKey",
+        "b_id",
+        "bId",
+        "badge_name",
+        "badgeName",
+        "tag",
+        "key",
+        "id",
+        "slug",
+        "name",
+        "n",
+        "num",
+        "number",
+        "q"
+      );
       if (badgeKey) {
         badgeMatch = badgeByKey(badgeKey) ?? null;
       }

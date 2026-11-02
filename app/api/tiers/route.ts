@@ -11,39 +11,49 @@ export function GET(req?: Request): Response {
     try {
       const url = new URL(req.url, "http://localhost");
       const q = parseSearchQuery(url.searchParams);
-      const id =
-        parseSearchQuery(url.searchParams, "id") ||
-        parseSearchQuery(url.searchParams, "tier") ||
-        parseSearchQuery(url.searchParams, "tier_id") ||
-        parseSearchQuery(url.searchParams, "tierId") ||
-        parseSearchQuery(url.searchParams, "tier_slug") ||
-        parseSearchQuery(url.searchParams, "tierSlug") ||
-        parseSearchQuery(url.searchParams, "t") ||
-        parseSearchQuery(url.searchParams, "t_id") ||
-        parseSearchQuery(url.searchParams, "tId") ||
-        parseSearchQuery(url.searchParams, "slug") ||
-        parseSearchQuery(url.searchParams, "n") ||
-        parseSearchQuery(url.searchParams, "num") ||
-        parseSearchQuery(url.searchParams, "number");
-      const name =
-        parseSearchQuery(url.searchParams, "name") ||
-        parseSearchQuery(url.searchParams, "tier_name") ||
-        parseSearchQuery(url.searchParams, "tierName") ||
-        parseSearchQuery(url.searchParams, "title");
-      const cadence =
-        parseSearchQuery(url.searchParams, "cadence") ||
-        parseSearchQuery(url.searchParams, "frequency") ||
-        parseSearchQuery(url.searchParams, "schedule");
-      const positioning =
-        parseSearchQuery(url.searchParams, "positioning") ||
-        parseSearchQuery(url.searchParams, "price") ||
-        parseSearchQuery(url.searchParams, "pricing") ||
-        parseSearchQuery(url.searchParams, "level");
-      const feature =
-        parseSearchQuery(url.searchParams, "feature") ||
-        parseSearchQuery(url.searchParams, "included") ||
-        parseSearchQuery(url.searchParams, "deliverable") ||
-        parseSearchQuery(url.searchParams, "service");
+      const id = parseSearchQuery(
+        url.searchParams,
+        "id",
+        "tier",
+        "tier_id",
+        "tierId",
+        "tier_slug",
+        "tierSlug",
+        "t",
+        "t_id",
+        "tId",
+        "slug",
+        "n",
+        "num",
+        "number"
+      );
+      const name = parseSearchQuery(
+        url.searchParams,
+        "name",
+        "tier_name",
+        "tierName",
+        "title"
+      );
+      const cadence = parseSearchQuery(
+        url.searchParams,
+        "cadence",
+        "frequency",
+        "schedule"
+      );
+      const positioning = parseSearchQuery(
+        url.searchParams,
+        "positioning",
+        "price",
+        "pricing",
+        "level"
+      );
+      const feature = parseSearchQuery(
+        url.searchParams,
+        "feature",
+        "included",
+        "deliverable",
+        "service"
+      );
       const rankParam = getFirstParam(
         url.searchParams,
         "rank",

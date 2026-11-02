@@ -12,53 +12,55 @@ export function GET(req?: Request): Response {
   if (req?.url) {
     try {
       const url = new URL(req.url, "http://localhost");
-      const slug =
-        parseSearchQuery(url.searchParams, "slug") ||
-        parseSearchQuery(url.searchParams, "id") ||
-        parseSearchQuery(url.searchParams, "n") ||
-        parseSearchQuery(url.searchParams, "num") ||
-        parseSearchQuery(url.searchParams, "number") ||
-        parseSearchQuery(url.searchParams, "post") ||
-        parseSearchQuery(url.searchParams, "post_id") ||
-        parseSearchQuery(url.searchParams, "postId") ||
-        parseSearchQuery(url.searchParams, "post_slug") ||
-        parseSearchQuery(url.searchParams, "postSlug") ||
-        parseSearchQuery(url.searchParams, "article") ||
-        parseSearchQuery(url.searchParams, "article_id") ||
-        parseSearchQuery(url.searchParams, "articleId") ||
-        parseSearchQuery(url.searchParams, "article_slug") ||
-        parseSearchQuery(url.searchParams, "articleSlug") ||
-        parseSearchQuery(url.searchParams, "blog") ||
-        parseSearchQuery(url.searchParams, "blog_id") ||
-        parseSearchQuery(url.searchParams, "blogId") ||
-        parseSearchQuery(url.searchParams, "blog_slug") ||
-        parseSearchQuery(url.searchParams, "blogSlug");
-      const title =
-        parseSearchQuery(url.searchParams, "title") ||
-        parseSearchQuery(url.searchParams, "name") ||
-        parseSearchQuery(url.searchParams, "headline") ||
-        parseSearchQuery(url.searchParams, "post_title") ||
-        parseSearchQuery(url.searchParams, "postTitle");
-      const tier =
-        parseSearchQuery(url.searchParams, "tier") ||
-        parseSearchQuery(url.searchParams, "service_tier") ||
-        parseSearchQuery(url.searchParams, "serviceTier");
-      const source =
-        parseSearchQuery(url.searchParams, "source") ||
-        parseSearchQuery(url.searchParams, "source_id") ||
-        parseSearchQuery(url.searchParams, "sourceId") ||
-        parseSearchQuery(url.searchParams, "source_slug") ||
-        parseSearchQuery(url.searchParams, "src") ||
-        parseSearchQuery(url.searchParams, "src_id") ||
-        parseSearchQuery(url.searchParams, "srcId") ||
-        parseSearchQuery(url.searchParams, "ref") ||
-        parseSearchQuery(url.searchParams, "reference");
-      const year = parseSearchQuery(url.searchParams, "year") || parseSearchQuery(url.searchParams, "date");
-      const desc =
-        parseSearchQuery(url.searchParams, "description") ||
-        parseSearchQuery(url.searchParams, "summary") ||
-        parseSearchQuery(url.searchParams, "lead") ||
-        parseSearchQuery(url.searchParams, "subtitle");
+      const slug = parseSearchQuery(
+        url.searchParams,
+        "slug",
+        "id",
+        "n",
+        "num",
+        "number",
+        "post",
+        "post_id",
+        "postId",
+        "post_slug",
+        "postSlug",
+        "article",
+        "article_id",
+        "articleId",
+        "article_slug",
+        "articleSlug",
+        "blog",
+        "blog_id",
+        "blogId",
+        "blog_slug",
+        "blogSlug"
+      );
+      const title = parseSearchQuery(url.searchParams, "title", "name", "headline", "post_title", "postTitle");
+      const tier = parseSearchQuery(url.searchParams, "tier", "service_tier", "serviceTier", "plan", "service");
+      const source = parseSearchQuery(
+        url.searchParams,
+        "source",
+        "source_id",
+        "sourceId",
+        "source_slug",
+        "src",
+        "src_id",
+        "srcId",
+        "ref",
+        "ref_id",
+        "refId",
+        "reference"
+      );
+      const year = parseSearchQuery(url.searchParams, "year", "date", "timeframe", "published");
+      const desc = parseSearchQuery(
+        url.searchParams,
+        "description",
+        "summary",
+        "lead",
+        "subtitle",
+        "desc",
+        "intro"
+      );
       const q = parseSearchQuery(url.searchParams);
       const readMinsParam = getFirstParam(
         url.searchParams,

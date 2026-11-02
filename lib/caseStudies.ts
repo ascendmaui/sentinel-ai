@@ -225,7 +225,12 @@ export const findingById = (id: string): Finding | undefined => {
   if (!target) return undefined;
   target = target.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
   target = target.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
-  if (target.startsWith("fix-") || target.startsWith("fix_")) target = target.slice(4);
+  target = target.replace(/^(?:case-studies|case-study|findings|finding|remediations|remediation)\//, "");
+  target = target.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
+  if (target.startsWith("remediation-") || target.startsWith("remediation_")) target = target.slice(12);
+  else if (target.startsWith("rem-") || target.startsWith("rem_")) target = target.slice(4);
+  else if (target.startsWith("rem") && /^\d+$/.test(target.slice(3))) target = target.slice(3);
+  else if (target.startsWith("fix-") || target.startsWith("fix_")) target = target.slice(4);
   else if (target.startsWith("fix") && /^\d+$/.test(target.slice(3))) target = target.slice(3);
   else if (target.startsWith("finding-") || target.startsWith("finding_")) target = target.slice(8);
   else if (target.startsWith("finding") && /^\d+$/.test(target.slice(7))) target = target.slice(7);
@@ -258,7 +263,12 @@ export const remediationById = (id: string): Remediation | undefined => {
   if (!target) return undefined;
   target = target.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
   target = target.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
-  if (target.startsWith("fix-") || target.startsWith("fix_")) target = target.slice(4);
+  target = target.replace(/^(?:case-studies|case-study|findings|finding|remediations|remediation)\//, "");
+  target = target.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
+  if (target.startsWith("remediation-") || target.startsWith("remediation_")) target = target.slice(12);
+  else if (target.startsWith("rem-") || target.startsWith("rem_")) target = target.slice(4);
+  else if (target.startsWith("rem") && /^\d+$/.test(target.slice(3))) target = target.slice(3);
+  else if (target.startsWith("fix-") || target.startsWith("fix_")) target = target.slice(4);
   else if (target.startsWith("fix") && /^\d+$/.test(target.slice(3))) target = target.slice(3);
   else if (target.startsWith("finding-") || target.startsWith("finding_")) target = target.slice(8);
   else if (target.startsWith("finding") && /^\d+$/.test(target.slice(7))) target = target.slice(7);

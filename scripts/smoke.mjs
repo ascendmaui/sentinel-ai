@@ -941,11 +941,23 @@ check(incSeraphim.count > 0, "GET /api/incidents?seraphim=recon filter");
 const csCase01 = await get("/api/case-studies/case-01");
 check(csCase01.status === 200 && (await csCase01.json()).id === "F-01", "GET /api/case-studies/case-01 (case- prefix)");
 
+const csRem01 = await get("/api/case-studies/rem-01");
+check(csRem01.status === 200 && (await csRem01.json()).id === "F-01", "GET /api/case-studies/rem-01 (rem- prefix)");
+
 const csCaseIdFilter = await (await get("/api/case-studies?id=case-1")).json();
 check(csCaseIdFilter.count === 1 && csCaseIdFilter.findings[0].id === "F-01", "GET /api/case-studies?id=case-1 filter");
 
+const csSevFallback = await (await get("/api/case-studies?severity=&sev=med")).json();
+check(csSevFallback.count === 4, "GET /api/case-studies?severity=&sev=med empty-string alias fallback");
+
+const postsTitleFallback = await (await get("/api/posts?title=&name=incident")).json();
+check(postsTitleFallback.count > 0, "GET /api/posts?title=&name=incident empty-string alias fallback");
+
 const brandQFilter = await (await get("/api/brand?q=passive")).json();
 check(brandQFilter.badge && brandQFilter.badge.key === "passive", "GET /api/brand?q=passive query filter");
+
+const brandAliasFallback = await (await get("/api/brand?badge=&key=auth")).json();
+check(brandAliasFallback.badge && brandAliasFallback.badge.key === "auth", "GET /api/brand?badge=&key=auth alias fallback");
 
 const srcUrlParam = encodeURIComponent("https://openai.com/index/hugging-face-incident-and-the-road-ahead/");
 const srcItemByUrl = await get(`/api/sources/${srcUrlParam}`);

@@ -98,6 +98,8 @@ export function badgeByKey(key: string): TrustBadge | undefined {
   if (!target) return undefined;
   target = target.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
   target = target.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
+  target = target.replace(/^(?:badges|badge|trust|trust-badges)\//, "");
+  target = target.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
   if (target.startsWith("badge-") || target.startsWith("badge_")) target = target.slice(6);
   else if (target.startsWith("badge") && /^\d+$/.test(target.slice(5))) target = target.slice(5);
   else if (target.startsWith("b-") || target.startsWith("b_")) target = target.slice(2);

@@ -258,41 +258,49 @@ export function parseSortOrder(params: URLSearchParams, paramName = "order"): So
 
 /**
  * Safely extracts a trimmed lowercase query string from URL search parameters.
- * When paramName is "q", also accepts "query", "search", "keyword", "term", "filter", or "find".
+ * When paramName is "q" (or omitted), also checks "query", "search", "keyword", "term", "filter", or "find".
+ * Accepts multiple parameter keys in order of precedence and falls back across empty values.
  * Returns undefined if missing or containing only whitespace.
  */
-export function parseSearchQuery(params: URLSearchParams, paramName = "q"): string | undefined {
-  if (!params || typeof params.get !== "function" || !paramName || typeof paramName !== "string") return undefined;
-  const cleanParam = paramName.trim();
-  if (!cleanParam) return undefined;
-  const keys =
-    cleanParam === "q"
-      ? [
-          "q",
-          "query",
-          "search",
-          "keyword",
-          "term",
-          "filter",
-          "find",
-          "lookup",
-          "q_term",
-          "qTerm",
-          "query_term",
-          "queryTerm",
-          "search_query",
-          "searchQuery",
-          "search_term",
-          "searchTerm",
-          "search_text",
-          "searchText",
-          "text",
-          "filter_text",
-          "filterText",
-          "keywords",
-        ]
-      : [cleanParam];
-  const raw = getFirstParam(params, ...keys);
+export function parseSearchQuery(params: URLSearchParams, ...paramNames: string[]): string | undefined {
+  if (!params || typeof params.get !== "function") return undefined;
+  const rawNames = paramNames.length > 0 ? paramNames : ["q"];
+  const expandedKeys: string[] = [];
+  for (const name of rawNames) {
+    if (!name || typeof name !== "string") continue;
+    const clean = name.trim();
+    if (!clean) continue;
+    if (clean === "q") {
+      expandedKeys.push(
+        "q",
+        "query",
+        "search",
+        "keyword",
+        "term",
+        "filter",
+        "find",
+        "lookup",
+        "q_term",
+        "qTerm",
+        "query_term",
+        "queryTerm",
+        "search_query",
+        "searchQuery",
+        "search_term",
+        "searchTerm",
+        "search_text",
+        "searchText",
+        "text",
+        "filter_text",
+        "filterText",
+        "keywords"
+      );
+    } else {
+      expandedKeys.push(clean);
+    }
+  }
+  if (expandedKeys.length === 0) return undefined;
+  const raw = getFirstParam(params, ...expandedKeys);
   if (!raw) return undefined;
   let trimmed = raw;
   try {

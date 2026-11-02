@@ -97,6 +97,10 @@ describe("brand", () => {
     expect(badgeByKey("##passive")).toEqual(TRUE_BADGES[0]);
     expect(badgeByKey("++passive")).toEqual(TRUE_BADGES[0]);
     expect(badgeByKey("#passive#")).toEqual(TRUE_BADGES[0]);
+    expect(badgeByKey("badges/passive")).toEqual(TRUE_BADGES[0]);
+    expect(badgeByKey("badge/passive")).toEqual(TRUE_BADGES[0]);
+    expect(badgeByKey("trust/auth")).toEqual(TRUE_BADGES[1]);
+    expect(badgeByKey("trust-badges/auth")).toEqual(TRUE_BADGES[1]);
     expect(badgeByKey("Passive recon only")).toEqual(TRUE_BADGES[0]);
     expect(badgeByKey("Written client authorization required")).toEqual(TRUE_BADGES[1]);
     expect(badgeByKey("probing")).toEqual(TRUE_BADGES[0]);
@@ -341,6 +345,11 @@ describe("sources registry", () => {
     expect(sourceById("#oaiAug#")).toBe(sources[0]);
     expect(sourceById("https://openai.com/index/hugging-face-incident-and-the-road-ahead/")).toBe(sources[0]);
     expect(sourceById("https://openai.com/index/hugging-face-incident-and-the-road-ahead")).toBe(sources[0]);
+    expect(sourceById("sources/oaiAug")).toBe(S.oaiAug);
+    expect(sourceById("refs/oaiAug")).toBe(S.oaiAug);
+    expect(sourceById("source/oaiAug")).toBe(S.oaiAug);
+    expect(sourceById("sources/1")).toBe(sources[0]);
+    expect(sourceById("refs/1")).toBe(sources[0]);
     expect(sourceById("")).toBeUndefined();
     expect(sourceById("   ")).toBeUndefined();
     expect(sourceById(undefined as unknown as string)).toBeUndefined();
@@ -395,6 +404,10 @@ describe("posts", () => {
     expect(postBySlug("p-" + posts[0].slug)).toBe(posts[0]);
     expect(postBySlug("article-" + posts[0].slug)).toBe(posts[0]);
     expect(postBySlug("art-" + posts[0].slug)).toBe(posts[0]);
+    expect(postBySlug(`blog/${posts[0].slug}`)).toBe(posts[0]);
+    expect(postBySlug(`/blog/${posts[0].slug}`)).toBe(posts[0]);
+    expect(postBySlug(`posts/${posts[0].slug}`)).toBe(posts[0]);
+    expect(postBySlug(`article/${posts[0].slug}`)).toBe(posts[0]);
     expect(postBySlug("1")).toBe(posts[0]);
     expect(postBySlug("01")).toBe(posts[0]);
     expect(postBySlug("+1")).toBe(posts[0]);
@@ -549,6 +562,11 @@ describe("tiers", () => {
     expect(tierById("r_1")).toBe(tiers[0]);
     expect(tierById("r1")).toBe(tiers[0]);
     expect(tierById("r01")).toBe(tiers[0]);
+    expect(tierById("tiers/seraphim")).toBe(tiers[0]);
+    expect(tierById("tier/seraphim")).toBe(tiers[0]);
+    expect(tierById("pricing/seraphim")).toBe(tiers[0]);
+    expect(tierById("services/seraphim")).toBe(tiers[0]);
+    expect(tierById("tiers/1")).toBe(tiers[0]);
   });
 
   it("matrix and helper cover all tiers correctly", () => {
@@ -676,6 +694,11 @@ describe("incidents", () => {
     expect(incidentById("//i-1//")).toBe(first);
     expect(incidentById("+1")).toBe(first);
     expect(incidentById("+01")).toBe(first);
+    expect(incidentById("incidents/openai-huggingface-2026")).toBe(first);
+    expect(incidentById("incident/openai-huggingface-2026")).toBe(first);
+    expect(incidentById("cases/openai-huggingface-2026")).toBe(first);
+    expect(incidentById("incidents/01")).toBe(first);
+    expect(incidentById("case/1")).toBe(first);
   });
 
   it("scenarios have unique ids, contiguous H-numbering, non-empty sections, and cite only registered sources", () => {
@@ -751,6 +774,9 @@ describe("incidents", () => {
     expect(scenarioById("##legacy-internal-app")).toBe(first);
     expect(scenarioById("++h1")).toBe(first);
     expect(scenarioById("#h1#")).toBe(first);
+    expect(scenarioById("scenarios/h1")).toBe(first);
+    expect(scenarioById("scenario/h1")).toBe(first);
+    expect(scenarioById("scenarios/1")).toBe(first);
     expect(incidentById("##openai-huggingface-2026")).toBe(incidents[0]);
     expect(incidentById("++01")).toBe(incidents[0]);
     expect(incidentById("#01#")).toBe(incidents[0]);
@@ -847,6 +873,18 @@ describe("case studies / findings", () => {
     expect(remediationById("case_study_01")?.id).toBe("F-01");
     expect(remediationById("/f-01/")?.id).toBe("F-01");
     expect(remediationById("//cs-1//")?.id).toBe("F-01");
+    expect(findingById("case-studies/f-01")?.id).toBe("F-01");
+    expect(findingById("findings/f-01")?.id).toBe("F-01");
+    expect(findingById("rem-01")?.id).toBe("F-01");
+    expect(findingById("rem-1")?.id).toBe("F-01");
+    expect(findingById("remediation-01")?.id).toBe("F-01");
+    expect(findingById("remediation-1")?.id).toBe("F-01");
+    expect(remediationById("case-studies/f-01")?.id).toBe("F-01");
+    expect(remediationById("findings/f-01")?.id).toBe("F-01");
+    expect(remediationById("rem-01")?.id).toBe("F-01");
+    expect(remediationById("rem-1")?.id).toBe("F-01");
+    expect(remediationById("remediation-01")?.id).toBe("F-01");
+    expect(remediationById("remediation-1")?.id).toBe("F-01");
   });
 
   it("remediationById handles case-insensitivity, hyphenless form, single-digit and extension forms, and returns undefined for unknown", () => {

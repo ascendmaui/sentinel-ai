@@ -10,48 +10,56 @@ export function GET(req?: Request): Response {
   if (req?.url) {
     try {
       const url = new URL(req.url, "http://localhost");
-      const id =
-        parseSearchQuery(url.searchParams, "id") ||
-        parseSearchQuery(url.searchParams, "source") ||
-        parseSearchQuery(url.searchParams, "source_id") ||
-        parseSearchQuery(url.searchParams, "sourceId") ||
-        parseSearchQuery(url.searchParams, "source_slug") ||
-        parseSearchQuery(url.searchParams, "sourceSlug") ||
-        parseSearchQuery(url.searchParams, "src") ||
-        parseSearchQuery(url.searchParams, "src_id") ||
-        parseSearchQuery(url.searchParams, "srcId") ||
-        parseSearchQuery(url.searchParams, "ref") ||
-        parseSearchQuery(url.searchParams, "ref_id") ||
-        parseSearchQuery(url.searchParams, "refId") ||
-        parseSearchQuery(url.searchParams, "reference") ||
-        parseSearchQuery(url.searchParams, "reference_id") ||
-        parseSearchQuery(url.searchParams, "referenceId") ||
-        parseSearchQuery(url.searchParams, "s") ||
-        parseSearchQuery(url.searchParams, "s_id") ||
-        parseSearchQuery(url.searchParams, "sId") ||
-        parseSearchQuery(url.searchParams, "slug") ||
-        parseSearchQuery(url.searchParams, "n") ||
-        parseSearchQuery(url.searchParams, "num") ||
-        parseSearchQuery(url.searchParams, "number");
+      const id = parseSearchQuery(
+        url.searchParams,
+        "id",
+        "source",
+        "source_id",
+        "sourceId",
+        "source_slug",
+        "sourceSlug",
+        "src",
+        "src_id",
+        "srcId",
+        "ref",
+        "ref_id",
+        "refId",
+        "reference",
+        "reference_id",
+        "referenceId",
+        "s",
+        "s_id",
+        "sId",
+        "slug",
+        "n",
+        "num",
+        "number"
+      );
       const q = parseSearchQuery(url.searchParams);
-      const year = parseSearchQuery(url.searchParams, "year") || parseSearchQuery(url.searchParams, "date");
-      const label =
-        parseSearchQuery(url.searchParams, "label") ||
-        parseSearchQuery(url.searchParams, "title") ||
-        parseSearchQuery(url.searchParams, "name") ||
-        parseSearchQuery(url.searchParams, "headline");
-      const note =
-        parseSearchQuery(url.searchParams, "note") ||
-        parseSearchQuery(url.searchParams, "type") ||
-        parseSearchQuery(url.searchParams, "credibility") ||
-        parseSearchQuery(url.searchParams, "standing") ||
-        parseSearchQuery(url.searchParams, "kind");
-      const urlFilter =
-        parseSearchQuery(url.searchParams, "url") ||
-        parseSearchQuery(url.searchParams, "link") ||
-        parseSearchQuery(url.searchParams, "domain") ||
-        parseSearchQuery(url.searchParams, "href") ||
-        parseSearchQuery(url.searchParams, "uri");
+      const year = parseSearchQuery(url.searchParams, "year", "date", "published");
+      const label = parseSearchQuery(
+        url.searchParams,
+        "label",
+        "title",
+        "name",
+        "headline"
+      );
+      const note = parseSearchQuery(
+        url.searchParams,
+        "note",
+        "type",
+        "credibility",
+        "standing",
+        "kind"
+      );
+      const urlFilter = parseSearchQuery(
+        url.searchParams,
+        "url",
+        "link",
+        "domain",
+        "href",
+        "uri"
+      );
       const limit = parseLimit(url.searchParams);
       const offset = parseOffset(url.searchParams, 10000, limit);
       const order = parseSortOrder(url.searchParams);

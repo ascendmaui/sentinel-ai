@@ -11,7 +11,11 @@ export function GET(_req?: Request): Response {
     status: "ok",
     service: BRAND_NAME,
     environment: process.env.VERCEL_ENV?.trim() || "local",
-    commit: process.env.VERCEL_GIT_COMMIT_SHA?.trim().slice(0, 7) || null,
+    commit:
+      process.env.VERCEL_GIT_COMMIT_SHA?.trim().slice(0, 7) ||
+      process.env.GITHUB_SHA?.trim().slice(0, 7) ||
+      process.env.COMMIT_REF?.trim().slice(0, 7) ||
+      null,
     timestamp: new Date().toISOString(),
   });
 }

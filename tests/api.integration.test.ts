@@ -4383,6 +4383,145 @@ describe("Cross-route end-to-end user journeys and relational data integrity", (
     const brandQData2 = await brandQRes2.json();
     expect(brandQData2.badge.key).toBe("passive");
   });
+
+  it("parseSearchQuery supports multi-parameter aliases, precedence, and empty-string fallback", () => {
+    // Multi-key alias fallback when earlier param is empty
+    expect(parseSearchQuery(new URLSearchParams("title=&name=incident"), "title", "name")).toBe("incident");
+    expect(parseSearchQuery(new URLSearchParams("a=&b=&c=third"), "a", "b", "c")).toBe("third");
+
+    // Precedence: returns first non-empty value
+    expect(parseSearchQuery(new URLSearchParams("title=first&name=second"), "title", "name")).toBe("first");
+
+    // Automatic 'q' alias expansion when 'q' is included in keys
+    expect(parseSearchQuery(new URLSearchParams("tag=&search=deep"), "tag", "q")).toBe("deep");
+    expect(parseSearchQuery(new URLSearchParams("tag=&query=filter_val"), "tag", "q")).toBe("filter_val");
+    expect(parseSearchQuery(new URLSearchParams("category=&find=testing"), "category", "q")).toBe("testing");
+
+    // URL-decoding and trimming across multi-param
+    expect(parseSearchQuery(new URLSearchParams("first=&second=%20hello%20world%20"), "first", "second")).toBe("hello world");
+  });
+
+  it("API item routes support path prefixes and remediation aliases across all endpoints", async () => {
+    // 1. Post item resolves with blog/, posts/, and article/ prefixes
+    const postItem1 = await postOne(req("/api/posts/blog/when-the-test-subject-leaves-the-test"), slugCtx("blog/when-the-test-subject-leaves-the-test"));
+    expect(postItem1.status).toBe(200);
+    expect((await postItem1.json()).slug).toBe("when-the-test-subject-leaves-the-test");
+
+    const postItem2 = await postOne(req("/api/posts/posts/when-the-test-subject-leaves-the-test"), slugCtx("posts/when-the-test-subject-leaves-the-test"));
+    expect(postItem2.status).toBe(200);
+    expect((await postItem2.json()).slug).toBe("when-the-test-subject-leaves-the-test");
+
+    // 2. Incident item resolves with incidents/, incident/, and cases/ prefixes
+    const incItem1 = await incidentOne(req("/api/incidents/incidents/openai-huggingface-2026"), idCtx("incidents/openai-huggingface-2026"));
+    expect(incItem1.status).toBe(200);
+    expect((await incItem1.json()).id).toBe("openai-huggingface-2026");
+
+    const incItem2 = await incidentOne(req("/api/incidents/cases/1"), idCtx("cases/1"));
+    expect(incItem2.status).toBe(200);
+    expect((await incItem2.json()).id).toBe("openai-huggingface-2026");
+
+    // 3. Scenario item resolves with scenarios/ and scenario/ prefixes
+    const scItem1 = await scenarioOne(req("/api/scenarios/scenarios/h1"), idCtx("scenarios/h1"));
+    expect(scItem1.status).toBe(200);
+    expect((await scItem1.json()).id).toBe("legacy-internal-app");
+
+    const scItem2 = await scenarioOne(req("/api/scenarios/scenario/1"), idCtx("scenario/1"));
+    expect(scItem2.status).toBe(200);
+    expect((await scItem2.json()).id).toBe("legacy-internal-app");
+
+    // 4. Tier item resolves with tiers/ and pricing/ prefixes
+    const tierItem1 = await tierOne(req("/api/tiers/tiers/seraphim"), idCtx("tiers/seraphim"));
+    expect(tierItem1.status).toBe(200);
+    expect((await tierItem1.json()).id).toBe("seraphim");
+
+    const tierItem2 = await tierOne(req("/api/tiers/pricing/seraphim"), idCtx("pricing/seraphim"));
+    expect(tierItem2.status).toBe(200);
+    expect((await tierItem2.json()).id).toBe("seraphim");
+
+    // 5. Case studies item resolves with rem-01, remediation-01, and case-studies/ prefixes
+    const csRem1 = await caseStudyOne(req("/api/case-studies/rem-01"), idCtx("rem-01"));
+    expect(csRem1.status).toBe(200);
+    expect((await csRem1.json()).id).toBe("F-01");
+
+    const csRem2 = await caseStudyOne(req("/api/case-studies/remediation-01"), idCtx("remediation-01"));
+    expect(csRem2.status).toBe(200);
+    expect((await csRem2.json()).id).toBe("F-01");
+
+    const csPrefix1 = await caseStudyOne(req("/api/case-studies/case-studies/f-01"), idCtx("case-studies/f-01"));
+    expect(csPrefix1.status).toBe(200);
+    expect((await csPrefix1.json()).id).toBe("F-01");
+
+    // 6. Source item resolves with sources/ and refs/ prefixes
+    const srcItem1 = await sourceOne(req("/api/sources/sources/oaiAug"), idCtx("sources/oaiAug"));
+    expect(srcItem1.status).toBe(200);
+    expect((await srcItem1.json()).id).toBe("oaiAug");
+
+    const srcItem2 = await sourceOne(req("/api/sources/refs/oaiAug"), idCtx("refs/oaiAug"));
+    expect(srcItem2.status).toBe(200);
+    expect((await srcItem2.json()).id).toBe("oaiAug");
+
+    // 7. Brand endpoint resolves ?badge=&key=auth and path prefix badges/
+    const brandParamRes = brandEndpoint(req("/api/brand?badge=&key=auth"));
+    expect(brandParamRes.status).toBe(200);
+    expect((await brandParamRes.json()).badge.key).toBe("auth");
+
+    const brandPrefixRes = brandEndpoint(req("/api/brand?key=badges/passive"));
+    expect(brandPrefixRes.status).toBe(200);
+    expect((await brandPrefixRes.json()).badge.key).toBe("passive");
+  });
+
+  it("API collection routes fall back across secondary aliases when primary alias is empty", async () => {
+    // 1. /api/posts: ?title=&name=incident
+    const postRes = postsIndex(req("/api/posts?title=&name=incident"));
+    expect(postRes.status).toBe(200);
+    const postData = await postRes.json();
+    expect(postData.count).toBeGreaterThan(0);
+
+    // 2. /api/incidents: ?standing=&status=documented
+    const incRes = incidentsIndex(req("/api/incidents?standing=&status=documented"));
+    expect(incRes.status).toBe(200);
+    const incData = await incRes.json();
+    expect(incData.count).toBe(2);
+
+    // 3. /api/scenarios: ?target=&victim=internal
+    const scRes = scenariosIndex(req("/api/scenarios?target=&victim=internal"));
+    expect(scRes.status).toBe(200);
+    const scData = await scRes.json();
+    expect(scData.count).toBeGreaterThan(0);
+
+    // 4. /api/case-studies: ?severity=&sev=med
+    const csRes = caseStudiesIndex(req("/api/case-studies?severity=&sev=med"));
+    expect(csRes.status).toBe(200);
+    const csData = await csRes.json();
+    expect(csData.count).toBe(4);
+
+    // 5. /api/tiers: ?name=&tier_name=seraphim
+    const tierRes = tiersIndex(req("/api/tiers?name=&tier_name=seraphim"));
+    expect(tierRes.status).toBe(200);
+    const tierData = await tierRes.json();
+    expect(tierData.count).toBe(1);
+    expect(tierData.tiers[0].id).toBe("seraphim");
+
+    // 6. /api/sources: ?label=&name=openai
+    const srcRes = sourcesIndex(req("/api/sources?label=&name=openai"));
+    expect(srcRes.status).toBe(200);
+    const srcData = await srcRes.json();
+    expect(srcData.count).toBeGreaterThanOrEqual(3);
+  });
+
+  it("health endpoint falls back to GITHUB_SHA and COMMIT_REF when VERCEL_GIT_COMMIT_SHA is not set", async () => {
+    vi.stubEnv("VERCEL_GIT_COMMIT_SHA", "");
+    vi.stubEnv("GITHUB_SHA", "abcdef1234567890");
+    const ghRes = health();
+    const ghBody = await ghRes.json();
+    expect(ghBody.commit).toBe("abcdef1");
+
+    vi.stubEnv("GITHUB_SHA", "");
+    vi.stubEnv("COMMIT_REF", "9876543210abcdef");
+    const commitRefRes = health();
+    const commitRefBody = await commitRefRes.json();
+    expect(commitRefBody.commit).toBe("9876543");
+  });
 });
 
 

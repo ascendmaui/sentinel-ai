@@ -133,6 +133,8 @@ export const tierById = (id: string): Tier | undefined => {
   if (!target) return undefined;
   target = target.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
   target = target.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
+  target = target.replace(/^(?:tiers|tier|pricing|services|service)\//, "");
+  target = target.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
   if (target.startsWith("tier-") || target.startsWith("tier_")) target = target.slice(5);
   else if (target.startsWith("tier") && /^\d+$/.test(target.slice(4))) target = target.slice(4);
   else if (target.startsWith("tier")) target = target.slice(4);

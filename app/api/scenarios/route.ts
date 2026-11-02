@@ -11,77 +11,98 @@ export function GET(req?: Request): Response {
   if (req?.url) {
     try {
       const url = new URL(req.url, "http://localhost");
-      const id =
-        parseSearchQuery(url.searchParams, "id") ||
-        parseSearchQuery(url.searchParams, "scenario") ||
-        parseSearchQuery(url.searchParams, "scenario_id") ||
-        parseSearchQuery(url.searchParams, "scenarioId") ||
-        parseSearchQuery(url.searchParams, "scenario_no") ||
-        parseSearchQuery(url.searchParams, "scenarioNo") ||
-        parseSearchQuery(url.searchParams, "scenario_slug") ||
-        parseSearchQuery(url.searchParams, "scenarioSlug") ||
-        parseSearchQuery(url.searchParams, "sc") ||
-        parseSearchQuery(url.searchParams, "sc_id") ||
-        parseSearchQuery(url.searchParams, "scId") ||
-        parseSearchQuery(url.searchParams, "h") ||
-        parseSearchQuery(url.searchParams, "h_id") ||
-        parseSearchQuery(url.searchParams, "hId") ||
-        parseSearchQuery(url.searchParams, "slug");
-      const n =
-        parseSearchQuery(url.searchParams, "n") ||
-        parseSearchQuery(url.searchParams, "num") ||
-        parseSearchQuery(url.searchParams, "number") ||
-        parseSearchQuery(url.searchParams, "h") ||
-        parseSearchQuery(url.searchParams, "h_id") ||
-        parseSearchQuery(url.searchParams, "hId") ||
-        parseSearchQuery(url.searchParams, "scenario_no") ||
-        parseSearchQuery(url.searchParams, "scenarioNo");
-      const title =
-        parseSearchQuery(url.searchParams, "title") ||
-        parseSearchQuery(url.searchParams, "name") ||
-        parseSearchQuery(url.searchParams, "headline");
-      const ref =
-        parseSearchQuery(url.searchParams, "ref") ||
-        parseSearchQuery(url.searchParams, "reference") ||
-        parseSearchQuery(url.searchParams, "source") ||
-        parseSearchQuery(url.searchParams, "source_id") ||
-        parseSearchQuery(url.searchParams, "sourceId") ||
-        parseSearchQuery(url.searchParams, "src") ||
-        parseSearchQuery(url.searchParams, "src_id") ||
-        parseSearchQuery(url.searchParams, "srcId");
-      const weakness =
-        parseSearchQuery(url.searchParams, "weakness") ||
-        parseSearchQuery(url.searchParams, "weaknessClass") ||
-        parseSearchQuery(url.searchParams, "weakness_class") ||
-        parseSearchQuery(url.searchParams, "vuln") ||
-        parseSearchQuery(url.searchParams, "vulnerability") ||
-        parseSearchQuery(url.searchParams, "flaw");
-      const target =
-        parseSearchQuery(url.searchParams, "target") ||
-        parseSearchQuery(url.searchParams, "victim") ||
-        parseSearchQuery(url.searchParams, "system") ||
-        parseSearchQuery(url.searchParams, "environment");
-      const control =
-        parseSearchQuery(url.searchParams, "control") ||
-        parseSearchQuery(url.searchParams, "controls") ||
-        parseSearchQuery(url.searchParams, "mitigation") ||
-        parseSearchQuery(url.searchParams, "defense") ||
-        parseSearchQuery(url.searchParams, "remediation");
-      const speed =
-        parseSearchQuery(url.searchParams, "speed") ||
-        parseSearchQuery(url.searchParams, "rate") ||
-        parseSearchQuery(url.searchParams, "tempo") ||
-        parseSearchQuery(url.searchParams, "pace");
-      const approach =
-        parseSearchQuery(url.searchParams, "approach") ||
-        parseSearchQuery(url.searchParams, "technique") ||
-        parseSearchQuery(url.searchParams, "method") ||
-        parseSearchQuery(url.searchParams, "attack");
-      const seraphim =
-        parseSearchQuery(url.searchParams, "seraphim") ||
-        parseSearchQuery(url.searchParams, "analysis") ||
-        parseSearchQuery(url.searchParams, "assessment") ||
-        parseSearchQuery(url.searchParams, "recommendation");
+      const id = parseSearchQuery(
+        url.searchParams,
+        "id",
+        "scenario",
+        "scenario_id",
+        "scenarioId",
+        "scenario_no",
+        "scenarioNo",
+        "scenario_slug",
+        "scenarioSlug",
+        "sc",
+        "sc_id",
+        "scId",
+        "h",
+        "h_id",
+        "hId",
+        "slug"
+      );
+      const n = parseSearchQuery(
+        url.searchParams,
+        "n",
+        "num",
+        "number",
+        "no",
+        "h",
+        "h_id",
+        "hId",
+        "scenario_no",
+        "scenarioNo"
+      );
+      const title = parseSearchQuery(url.searchParams, "title", "name", "headline");
+      const ref = parseSearchQuery(
+        url.searchParams,
+        "ref",
+        "ref_id",
+        "refId",
+        "reference",
+        "source",
+        "source_id",
+        "sourceId",
+        "src",
+        "src_id",
+        "srcId"
+      );
+      const weakness = parseSearchQuery(
+        url.searchParams,
+        "weakness",
+        "weaknessClass",
+        "weakness_class",
+        "vuln",
+        "vulnerability",
+        "flaw"
+      );
+      const target = parseSearchQuery(
+        url.searchParams,
+        "target",
+        "victim",
+        "system",
+        "environment",
+        "host"
+      );
+      const control = parseSearchQuery(
+        url.searchParams,
+        "control",
+        "controls",
+        "mitigation",
+        "defense",
+        "remediation"
+      );
+      const speed = parseSearchQuery(
+        url.searchParams,
+        "speed",
+        "rate",
+        "tempo",
+        "pace",
+        "velocity"
+      );
+      const approach = parseSearchQuery(
+        url.searchParams,
+        "approach",
+        "technique",
+        "method",
+        "attack",
+        "vector"
+      );
+      const seraphim = parseSearchQuery(
+        url.searchParams,
+        "seraphim",
+        "analysis",
+        "assessment",
+        "recommendation"
+      );
       const q = parseSearchQuery(url.searchParams);
       const limit = parseLimit(url.searchParams);
       const offset = parseOffset(url.searchParams, 10000, limit);
