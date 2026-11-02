@@ -101,6 +101,13 @@ describe("brand", () => {
     expect(badgeByKey("badge/passive")).toEqual(TRUE_BADGES[0]);
     expect(badgeByKey("trust/auth")).toEqual(TRUE_BADGES[1]);
     expect(badgeByKey("trust-badges/auth")).toEqual(TRUE_BADGES[1]);
+    expect(badgeByKey("trust-auth")).toEqual(TRUE_BADGES[1]);
+    expect(badgeByKey("trust_auth")).toEqual(TRUE_BADGES[1]);
+    expect(badgeByKey("trust-badge-auth")).toEqual(TRUE_BADGES[1]);
+    expect(badgeByKey("trust_badge_auth")).toEqual(TRUE_BADGES[1]);
+    expect(badgeByKey("trust-1")).toEqual(TRUE_BADGES[0]);
+    expect(badgeByKey("trust1")).toEqual(TRUE_BADGES[0]);
+    expect(badgeByKey("badges/trust/auth")).toEqual(TRUE_BADGES[1]);
     expect(badgeByKey("Passive recon only")).toEqual(TRUE_BADGES[0]);
     expect(badgeByKey("Written client authorization required")).toEqual(TRUE_BADGES[1]);
     expect(badgeByKey("probing")).toEqual(TRUE_BADGES[0]);
@@ -348,6 +355,9 @@ describe("sources registry", () => {
     expect(sourceById("sources/oaiAug")).toBe(S.oaiAug);
     expect(sourceById("refs/oaiAug")).toBe(S.oaiAug);
     expect(sourceById("source/oaiAug")).toBe(S.oaiAug);
+    expect(sourceById("api/sources/oaiAug")).toBe(S.oaiAug);
+    expect(sourceById("api/refs/oaiAug")).toBe(S.oaiAug);
+    expect(sourceById("sources/refs/oaiAug")).toBe(S.oaiAug);
     expect(sourceById("sources/1")).toBe(sources[0]);
     expect(sourceById("refs/1")).toBe(sources[0]);
     expect(sourceById("")).toBeUndefined();
@@ -408,6 +418,9 @@ describe("posts", () => {
     expect(postBySlug(`/blog/${posts[0].slug}`)).toBe(posts[0]);
     expect(postBySlug(`posts/${posts[0].slug}`)).toBe(posts[0]);
     expect(postBySlug(`article/${posts[0].slug}`)).toBe(posts[0]);
+    expect(postBySlug(`api/posts/${posts[0].slug}`)).toBe(posts[0]);
+    expect(postBySlug(`api/blog/${posts[0].slug}`)).toBe(posts[0]);
+    expect(postBySlug(`blog/posts/${posts[0].slug}`)).toBe(posts[0]);
     expect(postBySlug("1")).toBe(posts[0]);
     expect(postBySlug("01")).toBe(posts[0]);
     expect(postBySlug("+1")).toBe(posts[0]);
@@ -566,6 +579,9 @@ describe("tiers", () => {
     expect(tierById("tier/seraphim")).toBe(tiers[0]);
     expect(tierById("pricing/seraphim")).toBe(tiers[0]);
     expect(tierById("services/seraphim")).toBe(tiers[0]);
+    expect(tierById("api/tiers/seraphim")).toBe(tiers[0]);
+    expect(tierById("api/pricing/seraphim")).toBe(tiers[0]);
+    expect(tierById("tiers/pricing/seraphim")).toBe(tiers[0]);
     expect(tierById("tiers/1")).toBe(tiers[0]);
   });
 
