@@ -1,7 +1,7 @@
 import { getFirstParam, json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
 import { tiers, tierById, tierHref, matrix, helper, ENGAGEMENT_TERMS } from "../../../lib/tiers";
 
-/** Service tiers index as JSON: all four engagement tiers and comparison matrix. Supports ?id=, ?tier=, ?name=, ?cadence=, ?positioning=, ?rank=, ?feature=, ?included=, ?deliverable=, ?q=, ?order=, ?sort=, ?offset=, ?limit=, ?take=, and ?page=. */
+/** Service tiers index as JSON: all four engagement tiers and comparison matrix. Supports ?id=, ?tier=, ?name=, ?cadence=, ?positioning=, ?rank=, ?feature=, ?included=, ?deliverable=, ?tagline=, ?forWho=, ?audience=, ?fitWhen=, ?fit=, ?excluded=, ?q=, ?order=, ?sort=, ?offset=, ?limit=, ?take=, and ?page=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -53,6 +53,38 @@ export function GET(req?: Request): Response {
         "included",
         "deliverable",
         "service"
+      );
+      const tagline = parseSearchQuery(
+        url.searchParams,
+        "tagline",
+        "motto",
+        "slogan"
+      );
+      const forWho = parseSearchQuery(
+        url.searchParams,
+        "forWho",
+        "for_who",
+        "audience",
+        "target",
+        "who",
+        "for"
+      );
+      const fitWhen = parseSearchQuery(
+        url.searchParams,
+        "fitWhen",
+        "fit_when",
+        "fit",
+        "when",
+        "scenario"
+      );
+      const excluded = parseSearchQuery(
+        url.searchParams,
+        "excluded",
+        "notIncluded",
+        "not_included",
+        "omitted",
+        "out_of_scope",
+        "outOfScope"
       );
       const rankParam = getFirstParam(
         url.searchParams,
@@ -123,6 +155,22 @@ export function GET(req?: Request): Response {
 
       if (positioning) {
         list = list.filter((t) => t.positioning.toLowerCase().includes(positioning));
+      }
+
+      if (tagline) {
+        list = list.filter((t) => t.tagline.toLowerCase().includes(tagline));
+      }
+
+      if (forWho) {
+        list = list.filter((t) => t.forWho.toLowerCase().includes(forWho));
+      }
+
+      if (fitWhen) {
+        list = list.filter((t) => t.fitWhen.toLowerCase().includes(fitWhen));
+      }
+
+      if (excluded) {
+        list = list.filter((t) => t.notIncluded.some((item) => item.toLowerCase().includes(excluded)));
       }
 
       if (rank !== undefined) {

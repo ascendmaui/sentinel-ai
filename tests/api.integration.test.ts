@@ -4522,6 +4522,153 @@ describe("Cross-route end-to-end user journeys and relational data integrity", (
     const commitRefBody = await commitRefRes.json();
     expect(commitRefBody.commit).toBe("9876543");
   });
+
+  it("parseLimit, parsePage, parseOffset, and parseSortOrder fall back across aliases when primary values are invalid", () => {
+    // 1. parseLimit falls back when primary is 0, negative, or non-numeric
+    expect(parseLimit(new URLSearchParams("limit=0&take=5"))).toBe(5);
+    expect(parseLimit(new URLSearchParams("limit=invalid&take=10"))).toBe(10);
+    expect(parseLimit(new URLSearchParams("limit=-1&per_page=15"))).toBe(15);
+    expect(parseLimit(new URLSearchParams("limit=1e3&size=20"))).toBe(20);
+    expect(parseLimit(new URLSearchParams("limit=0&take=0"))).toBeUndefined();
+
+    // 2. parsePage falls back when primary is 0, negative, or non-numeric
+    expect(parsePage(new URLSearchParams("page=0&p=3"))).toBe(3);
+    expect(parsePage(new URLSearchParams("page=abc&p=2"))).toBe(2);
+    expect(parsePage(new URLSearchParams("page=-5&pageNum=4"))).toBe(4);
+    expect(parsePage(new URLSearchParams("page=0&p=0"))).toBeUndefined();
+
+    // 3. parseOffset falls back when primary is negative or non-numeric
+    expect(parseOffset(new URLSearchParams("offset=invalid&skip=10"))).toBe(10);
+    expect(parseOffset(new URLSearchParams("offset=-5&skip=20"))).toBe(20);
+    expect(parseOffset(new URLSearchParams("offset=1e2&from=30"))).toBe(30);
+
+    // 4. parseSortOrder falls back when primary is unrecognized
+    expect(parseSortOrder(new URLSearchParams("order=custom&dir=asc"))).toBe("asc");
+    expect(parseSortOrder(new URLSearchParams("order=unknown&sort=desc"))).toBe("desc");
+    expect(parseSortOrder(new URLSearchParams("order=invalid&sort_dir=chronological"))).toBe("asc");
+
+    // 5. parseSearchQuery expands query synonyms and falls back across empty aliases
+    expect(parseSearchQuery(new URLSearchParams("search=&term=openai"), "search")).toBe("openai");
+    expect(parseSearchQuery(new URLSearchParams("query=&filter=passive"), "query")).toBe("passive");
+  });
+
+  it("badgeByKey and /api/brand support trust- and trust_badge_ prefixes, numeric indices, and alias fallback", async () => {
+    // 1. badgeByKey prefix resolutions
+    expect(badgeByKey("trust-auth")?.key).toBe("auth");
+    expect(badgeByKey("trust_auth")?.key).toBe("auth");
+    expect(badgeByKey("trust-badge-auth")?.key).toBe("auth");
+    expect(badgeByKey("trust_badge_scoped")?.key).toBe("scoped");
+    expect(badgeByKey("trust-1")?.key).toBe("passive");
+    expect(badgeByKey("trust1")?.key).toBe("passive");
+    expect(badgeByKey("badges/trust/auth")?.key).toBe("auth");
+
+    // 2. /api/brand with trust alias and prefixes
+    const res1 = brandEndpoint(req("/api/brand?trust=auth"));
+    expect((await res1.json()).badge.key).toBe("auth");
+
+    const res2 = brandEndpoint(req("/api/brand?trust_badge=scoped"));
+    expect((await res2.json()).badge.key).toBe("scoped");
+
+    const res3 = brandEndpoint(req("/api/brand?badges=retest"));
+    expect((await res3.json()).badge.key).toBe("retest");
+
+    const res4 = brandEndpoint(req("/api/brand?badge=&key=local"));
+    expect((await res4.json()).badge.key).toBe("local");
+  });
+
+  it("blog posts route supports body content search, duration range filtering, and minute suffixes", async () => {
+    // 1. Content search matching body blocks (ExploitGym is mentioned in post body)
+    const contentRes = postsIndex(req("/api/posts?content=ExploitGym"));
+    expect(contentRes.status).toBe(200);
+    const contentData = await contentRes.json();
+    expect(contentData.count).toBe(1);
+    expect(contentData.posts[0].slug).toBe("when-the-test-subject-leaves-the-test");
+
+    // 2. Duration range filtering (?minMins= and ?maxMins=)
+    const rangeRes = postsIndex(req("/api/posts?minMins=7&maxMins=9"));
+    expect(rangeRes.status).toBe(200);
+    const rangeData = await rangeRes.json();
+    expect(rangeData.count).toBeGreaterThan(0);
+    expect(rangeData.posts.every((p: { readMins: number }) => p.readMins >= 7 && p.readMins <= 9)).toBe(true);
+
+    // 3. Minute suffix parsing (e.g. 8m, 8min, 8mins)
+    const suffixRes = postsIndex(req("/api/posts?readMins=8m"));
+    expect(suffixRes.status).toBe(200);
+    const suffixData = await suffixRes.json();
+    expect(suffixData.count).toBeGreaterThan(0);
+    expect(suffixData.posts.every((p: { readMins: number }) => p.readMins === 8)).toBe(true);
+  });
+
+  it("service tiers route supports tagline, audience (forWho), fit scenario (fitWhen), and excluded filters", async () => {
+    // 1. Tagline filter
+    const tagRes = tiersIndex(req("/api/tiers?tagline=engagement"));
+    expect(tagRes.status).toBe(200);
+    const tagData = await tagRes.json();
+    expect(tagData.count).toBe(1);
+    expect(tagData.tiers[0].id).toBe("seraphim");
+
+    // 2. Audience filter (?forWho= / ?audience=)
+    const audRes = tiersIndex(req("/api/tiers?audience=founders"));
+    expect(audRes.status).toBe(200);
+    const audData = await audRes.json();
+    expect(audData.count).toBe(1);
+    expect(audData.tiers[0].id).toBe("angels");
+
+    // 3. Fit scenario filter (?fitWhen= / ?fit=)
+    const fitRes = tiersIndex(req("/api/tiers?fit=deadline"));
+    expect(fitRes.status).toBe(200);
+    const fitData = await fitRes.json();
+    expect(fitData.count).toBe(1);
+    expect(fitData.tiers[0].id).toBe("thrones");
+
+    // 4. Excluded filter (?excluded= / ?notIncluded=)
+    const exclRes = tiersIndex(req("/api/tiers?excluded=scanner"));
+    expect(exclRes.status).toBe(200);
+    const exclData = await exclRes.json();
+    expect(exclData.count).toBe(1);
+    expect(exclData.tiers[0].id).toBe("angels");
+  });
+
+  it("case studies route supports remediation lifecycle filters: ?changed=, ?checked=, and ?found=", async () => {
+    // 1. Filter by change description (?changed=)
+    const changeRes = caseStudiesIndex(req("/api/case-studies?changed=constant-time"));
+    expect(changeRes.status).toBe(200);
+    const changeData = await changeRes.json();
+    expect(changeData.count).toBe(1);
+    expect(changeData.findings[0].id).toBe("F-01");
+
+    // 2. Filter by verification check (?checked=)
+    const checkRes = caseStudiesIndex(req("/api/case-studies?checked=US-Eastern"));
+    expect(checkRes.status).toBe(200);
+    const checkData = await checkRes.json();
+    expect(checkData.count).toBe(1);
+    expect(checkData.findings[0].id).toBe("F-02");
+
+    // 3. Filter by issue discovery (?found=)
+    const foundRes = caseStudiesIndex(req("/api/case-studies?found=fire-and-forget"));
+    expect(foundRes.status).toBe(200);
+    const foundData = await foundRes.json();
+    expect(foundData.count).toBe(1);
+    expect(foundData.findings[0].id).toBe("F-04");
+  });
+
+  it("nested api/ and route prefixes resolve consistently across entity lookups", async () => {
+    const postItem = await postOne(req("/api/posts/api/posts/when-the-test-subject-leaves-the-test"), slugCtx("api/posts/when-the-test-subject-leaves-the-test"));
+    expect(postItem.status).toBe(200);
+    expect((await postItem.json()).slug).toBe("when-the-test-subject-leaves-the-test");
+
+    const tierItem = await tierOne(req("/api/tiers/api/tiers/cherubim"), idCtx("api/tiers/cherubim"));
+    expect(tierItem.status).toBe(200);
+    expect((await tierItem.json()).id).toBe("cherubim");
+
+    const csItem = await caseStudyOne(req("/api/case-studies/api/findings/f-02"), idCtx("api/findings/f-02"));
+    expect(csItem.status).toBe(200);
+    expect((await csItem.json()).id).toBe("F-02");
+
+    const scItem = await scenarioOne(req("/api/scenarios/api/scenarios/h1"), idCtx("api/scenarios/h1"));
+    expect(scItem.status).toBe(200);
+    expect((await scItem.json()).id).toBe("legacy-internal-app");
+  });
 });
 
 

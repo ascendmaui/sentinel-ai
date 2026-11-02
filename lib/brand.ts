@@ -98,10 +98,13 @@ export function badgeByKey(key: string): TrustBadge | undefined {
   if (!target) return undefined;
   target = target.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
   target = target.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
-  target = target.replace(/^(?:badges|badge|trust|trust-badges)\//, "");
+  target = target.replace(/^(?:(?:badges|badge|trust|trust-badges|trust-badge)\/)+/, "");
   target = target.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
-  if (target.startsWith("badge-") || target.startsWith("badge_")) target = target.slice(6);
+  if (target.startsWith("trust-badge-") || target.startsWith("trust_badge_")) target = target.slice(12);
+  else if (target.startsWith("trust-") || target.startsWith("trust_")) target = target.slice(6);
+  else if (target.startsWith("badge-") || target.startsWith("badge_")) target = target.slice(6);
   else if (target.startsWith("badge") && /^\d+$/.test(target.slice(5))) target = target.slice(5);
+  else if (target.startsWith("trust") && /^\d+$/.test(target.slice(5))) target = target.slice(5);
   else if (target.startsWith("b-") || target.startsWith("b_")) target = target.slice(2);
   else if (target.startsWith("b") && /^\d+$/.test(target.slice(1))) target = target.slice(1);
   target = target.replace(/^[#+]+/, "").replace(/[#+]+$/, "");

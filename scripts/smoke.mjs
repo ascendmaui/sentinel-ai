@@ -959,6 +959,45 @@ check(brandQFilter.badge && brandQFilter.badge.key === "passive", "GET /api/bran
 const brandAliasFallback = await (await get("/api/brand?badge=&key=auth")).json();
 check(brandAliasFallback.badge && brandAliasFallback.badge.key === "auth", "GET /api/brand?badge=&key=auth alias fallback");
 
+const brandTrustPrefix = await (await get("/api/brand?trust=auth")).json();
+check(brandTrustPrefix.badge && brandTrustPrefix.badge.key === "auth", "GET /api/brand?trust=auth query filter");
+
+const brandTrustNumeric = await (await get("/api/brand?key=trust-1")).json();
+check(brandTrustNumeric.badge && brandTrustNumeric.badge.key === "passive", "GET /api/brand?key=trust-1 numeric prefix");
+
+const postInvalidLimitFallback = await (await get("/api/posts?limit=0&take=2")).json();
+check(postInvalidLimitFallback.count === 2, "GET /api/posts?limit=0&take=2 invalid-primary fallback");
+
+const postContentQuery = await (await get("/api/posts?content=ExploitGym")).json();
+check(postContentQuery.count === 1 && postContentQuery.posts[0].slug === "when-the-test-subject-leaves-the-test", "GET /api/posts?content=ExploitGym body search");
+
+const postMinuteSuffix = await (await get("/api/posts?readMins=8m")).json();
+check(postMinuteSuffix.count > 0 && postMinuteSuffix.posts.every(p => p.readMins === 8), "GET /api/posts?readMins=8m unit-suffix parsing");
+
+const postMinuteRange = await (await get("/api/posts?minMins=7&maxMins=9")).json();
+check(postMinuteRange.count > 0 && postMinuteRange.posts.every(p => p.readMins >= 7 && p.readMins <= 9), "GET /api/posts?minMins=7&maxMins=9 range filter");
+
+const tierTaglineFilter = await (await get("/api/tiers?tagline=engagement")).json();
+check(tierTaglineFilter.count === 1 && tierTaglineFilter.tiers[0].id === "seraphim", "GET /api/tiers?tagline=engagement filter");
+
+const tierAudienceFilter = await (await get("/api/tiers?audience=founders")).json();
+check(tierAudienceFilter.count === 1 && tierAudienceFilter.tiers[0].id === "angels", "GET /api/tiers?audience=founders filter");
+
+const csChangedFilter = await (await get("/api/case-studies?changed=constant-time")).json();
+check(csChangedFilter.count === 1 && csChangedFilter.findings[0].id === "F-01", "GET /api/case-studies?changed=constant-time filter");
+
+const csCheckedFilter = await (await get("/api/case-studies?checked=US-Eastern")).json();
+check(csCheckedFilter.count === 1 && csCheckedFilter.findings[0].id === "F-02", "GET /api/case-studies?checked=US-Eastern filter");
+
+const nestedPostQuery = await (await get("/api/posts?slug=api/posts/when-the-test-subject-leaves-the-test")).json();
+check(nestedPostQuery.count === 1 && nestedPostQuery.posts[0].slug === "when-the-test-subject-leaves-the-test", "GET /api/posts?slug=api/posts/... nested prefix resolution");
+
+const nestedTierQuery = await (await get("/api/tiers?id=api/tiers/cherubim")).json();
+check(nestedTierQuery.count === 1 && nestedTierQuery.tiers[0].id === "cherubim", "GET /api/tiers?id=api/tiers/... nested prefix resolution");
+
+const nestedCsQuery = await (await get("/api/case-studies?id=api/findings/f-02")).json();
+check(nestedCsQuery.count === 1 && nestedCsQuery.findings[0].id === "F-02", "GET /api/case-studies?id=api/findings/... nested prefix resolution");
+
 const srcUrlParam = encodeURIComponent("https://openai.com/index/hugging-face-incident-and-the-road-ahead/");
 const srcItemByUrl = await get(`/api/sources/${srcUrlParam}`);
 check(srcItemByUrl.status === 200 && (await srcItemByUrl.json()).id === "oaiAug", "GET /api/sources/[url] URL lookup");

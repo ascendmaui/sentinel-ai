@@ -90,6 +90,7 @@ export function getFirstParam(params: URLSearchParams, ...keys: string[]): strin
  * Safely parses an optional integer limit from URL search parameters.
  * Accepts "limit", "take", "pageSize", "page_size", "per_page", "size", "count", or "max".
  * Returns undefined if missing, non-numeric, or <= 0. Bounded by max.
+ * Falls back across candidate keys when earlier aliases contain empty or invalid values (e.g. ?limit=0&take=5).
  * Only plain base-10 integers are accepted: partial numerics such as "1e3", "2.5" or "10abc"
  * are rejected rather than silently truncated by parseInt.
  */
@@ -97,8 +98,7 @@ export function parseLimit(params: URLSearchParams, max = 100): number | undefin
   if (!params || typeof params.get !== "function") return undefined;
   const cap = Math.floor(max);
   if (!Number.isFinite(max) || cap <= 0) return undefined;
-  const raw = getFirstParam(
-    params,
+  const keys = [
     "limit",
     "take",
     "pageSize",
@@ -126,24 +126,31 @@ export function parseLimit(params: URLSearchParams, max = 100): number | undefin
     "recordsPerPage",
     "top",
     "results",
-    "max"
-  );
-  if (!raw || !/^\+?\d+$/.test(raw)) return undefined;
-  const num = Number(raw);
-  if (!(num > 0)) return undefined;
-  return Math.min(num, cap);
+    "max",
+  ];
+  for (const k of keys) {
+    const values = typeof params.getAll === "function" ? params.getAll(k) : [params.get(k)];
+    for (const raw of values) {
+      if (typeof raw !== "string") continue;
+      const v = raw.trim();
+      if (!v || !/^\+?\d+$/.test(v)) continue;
+      const num = Number(v);
+      if (num > 0) return Math.min(num, cap);
+    }
+  }
+  return undefined;
 }
 
 /**
  * Safely parses an optional integer 1-based page number from URL search parameters (accepts "page", "p", "pageNum", "page_num", "pageNumber", "page_number", "pageNo", or "page_no").
  * Returns undefined if missing, non-numeric, or <= 0. Bounded by max.
+ * Falls back across candidate keys when earlier aliases contain empty or invalid values (e.g. ?page=0&p=3).
  */
 export function parsePage(params: URLSearchParams, max = 10000): number | undefined {
   if (!params || typeof params.get !== "function") return undefined;
   const cap = Math.floor(max);
   if (!Number.isFinite(max) || cap <= 0) return undefined;
-  const raw = getFirstParam(
-    params,
+  const keys = [
     "page",
     "p",
     "pg",
@@ -160,18 +167,26 @@ export function parsePage(params: URLSearchParams, max = 10000): number | undefi
     "page_idx",
     "pageIdx",
     "page_index",
-    "pageIndex"
-  );
-  if (!raw || !/^\+?\d+$/.test(raw)) return undefined;
-  const num = Number(raw);
-  if (!(num > 0)) return undefined;
-  return Math.min(num, cap);
+    "pageIndex",
+  ];
+  for (const k of keys) {
+    const values = typeof params.getAll === "function" ? params.getAll(k) : [params.get(k)];
+    for (const raw of values) {
+      if (typeof raw !== "string") continue;
+      const v = raw.trim();
+      if (!v || !/^\+?\d+$/.test(v)) continue;
+      const num = Number(v);
+      if (num > 0) return Math.min(num, cap);
+    }
+  }
+  return undefined;
 }
 
 /**
  * Safely parses an optional integer offset from URL search parameters (accepts "offset", "skip", "start", "from", "start_at", or "startAt").
  * If neither is present, calculates offset from 1-based "page" / "p" when a page size is available.
  * Returns undefined if missing, non-numeric, or < 0. Bounded by optional max.
+ * Falls back across candidate keys when earlier aliases contain empty or invalid values (e.g. ?offset=invalid&skip=10).
  * Only plain base-10 non-negative integers are accepted: partial numerics such as "1e3" or "2.5"
  * are rejected rather than silently truncated by parseInt.
  */
@@ -179,8 +194,7 @@ export function parseOffset(params: URLSearchParams, max = 10000, pageSize?: num
   if (!params || typeof params.get !== "function") return undefined;
   const cap = Math.floor(max);
   if (!Number.isFinite(max) || cap < 0) return undefined;
-  const raw = getFirstParam(
-    params,
+  const keys = [
     "offset",
     "skip",
     "start",
@@ -200,13 +214,17 @@ export function parseOffset(params: URLSearchParams, max = 10000, pageSize?: num
     "offset_idx",
     "offsetIdx",
     "skip_count",
-    "skipCount"
-  );
-  if (raw) {
-    if (!/^\+?\d+$/.test(raw)) return undefined;
-    const num = Number(raw);
-    if (!Number.isFinite(num) || num < 0) return undefined;
-    return Math.min(num, cap);
+    "skipCount",
+  ];
+  for (const k of keys) {
+    const values = typeof params.getAll === "function" ? params.getAll(k) : [params.get(k)];
+    for (const raw of values) {
+      if (typeof raw !== "string") continue;
+      const v = raw.trim();
+      if (!v || !/^\+?\d+$/.test(v)) continue;
+      const num = Number(v);
+      if (Number.isFinite(num) && num >= 0) return Math.min(num, cap);
+    }
   }
   const page = parsePage(params, max);
   if (page && page > 0) {
@@ -223,11 +241,11 @@ export type SortOrder = "asc" | "desc";
 /**
  * Safely parses an optional sort order from URL search parameters (accepts "order", "sort", "sort_order", "sortOrder", "dir", "direction", "sort_dir", "sortDir", "orderBy", or "order_by").
  * Returns "asc" for ascending/oldest/earliest/first, "desc" for descending/newest/latest/last/reverse, or undefined if omitted/unrecognized.
+ * Falls back across candidate keys when earlier aliases contain empty or invalid values (e.g. ?order=invalid&sort=asc).
  */
 export function parseSortOrder(params: URLSearchParams, paramName = "order"): SortOrder | undefined {
   if (!params || typeof params.get !== "function" || !paramName || typeof paramName !== "string") return undefined;
-  const raw = getFirstParam(
-    params,
+  const keys = [
     paramName,
     "sort",
     "sort_order",
@@ -248,11 +266,52 @@ export function parseSortOrder(params: URLSearchParams, paramName = "order"): So
     "sortBy",
     "ordering",
     "orderBy",
-    "order_by"
-  )?.toLowerCase();
-  if (!raw) return undefined;
-  if (raw === "asc" || raw === "ascending" || raw === "oldest" || raw === "earliest" || raw === "first" || raw === "forward" || raw === "up" || raw === "ascend" || raw === "older" || raw === "chronological" || raw === "chrono" || raw === "1" || raw === "+1") return "asc";
-  if (raw === "desc" || raw === "descending" || raw === "newest" || raw === "latest" || raw === "last" || raw === "reverse" || raw === "reversed" || raw === "rev" || raw === "recent" || raw === "backward" || raw === "backwards" || raw === "down" || raw === "descend" || raw === "newer" || raw === "reverse-chronological" || raw === "reverse_chronological" || raw === "-1") return "desc";
+    "order_by",
+  ];
+  const ASC_TOKENS = new Set([
+    "asc",
+    "ascending",
+    "oldest",
+    "earliest",
+    "first",
+    "forward",
+    "up",
+    "ascend",
+    "older",
+    "chronological",
+    "chrono",
+    "1",
+    "+1",
+  ]);
+  const DESC_TOKENS = new Set([
+    "desc",
+    "descending",
+    "newest",
+    "latest",
+    "last",
+    "reverse",
+    "reversed",
+    "rev",
+    "recent",
+    "backward",
+    "backwards",
+    "down",
+    "descend",
+    "newer",
+    "reverse-chronological",
+    "reverse_chronological",
+    "-1",
+  ]);
+  for (const k of keys) {
+    const values = typeof params.getAll === "function" ? params.getAll(k) : [params.get(k)];
+    for (const raw of values) {
+      if (typeof raw !== "string") continue;
+      const v = raw.trim().toLowerCase();
+      if (!v) continue;
+      if (ASC_TOKENS.has(v)) return "asc";
+      if (DESC_TOKENS.has(v)) return "desc";
+    }
+  }
   return undefined;
 }
 
@@ -266,49 +325,66 @@ export function parseSearchQuery(params: URLSearchParams, ...paramNames: string[
   if (!params || typeof params.get !== "function") return undefined;
   const rawNames = paramNames.length > 0 ? paramNames : ["q"];
   const expandedKeys: string[] = [];
+  const Q_SYNONYMS = [
+    "q",
+    "query",
+    "search",
+    "keyword",
+    "term",
+    "filter",
+    "find",
+    "lookup",
+    "q_term",
+    "qTerm",
+    "query_term",
+    "queryTerm",
+    "search_query",
+    "searchQuery",
+    "search_term",
+    "searchTerm",
+    "search_text",
+    "searchText",
+    "text",
+    "filter_text",
+    "filterText",
+    "keywords",
+  ];
   for (const name of rawNames) {
     if (!name || typeof name !== "string") continue;
     const clean = name.trim();
     if (!clean) continue;
-    if (clean === "q") {
-      expandedKeys.push(
-        "q",
-        "query",
-        "search",
-        "keyword",
-        "term",
-        "filter",
-        "find",
-        "lookup",
-        "q_term",
-        "qTerm",
-        "query_term",
-        "queryTerm",
-        "search_query",
-        "searchQuery",
-        "search_term",
-        "searchTerm",
-        "search_text",
-        "searchText",
-        "text",
-        "filter_text",
-        "filterText",
-        "keywords"
-      );
+    if (
+      clean === "q" ||
+      clean === "query" ||
+      clean === "search" ||
+      clean === "keyword" ||
+      clean === "term" ||
+      clean === "filter" ||
+      clean === "find" ||
+      clean === "lookup"
+    ) {
+      for (const syn of Q_SYNONYMS) {
+        if (!expandedKeys.includes(syn)) expandedKeys.push(syn);
+      }
     } else {
-      expandedKeys.push(clean);
+      if (!expandedKeys.includes(clean)) expandedKeys.push(clean);
     }
   }
   if (expandedKeys.length === 0) return undefined;
-  const raw = getFirstParam(params, ...expandedKeys);
-  if (!raw) return undefined;
-  let trimmed = raw;
-  try {
-    trimmed = decodeURIComponent(trimmed);
-  } catch {
-    // keep raw
+  for (const k of expandedKeys) {
+    const values = typeof params.getAll === "function" ? params.getAll(k) : [params.get(k)];
+    for (const raw of values) {
+      if (typeof raw !== "string") continue;
+      let trimmed = raw;
+      try {
+        trimmed = decodeURIComponent(trimmed);
+      } catch {
+        // keep raw
+      }
+      trimmed = trimmed.trim().toLowerCase();
+      if (trimmed.length > 0) return trimmed;
+    }
   }
-  trimmed = trimmed.trim().toLowerCase();
-  return trimmed.length > 0 ? trimmed : undefined;
+  return undefined;
 }
 

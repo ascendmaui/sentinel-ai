@@ -38,7 +38,7 @@ export function sourceById(id: string): Source | undefined {
   let target = trimmed.toLowerCase().replace(/\.(html|json)$/, "");
   target = target.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
   if (!target.startsWith("http://") && !target.startsWith("https://")) {
-    target = target.replace(/^(?:sources|source|refs|ref)\//, "");
+    target = target.replace(/^(?:(?:api\/)?(?:sources|source|refs|ref|references|reference)\/)+/, "");
     target = target.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
   }
   if (target.startsWith("source-") || target.startsWith("source_")) target = target.slice(7);

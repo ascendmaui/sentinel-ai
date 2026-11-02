@@ -3,7 +3,7 @@ import { postBySlug, posts, postWords } from "../../../lib/posts";
 import { sourceById } from "../../../lib/sources";
 import { tierById } from "../../../lib/tiers";
 
-/** Blog index as JSON: post metadata only (no body). Newest first by default. Supports ?slug=, ?id=, ?n=, ?num=, ?post=, ?post_id=, ?postId=, ?post_slug=, ?postSlug=, ?article=, ?article_id=, ?articleId=, ?title=, ?tier=, ?service_tier=, ?source=, ?source_id=, ?sourceId=, ?src=, ?ref=, ?reference=, ?year=, ?date=, ?description=, ?summary=, ?lead=, ?readMins=, ?mins=, ?min=, ?read_mins=, ?read_time=, ?reading_time=, ?q=, ?order=, ?sort=, ?offset=, ?limit=, ?take=, and ?page=. */
+/** Blog index as JSON: post metadata only (no body). Newest first by default. Supports ?slug=, ?id=, ?n=, ?num=, ?post=, ?post_id=, ?postId=, ?post_slug=, ?postSlug=, ?article=, ?article_id=, ?articleId=, ?title=, ?tier=, ?service_tier=, ?source=, ?source_id=, ?sourceId=, ?src=, ?ref=, ?reference=, ?year=, ?date=, ?description=, ?summary=, ?lead=, ?content=, ?body=, ?section=, ?readMins=, ?mins=, ?min=, ?minMins=, ?maxMins=, ?q=, ?order=, ?sort=, ?offset=, ?limit=, ?take=, and ?page=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -61,8 +61,18 @@ export function GET(req?: Request): Response {
         "desc",
         "intro"
       );
+      const content = parseSearchQuery(
+        url.searchParams,
+        "content",
+        "body",
+        "section",
+        "heading",
+        "paragraph",
+        "text_content",
+        "textContent"
+      );
       const q = parseSearchQuery(url.searchParams);
-      const readMinsParam = getFirstParam(
+      const readMinsRaw = getFirstParam(
         url.searchParams,
         "readMins",
         "mins",
@@ -77,7 +87,37 @@ export function GET(req?: Request): Response {
         "reading_mins",
         "readingMins"
       );
-      const readMins = readMinsParam && /^\+?\d+$/.test(readMinsParam) ? Number(readMinsParam) : undefined;
+      const readMinsClean = readMinsRaw?.replace(/\s*(?:mins?|minutes?|m)$/i, "").trim();
+      const readMins = readMinsClean && /^\+?\d+$/.test(readMinsClean) ? Number(readMinsClean) : undefined;
+
+      const minMinsRaw = getFirstParam(
+        url.searchParams,
+        "minMins",
+        "min_mins",
+        "min_read_mins",
+        "minReadMins",
+        "min_read_time",
+        "minReadTime",
+        "min_time",
+        "minTime"
+      );
+      const minMinsClean = minMinsRaw?.replace(/\s*(?:mins?|minutes?|m)$/i, "").trim();
+      const minMins = minMinsClean && /^\+?\d+$/.test(minMinsClean) ? Number(minMinsClean) : undefined;
+
+      const maxMinsRaw = getFirstParam(
+        url.searchParams,
+        "maxMins",
+        "max_mins",
+        "max_read_mins",
+        "maxReadMins",
+        "max_read_time",
+        "maxReadTime",
+        "max_time",
+        "maxTime"
+      );
+      const maxMinsClean = maxMinsRaw?.replace(/\s*(?:mins?|minutes?|m)$/i, "").trim();
+      const maxMins = maxMinsClean && /^\+?\d+$/.test(maxMinsClean) ? Number(maxMinsClean) : undefined;
+
       const limit = parseLimit(url.searchParams);
       const offset = parseOffset(url.searchParams, 10000, limit);
       const order = parseSortOrder(url.searchParams);
@@ -137,6 +177,20 @@ export function GET(req?: Request): Response {
       }
       if (readMins !== undefined) {
         list = list.filter((p) => p.readMins === readMins);
+      }
+      if (minMins !== undefined) {
+        list = list.filter((p) => p.readMins >= minMins);
+      }
+      if (maxMins !== undefined) {
+        list = list.filter((p) => p.readMins <= maxMins);
+      }
+      if (content) {
+        list = list.filter((p) =>
+          p.body.some((b) => {
+            const text = Array.isArray(b.x) ? b.x.join(" ") : (b.x ?? "");
+            return text.toLowerCase().includes(content);
+          })
+        );
       }
       if (q) {
         list = list.filter(

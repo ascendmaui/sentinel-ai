@@ -587,7 +587,7 @@ export const incidentById = (id: string): Incident | undefined => {
   if (!target) return undefined;
   target = target.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
   target = target.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
-  target = target.replace(/^(?:incidents|incident|incident-case-studies|cases|case)\//, "");
+  target = target.replace(/^(?:(?:api\/)?(?:incidents|incident|incident-case-studies|cases|case)\/)+/, "");
   target = target.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
   if (target.startsWith("incident-") || target.startsWith("incident_")) target = target.slice(9);
   else if (target.startsWith("incident") && /^\d+$/.test(target.slice(8))) target = target.slice(8);
@@ -619,7 +619,7 @@ export const scenarioById = (id: string): Scenario | undefined => {
   if (!target) return undefined;
   target = target.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
   target = target.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
-  target = target.replace(/^(?:scenarios|scenario)\//, "");
+  target = target.replace(/^(?:(?:api\/)?(?:scenarios|scenario|hypothetical-scenarios|hypothetical)\/)+/, "");
   target = target.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
   if (target.startsWith("scenario-") || target.startsWith("scenario_")) target = target.slice(9);
   else if (target.startsWith("scenario") && /^(?:h)?\d+$/.test(target.slice(8))) target = target.slice(8);

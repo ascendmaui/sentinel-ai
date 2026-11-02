@@ -1,7 +1,7 @@
 import { json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
-import { findingById, findings, remediation, severityCounts } from "../../../lib/caseStudies";
+import { findingById, findings, remediation, remediationById, severityCounts } from "../../../lib/caseStudies";
 
-/** Remediation findings and case studies index as JSON. Supports optional ?id=, ?n=, ?num=, ?finding=, ?finding_id=, ?findingId=, ?case_study=, ?caseStudy=, ?cs=, ?f=, ?slug=, ?title=, ?severity=, ?sev=, ?status=, ?fix=, ?rationale=, ?what=, ?before=, ?after=, ?q=, ?order=, ?sort=, ?offset=, ?limit=, ?take=, and ?page= filters. */
+/** Remediation findings and case studies index as JSON. Supports optional ?id=, ?n=, ?num=, ?finding=, ?finding_id=, ?findingId=, ?case_study=, ?caseStudy=, ?cs=, ?f=, ?slug=, ?title=, ?severity=, ?sev=, ?status=, ?fix=, ?rationale=, ?what=, ?before=, ?after=, ?changed=, ?checked=, ?found=, ?q=, ?order=, ?sort=, ?offset=, ?limit=, ?take=, and ?page= filters. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -84,6 +84,30 @@ export function GET(req?: Request): Response {
         "current",
         "remediated"
       );
+      const changed = parseSearchQuery(
+        url.searchParams,
+        "changed",
+        "change",
+        "diff",
+        "modification",
+        "patch"
+      );
+      const checked = parseSearchQuery(
+        url.searchParams,
+        "checked",
+        "check",
+        "verified",
+        "verification",
+        "tested",
+        "test"
+      );
+      const found = parseSearchQuery(
+        url.searchParams,
+        "found",
+        "issue",
+        "defect",
+        "discovery"
+      );
       const q = parseSearchQuery(url.searchParams);
       const limit = parseLimit(url.searchParams);
       const offset = parseOffset(url.searchParams, 10000, limit);
@@ -145,6 +169,24 @@ export function GET(req?: Request): Response {
       }
       if (after) {
         list = list.filter((f) => f.after.toLowerCase().includes(after));
+      }
+      if (changed) {
+        list = list.filter((f) => {
+          const rem = remediationById(f.id);
+          return rem?.changed.toLowerCase().includes(changed);
+        });
+      }
+      if (checked) {
+        list = list.filter((f) => {
+          const rem = remediationById(f.id);
+          return rem?.checked.toLowerCase().includes(checked);
+        });
+      }
+      if (found) {
+        list = list.filter((f) => {
+          const rem = remediationById(f.id);
+          return f.what.toLowerCase().includes(found) || (rem?.found && rem.found.toLowerCase().includes(found));
+        });
       }
       if (q) {
         list = list.filter(
