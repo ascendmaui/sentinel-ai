@@ -40,7 +40,7 @@ All endpoints export HTTP/REST JSON contracts with security headers (`X-Content-
 - `GET /api/tiers/[id]`: Single tier deliverables, target audience, and exclusions. Supports lookup by ID, rank number (`1`, `01`, `+1`), prefix (`tier-seraphim`, `tier_seraphim`, `tier-1`, `tier-01`, `tier_01`, `t1`, `t01`, `t-1`, `t_1`, `rank-1`, `rank1`, `r-1`, `r1`, `+1`), path prefixes (`tiers/`, `tier/`, `pricing/`, `services/`, `api/tiers/`), URL-encoding, and `.json`/`.html` suffixes.
 - `GET /api/sources`: Authoritative primary and secondary sources registry. Supports `?id=`, `?source=`, `?source_id=`, `?sourceId=`, `?src=`, `?src_id=`, `?ref=`, `?reference=`, `?s=`, `?slug=`, `?n=`, `?num=`, `?url=`, `?link=`, `?domain=`, `?title=`, `?label=`, `?q=`, `?year=`, `?date=`, `?note=`, `?type=`, `?order=`, `?sort=`, `?offset=`, `?limit=`, `?take=`, and `?page=`.
 - `GET /api/sources/[id]`: Single source record with URL and credibility note. Supports lookup by ID, 1-based index (`1`, `01`, `+1`), prefix (`src-oaiAug`, `src_oaiAug`, `source-oaiAug`, `ref-oaiAug`, `s-1`, `s_1`, `s1`, `src1`, `source1`, `ref1`, `ref-1`), path prefixes (`sources/`, `refs/`, `api/sources/`), full URL (`https://...`), URL-encoding, and `.json`/`.html` suffixes.
-- `GET /api/brand`: Brand identity metadata, contact mailto, trust badges, and theme configuration. Supports `?badge=`, `?badges=`, `?trust=`, `?trust_badge=`, `?badge_key=`, `?badgeKey=`, `?b_id=`, `?bId=`, `?key=`, `?id=`, `?slug=`, `?name=`, `?b=`, `?num=`, `?n=`, `?q=`, `?query=`, or `?search=` query filter with numeric (`1`, `01`, `+1`), prefix (`badge-passive`, `trust-auth`, `trust_auth`, `trust-badge-auth`, `trust1`, `badge1`, `b-1`, `b1`), path prefix (`badges/`, `trust/`), label/note substring, and URL-encoding resilience.
+- `GET /api/brand`: Brand identity metadata, contact mailto, trust badges, and theme configuration. Supports `?badge=`, `?badges=`, `?trust=`, `?trust_badge=`, `?badge_key=`, `?badgeKey=`, `?b_id=`, `?bId=`, `?key=`, `?id=`, `?slug=`, `?name=`, `?b=`, `?num=`, `?n=`, `?q=`, `?query=`, or `?search=` query filter with numeric (`1`, `01`, `+1`), prefix (`badge-passive`, `trust-auth`, `trust_auth`, `trust-badge-auth`, `trust1`, `badge1`, `b-1`, `b1`), path prefix (`brand/`, `badges/`, `trust/`, `api/brand/`, `api/badges/`), label/note substring, and URL-encoding resilience.
 
 ## Metadata & Discovery
 
@@ -52,7 +52,7 @@ All endpoints export HTTP/REST JSON contracts with security headers (`X-Content-
 
 ## Verification & Testing
 
-- `npm test`: Run 424+ unit, component, page, boundary recovery, content integrity, route contract, and API integration tests via Vitest across 5 test suites.
+- `npm test`: Run 433+ unit, component, page, boundary recovery, content integrity, route contract, and API integration tests via Vitest across 5 test suites.
 - `npm run test:contract`: Run API route contract discovery and security header verification tests.
 - `npm run test:integration`: Run API endpoint integration tests.
 - `npm run test:components`: Run UI component tests (icons, emblems, logo mark, trust badges, nav, footer).
