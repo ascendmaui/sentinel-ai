@@ -4947,6 +4947,258 @@ describe("Cross-route end-to-end user journeys and relational data integrity", (
     expect(rejectedSrc.status).toBe(404);
     expect((await rejectedSrc.json()).error).toBe("not_found");
   });
+
+  it("supports expanded query aliases, summary filters, protocol-less source lookups, and underscore path prefixes", async () => {
+    // 1. /api/tiers summary, overview, desc, description filters
+    const sumRes = tiersIndex(req("/api/tiers?summary=advisory"));
+    expect(sumRes.status).toBe(200);
+    expect((await sumRes.json()).count).toBeGreaterThanOrEqual(1);
+
+    const overRes = tiersIndex(req("/api/tiers?overview=comprehensive"));
+    expect(overRes.status).toBe(200);
+    expect((await overRes.json()).count).toBeGreaterThanOrEqual(1);
+
+    const descRes = tiersIndex(req("/api/tiers?desc=continuing"));
+    expect(descRes.status).toBe(200);
+    expect((await descRes.json()).count).toBeGreaterThanOrEqual(1);
+
+    const descripRes = tiersIndex(req("/api/tiers?description=lightweight"));
+    expect(descripRes.status).toBe(200);
+    expect((await descripRes.json()).count).toBeGreaterThanOrEqual(1);
+
+    // 2. /api/case-studies expanded severity aliases (severity_level, severityLevel, severity_tier, severityTier, sev_level, sevLevel, risk, risk_level, riskLevel)
+    const sevLvlRes = caseStudiesIndex(req("/api/case-studies?severity_level=high"));
+    expect(sevLvlRes.status).toBe(200);
+    expect((await sevLvlRes.json()).count).toBe(1);
+
+    const sevLevelCamel = caseStudiesIndex(req("/api/case-studies?severityLevel=high"));
+    expect(sevLevelCamel.status).toBe(200);
+    expect((await sevLevelCamel.json()).count).toBe(1);
+
+    const sevCriticalRes = caseStudiesIndex(req("/api/case-studies?severity_tier=critical"));
+    expect(sevCriticalRes.status).toBe(200);
+    expect((await sevCriticalRes.json()).count).toBe(0);
+
+    const sevTierRes = caseStudiesIndex(req("/api/case-studies?severity_tier=medium"));
+    expect(sevTierRes.status).toBe(200);
+    expect((await sevTierRes.json()).count).toBe(4);
+
+    const sevTierCamel = caseStudiesIndex(req("/api/case-studies?severityTier=low"));
+    expect(sevTierCamel.status).toBe(200);
+    expect((await sevTierCamel.json()).count).toBe(3);
+
+    const sevLvlShort = caseStudiesIndex(req("/api/case-studies?sev_level=high"));
+    expect(sevLvlShort.status).toBe(200);
+    expect((await sevLvlShort.json()).count).toBe(1);
+
+    const sevLvlShortCamel = caseStudiesIndex(req("/api/case-studies?sevLevel=medium"));
+    expect(sevLvlShortCamel.status).toBe(200);
+    expect((await sevLvlShortCamel.json()).count).toBe(4);
+
+    const riskRes = caseStudiesIndex(req("/api/case-studies?risk=high"));
+    expect(riskRes.status).toBe(200);
+    expect((await riskRes.json()).count).toBe(1);
+
+    const riskLvlRes = caseStudiesIndex(req("/api/case-studies?risk_level=medium"));
+    expect(riskLvlRes.status).toBe(200);
+    expect((await riskLvlRes.json()).count).toBe(4);
+
+    const riskLvlCamel = caseStudiesIndex(req("/api/case-studies?riskLevel=low"));
+    expect(riskLvlCamel.status).toBe(200);
+    expect((await riskLvlCamel.json()).count).toBe(3);
+
+    // /api/case-studies underscore path prefix stripping
+    const csUnderscorePlural = caseStudiesIndex(req("/api/case-studies?id=case_studies/f-01"));
+    expect(csUnderscorePlural.status).toBe(200);
+    expect((await csUnderscorePlural.json()).count).toBe(1);
+
+    const csUnderscoreSingular = caseStudiesIndex(req("/api/case-studies?id=case_study/f-01"));
+    expect(csUnderscoreSingular.status).toBe(200);
+    expect((await csUnderscoreSingular.json()).count).toBe(1);
+
+    const csDetailUnderscore = await caseStudyOne(req("/api/case-studies/case_studies/f-01"), idCtx("case_studies/f-01"));
+    expect(csDetailUnderscore.status).toBe(200);
+    expect((await csDetailUnderscore.json()).id).toBe("F-01");
+
+    // 3. /api/incidents expanded query aliases and underscore prefix stripping
+    const cveIdRes = incidentsIndex(req("/api/incidents?cve_id=token"));
+    expect(cveIdRes.status).toBe(200);
+    expect((await cveIdRes.json()).count).toBeGreaterThan(0);
+
+    const cveIdCamel = incidentsIndex(req("/api/incidents?cveId=token"));
+    expect(cveIdCamel.status).toBe(200);
+    expect((await cveIdCamel.json()).count).toBeGreaterThan(0);
+
+    const flawTypeRes = incidentsIndex(req("/api/incidents?flaw_type=token"));
+    expect(flawTypeRes.status).toBe(200);
+    expect((await flawTypeRes.json()).count).toBeGreaterThan(0);
+
+    const flawTypeCamel = incidentsIndex(req("/api/incidents?flawType=token"));
+    expect(flawTypeCamel.status).toBe(200);
+    expect((await flawTypeCamel.json()).count).toBeGreaterThan(0);
+
+    const consequencesRes = incidentsIndex(req("/api/incidents?consequences=credentials"));
+    expect(consequencesRes.status).toBe(200);
+    expect((await consequencesRes.json()).count).toBeGreaterThan(0);
+
+    const effectsRes = incidentsIndex(req("/api/incidents?effects=credentials"));
+    expect(effectsRes.status).toBe(200);
+    expect((await effectsRes.json()).count).toBeGreaterThan(0);
+
+    const outcomeRes = incidentsIndex(req("/api/incidents?outcome=credentials"));
+    expect(outcomeRes.status).toBe(200);
+    expect((await outcomeRes.json()).count).toBeGreaterThan(0);
+
+    const damageRes = incidentsIndex(req("/api/incidents?damage=credentials"));
+    expect(damageRes.status).toBe(200);
+    expect((await damageRes.json()).count).toBeGreaterThan(0);
+
+    const milestonesRes = incidentsIndex(req("/api/incidents?milestones=Artifactory"));
+    expect(milestonesRes.status).toBe(200);
+    expect((await milestonesRes.json()).count).toBeGreaterThan(0);
+
+    const chronologyRes = incidentsIndex(req("/api/incidents?chronology=Artifactory"));
+    expect(chronologyRes.status).toBe(200);
+    expect((await chronologyRes.json()).count).toBeGreaterThan(0);
+
+    const dateTimeRes = incidentsIndex(req("/api/incidents?date_time=12%20May%202026"));
+    expect(dateTimeRes.status).toBe(200);
+    expect((await dateTimeRes.json()).count).toBeGreaterThan(0);
+
+    const dateTimeCamel = incidentsIndex(req("/api/incidents?dateTime=12%20May%202026"));
+    expect(dateTimeCamel.status).toBe(200);
+    expect((await dateTimeCamel.json()).count).toBeGreaterThan(0);
+
+    const historyRes = incidentsIndex(req("/api/incidents?history=Artifactory"));
+    expect(historyRes.status).toBe(200);
+    expect((await historyRes.json()).count).toBeGreaterThan(0);
+
+    const activitiesRes = incidentsIndex(req("/api/incidents?activities=ExploitGym"));
+    expect(activitiesRes.status).toBe(200);
+    expect((await activitiesRes.json()).count).toBeGreaterThan(0);
+
+    const actionsTakenRes = incidentsIndex(req("/api/incidents?actions_taken=ExploitGym"));
+    expect(actionsTakenRes.status).toBe(200);
+    expect((await actionsTakenRes.json()).count).toBeGreaterThan(0);
+
+    const actionsTakenCamel = incidentsIndex(req("/api/incidents?actionsTaken=ExploitGym"));
+    expect(actionsTakenCamel.status).toBe(200);
+    expect((await actionsTakenCamel.json()).count).toBeGreaterThan(0);
+
+    const stepsRes = incidentsIndex(req("/api/incidents?steps=ExploitGym"));
+    expect(stepsRes.status).toBe(200);
+    expect((await stepsRes.json()).count).toBeGreaterThan(0);
+
+    const operationsRes = incidentsIndex(req("/api/incidents?operations=ExploitGym"));
+    expect(operationsRes.status).toBe(200);
+    expect((await operationsRes.json()).count).toBeGreaterThan(0);
+
+    const entryPointRes = incidentsIndex(req("/api/incidents?entry_point=Artifactory"));
+    expect(entryPointRes.status).toBe(200);
+    expect((await entryPointRes.json()).count).toBeGreaterThan(0);
+
+    const entryPointCamel = incidentsIndex(req("/api/incidents?entryPoint=Artifactory"));
+    expect(entryPointCamel.status).toBe(200);
+    expect((await entryPointCamel.json()).count).toBeGreaterThan(0);
+
+    const initialAccessRes = incidentsIndex(req("/api/incidents?initial_access=Artifactory"));
+    expect(initialAccessRes.status).toBe(200);
+    expect((await initialAccessRes.json()).count).toBeGreaterThan(0);
+
+    const initialAccessCamel = incidentsIndex(req("/api/incidents?initialAccess=Artifactory"));
+    expect(initialAccessCamel.status).toBe(200);
+    expect((await initialAccessCamel.json()).count).toBeGreaterThan(0);
+
+    const attackPathRes = incidentsIndex(req("/api/incidents?attack_path=Artifactory"));
+    expect(attackPathRes.status).toBe(200);
+    expect((await attackPathRes.json()).count).toBeGreaterThan(0);
+
+    const attackPathCamel = incidentsIndex(req("/api/incidents?attackPath=Artifactory"));
+    expect(attackPathCamel.status).toBe(200);
+    expect((await attackPathCamel.json()).count).toBeGreaterThan(0);
+
+    const vectorTypeRes = incidentsIndex(req("/api/incidents?vector_type=Artifactory"));
+    expect(vectorTypeRes.status).toBe(200);
+    expect((await vectorTypeRes.json()).count).toBeGreaterThan(0);
+
+    const vectorTypeCamel = incidentsIndex(req("/api/incidents?vectorType=Artifactory"));
+    expect(vectorTypeCamel.status).toBe(200);
+    expect((await vectorTypeCamel.json()).count).toBeGreaterThan(0);
+
+    const seraphimGuidanceRes = incidentsIndex(req("/api/incidents?seraphim_guidance=tabletop"));
+    expect(seraphimGuidanceRes.status).toBe(200);
+    expect((await seraphimGuidanceRes.json()).count).toBeGreaterThan(0);
+
+    const seraphimGuidanceCamel = incidentsIndex(req("/api/incidents?seraphimGuidance=tabletop"));
+    expect(seraphimGuidanceCamel.status).toBe(200);
+    expect((await seraphimGuidanceCamel.json()).count).toBeGreaterThan(0);
+
+    const limitsNoteRes = incidentsIndex(req("/api/incidents?limits_note=tabletop"));
+    expect(limitsNoteRes.status).toBe(200);
+    expect((await limitsNoteRes.json()).count).toBeGreaterThan(0);
+
+    const limitsNoteCamel = incidentsIndex(req("/api/incidents?limitsNote=tabletop"));
+    expect(limitsNoteCamel.status).toBe(200);
+    expect((await limitsNoteCamel.json()).count).toBeGreaterThan(0);
+
+    const preparationRes = incidentsIndex(req("/api/incidents?preparation=tabletop"));
+    expect(preparationRes.status).toBe(200);
+    expect((await preparationRes.json()).count).toBeGreaterThan(0);
+
+    const prepareRes = incidentsIndex(req("/api/incidents?prepare=tabletop"));
+    expect(prepareRes.status).toBe(200);
+    expect((await prepareRes.json()).count).toBeGreaterThan(0);
+
+    // /api/incidents underscore path prefix stripping
+    const incUnderscorePlural = incidentsIndex(req("/api/incidents?id=incident_case_studies/openai-huggingface-2026"));
+    expect(incUnderscorePlural.status).toBe(200);
+    expect((await incUnderscorePlural.json()).count).toBe(1);
+
+    const incUnderscoreSingular = incidentsIndex(req("/api/incidents?id=incident_case_study/01"));
+    expect(incUnderscoreSingular.status).toBe(200);
+    expect((await incUnderscoreSingular.json()).count).toBe(1);
+
+    const incDetailUnderscore = await incidentOne(req("/api/incidents/incident_case_studies/01"), idCtx("incident_case_studies/01"));
+    expect(incDetailUnderscore.status).toBe(200);
+    expect((await incDetailUnderscore.json()).id).toBe("openai-huggingface-2026");
+
+    // 4. /api/scenarios underscore path prefix stripping
+    const scUnderscorePlural = scenariosIndex(req("/api/scenarios?id=hypothetical_scenarios/h1"));
+    expect(scUnderscorePlural.status).toBe(200);
+    expect((await scUnderscorePlural.json()).count).toBe(1);
+
+    const scUnderscoreSingular = scenariosIndex(req("/api/scenarios?id=hypothetical_scenario/1"));
+    expect(scUnderscoreSingular.status).toBe(200);
+    expect((await scUnderscoreSingular.json()).count).toBe(1);
+
+    const scDetailUnderscore = await scenarioOne(req("/api/scenarios/hypothetical_scenarios/h1"), idCtx("hypothetical_scenarios/h1"));
+    expect(scDetailUnderscore.status).toBe(200);
+    expect((await scDetailUnderscore.json()).id).toBe("legacy-internal-app");
+
+    // 5. /api/sources protocol-less and http:// URL lookup
+    const srcHttpRes = sourcesIndex(req("/api/sources?url=http://openai.com/index/hugging-face-incident-and-the-road-ahead/"));
+    expect(srcHttpRes.status).toBe(200);
+    expect((await srcHttpRes.json()).count).toBeGreaterThan(0);
+
+    const srcNoProtoRes = sourcesIndex(req("/api/sources?url=openai.com/index/hugging-face-incident-and-the-road-ahead"));
+    expect(srcNoProtoRes.status).toBe(200);
+    expect((await srcNoProtoRes.json()).count).toBeGreaterThan(0);
+
+    const srcDetailHttp = await sourceOne(
+      req("/api/sources/https%3A%2F%2Fopenai.com%2Findex%2Fhugging-face-incident-and-the-road-ahead%2F"),
+      idCtx("https://openai.com/index/hugging-face-incident-and-the-road-ahead/")
+    );
+    expect(srcDetailHttp.status).toBe(200);
+    expect((await srcDetailHttp.json()).id).toBe("oaiAug");
+
+    const srcDetailNoProto = await sourceOne(
+      req("/api/sources/openai.com%2Findex%2Fhugging-face-incident-and-the-road-ahead"),
+      idCtx("openai.com/index/hugging-face-incident-and-the-road-ahead")
+    );
+    expect(srcDetailNoProto.status).toBe(200);
+    expect((await srcDetailNoProto.json()).id).toBe("oaiAug");
+  });
 });
+
 
 

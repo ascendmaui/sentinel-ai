@@ -225,7 +225,7 @@ export const findingById = (id: string): Finding | undefined => {
   if (!target) return undefined;
   target = target.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
   target = target.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
-  target = target.replace(/^(?:(?:api\/)?(?:case-studies|case-study|findings|finding|remediations|remediation)\/)+/, "");
+  target = target.replace(/^(?:(?:api\/)?(?:case[-_]studies|case[-_]study|findings|finding|remediations|remediation)\/)+/, "");
   target = target.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
   if (target.startsWith("remediation-") || target.startsWith("remediation_")) target = target.slice(12);
   else if (target.startsWith("rem-") || target.startsWith("rem_")) target = target.slice(4);
@@ -263,7 +263,7 @@ export const remediationById = (id: string): Remediation | undefined => {
   if (!target) return undefined;
   target = target.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
   target = target.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
-  target = target.replace(/^(?:(?:api\/)?(?:case-studies|case-study|findings|finding|remediations|remediation)\/)+/, "");
+  target = target.replace(/^(?:(?:api\/)?(?:case[-_]studies|case[-_]study|findings|finding|remediations|remediation)\/)+/, "");
   target = target.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
   if (target.startsWith("remediation-") || target.startsWith("remediation_")) target = target.slice(12);
   else if (target.startsWith("rem-") || target.startsWith("rem_")) target = target.slice(4);

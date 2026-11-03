@@ -60,6 +60,12 @@ export function GET(req?: Request): Response {
         "weakness",
         "weaknessClass",
         "weakness_class",
+        "weakness_type",
+        "weaknessType",
+        "flaw_class",
+        "flawClass",
+        "weakness_name",
+        "weaknessName",
         "vuln",
         "vulnerability",
         "flaw"
@@ -70,7 +76,12 @@ export function GET(req?: Request): Response {
         "victim",
         "system",
         "environment",
-        "host"
+        "host",
+        "affected_system",
+        "affectedSystem",
+        "victim_system",
+        "victimSystem",
+        "platform"
       );
       const control = parseSearchQuery(
         url.searchParams,
@@ -78,7 +89,13 @@ export function GET(req?: Request): Response {
         "controls",
         "mitigation",
         "defense",
-        "remediation"
+        "remediation",
+        "safeguard",
+        "safeguards",
+        "countermeasure",
+        "countermeasures",
+        "protection",
+        "protections"
       );
       const speed = parseSearchQuery(
         url.searchParams,
@@ -94,14 +111,23 @@ export function GET(req?: Request): Response {
         "technique",
         "method",
         "attack",
-        "vector"
+        "vector",
+        "attack_vector",
+        "attackVector",
+        "methodology",
+        "strategy",
+        "tactic"
       );
       const seraphim = parseSearchQuery(
         url.searchParams,
         "seraphim",
         "analysis",
         "assessment",
-        "recommendation"
+        "guidance",
+        "recommendation",
+        "recommendations",
+        "seraphim_recommendation",
+        "seraphimRecommendation"
       );
       const q = parseSearchQuery(url.searchParams);
       const limit = parseLimit(url.searchParams);
@@ -112,7 +138,7 @@ export function GET(req?: Request): Response {
         const matched = scenarioById(id);
         let cleanId = id.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
         cleanId = cleanId.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
-        cleanId = cleanId.replace(/^(?:(?:api\/)?(?:scenarios|scenario|hypothetical-scenarios|hypothetical)\/)+/, "");
+        cleanId = cleanId.replace(/^(?:(?:api\/)?(?:scenarios|scenario|hypothetical[-_]scenarios|hypothetical[-_]scenario|hypothetical)\/)+/, "");
         cleanId = cleanId.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         cleanId = cleanId.replace(/^(scenario|sc)[-_]/, "");
         if (cleanId.startsWith("scenario") && /^(?:h)?\d+$/.test(cleanId.slice(8))) cleanId = cleanId.slice(8);
@@ -136,7 +162,7 @@ export function GET(req?: Request): Response {
         const matched = scenarioById(n);
         let cleanN = n.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
         cleanN = cleanN.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
-        cleanN = cleanN.replace(/^(?:(?:api\/)?(?:scenarios|scenario|hypothetical-scenarios|hypothetical)\/)+/, "");
+        cleanN = cleanN.replace(/^(?:(?:api\/)?(?:scenarios|scenario|hypothetical[-_]scenarios|hypothetical[-_]scenario|hypothetical)\/)+/, "");
         cleanN = cleanN.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         cleanN = cleanN.replace(/^(scenario|sc)[-_]/, "");
         if (cleanN.startsWith("scenario") && /^(?:h)?\d+$/.test(cleanN.slice(8))) cleanN = cleanN.slice(8);

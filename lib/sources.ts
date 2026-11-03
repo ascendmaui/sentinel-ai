@@ -57,13 +57,13 @@ export function sourceById(id: string): Source | undefined {
   if (!Number.isNaN(num) && num >= 1 && num <= sources.length && String(num) === (numClean || target)) {
     return sources[num - 1];
   }
-  if (target.startsWith("http://") || target.startsWith("https://")) {
-    const cleanUrl = target.replace(/\/+$/, "");
-    const match = sources.find(
-      (s) => s.url.toLowerCase() === target || s.url.toLowerCase().replace(/\/+$/, "") === cleanUrl
-    );
-    if (match) return match;
-  }
+  const cleanUrl = target.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+  const match = sources.find((s) => {
+    const sUrl = s.url.toLowerCase();
+    const sUrlNoProto = sUrl.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+    return sUrl === target || sUrl.replace(/\/+$/, "") === target.replace(/\/+$/, "") || sUrlNoProto === cleanUrl;
+  });
+  if (match) return match;
   const normalized = target.replace(/[-_]/g, "");
   return sources.find(
     (s) =>

@@ -1,7 +1,7 @@
 import { getFirstParam, json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
 import { tiers, tierById, tierHref, matrix, helper, ENGAGEMENT_TERMS } from "../../../lib/tiers";
 
-/** Service tiers index as JSON: all four engagement tiers and comparison matrix. Supports ?id=, ?tier=, ?name=, ?cadence=, ?positioning=, ?rank=, ?feature=, ?included=, ?deliverable=, ?tagline=, ?forWho=, ?audience=, ?fitWhen=, ?fit=, ?excluded=, ?q=, ?order=, ?sort=, ?offset=, ?limit=, ?take=, and ?page=. */
+/** Service tiers index as JSON: all four engagement tiers and comparison matrix. Supports ?id=, ?tier=, ?name=, ?cadence=, ?positioning=, ?rank=, ?feature=, ?included=, ?deliverable=, ?tagline=, ?forWho=, ?audience=, ?fitWhen=, ?fit=, ?excluded=, ?summary=, ?q=, ?order=, ?sort=, ?offset=, ?limit=, ?take=, and ?page=. */
 export function GET(): Response;
 export function GET(req: Request): Response;
 export function GET(req?: Request): Response {
@@ -85,6 +85,13 @@ export function GET(req?: Request): Response {
         "omitted",
         "out_of_scope",
         "outOfScope"
+      );
+      const summary = parseSearchQuery(
+        url.searchParams,
+        "summary",
+        "overview",
+        "desc",
+        "description"
       );
       let rank: number | undefined;
       const rankKeys = [
@@ -187,6 +194,10 @@ export function GET(req?: Request): Response {
 
       if (excluded) {
         list = list.filter((t) => t.notIncluded.some((item) => item.toLowerCase().includes(excluded)));
+      }
+
+      if (summary) {
+        list = list.filter((t) => t.summary.toLowerCase().includes(summary));
       }
 
       if (rank !== undefined) {

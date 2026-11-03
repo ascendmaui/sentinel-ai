@@ -15,25 +15,34 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata(ctx: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const { slug = "" } = (await ctx?.params) ?? {};
-  const p = postBySlug(slug);
-  if (!p) return {};
-  return {
-    title: p.title,
-    description: p.description,
-    alternates: { canonical: `/blog/${p.slug}` },
-    openGraph: { type: "article", siteName: BRAND_NAME, title: p.title, description: p.description, url: `/blog/${p.slug}`, publishedTime: p.date, images: OG_IMAGES },
-    twitter: {
-      card: "summary_large_image",
+  try {
+    const { slug = "" } = (await ctx?.params) ?? {};
+    const p = postBySlug(slug);
+    if (!p) return {};
+    return {
       title: p.title,
       description: p.description,
-      images: OG_IMAGES,
-    },
-  };
+      alternates: { canonical: `/blog/${p.slug}` },
+      openGraph: { type: "article", siteName: BRAND_NAME, title: p.title, description: p.description, url: `/blog/${p.slug}`, publishedTime: p.date, images: OG_IMAGES },
+      twitter: {
+        card: "summary_large_image",
+        title: p.title,
+        description: p.description,
+        images: OG_IMAGES,
+      },
+    };
+  } catch {
+    return {};
+  }
 }
 
 export default async function PostPage(ctx: { params: Promise<{ slug: string }> }) {
-  const { slug = "" } = (await ctx?.params) ?? {};
+  let slug = "";
+  try {
+    slug = (await ctx?.params)?.slug ?? "";
+  } catch {
+    notFound();
+  }
   const p = postBySlug(slug);
   if (!p) notFound();
   const resolvedSources = p.sources.map((id) => sourceById(id)).filter((s): s is NonNullable<typeof s> => Boolean(s));

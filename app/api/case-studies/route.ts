@@ -39,7 +39,21 @@ export function GET(req?: Request): Response {
         "slug"
       );
       const title = parseSearchQuery(url.searchParams, "title", "name", "headline");
-      const severityKeys = ["severity", "sev", "level", "priority"];
+      const severityKeys = [
+        "severity",
+        "sev",
+        "level",
+        "priority",
+        "severity_level",
+        "severityLevel",
+        "severity_tier",
+        "severityTier",
+        "sev_level",
+        "sevLevel",
+        "risk",
+        "risk_level",
+        "riskLevel",
+      ];
       const KNOWN_SEVERITIES = ["critical", "high", "medium", "low", "info"];
       let severity: string | undefined;
       for (const k of severityKeys) {
@@ -134,7 +148,7 @@ export function GET(req?: Request): Response {
         const matched = findingById(id);
         let cleanId = id.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
         cleanId = cleanId.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
-        cleanId = cleanId.replace(/^(?:(?:api\/)?(?:case-studies|case-study|findings|finding|remediations|remediation)\/)+/, "");
+        cleanId = cleanId.replace(/^(?:(?:api\/)?(?:case[-_]studies|case[-_]study|findings|finding|remediations|remediation)\/)+/, "");
         cleanId = cleanId.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         if (cleanId.startsWith("remediation-") || cleanId.startsWith("remediation_")) cleanId = cleanId.slice(12);
         else if (cleanId.startsWith("rem-") || cleanId.startsWith("rem_")) cleanId = cleanId.slice(4);

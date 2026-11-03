@@ -217,17 +217,21 @@ describe("Blog Page and Post Page", () => {
     expect(hashNumMeta.alternates?.canonical).toBe(`/blog/${posts[0].slug}`);
   });
 
-  it("generateMetadata returns empty object for unknown post or missing params", async () => {
+  it("generateMetadata returns empty object for unknown post, missing params, or rejected params promise", async () => {
     const meta = await postMeta({ params: Promise.resolve({ slug: "unknown-slug" }) });
     expect(meta).toEqual({});
     expect(await postMeta(undefined as unknown as { params: Promise<{ slug: string }> })).toEqual({});
+    expect(await postMeta({ params: Promise.reject(new Error("simulated aborted stream")) })).toEqual({});
   });
 
-  it("invokes notFound() when rendering unknown post slug or missing params", async () => {
+  it("invokes notFound() when rendering unknown post slug, missing params, or rejected params promise", async () => {
     await expect(PostPage({ params: Promise.resolve({ slug: "unknown-slug" }) })).rejects.toThrow(
       "NEXT_HTTP_ERROR_FALLBACK;404"
     );
     await expect(PostPage(undefined as unknown as { params: Promise<{ slug: string }> })).rejects.toThrow(
+      "NEXT_HTTP_ERROR_FALLBACK;404"
+    );
+    await expect(PostPage({ params: Promise.reject(new Error("simulated stream abort")) })).rejects.toThrow(
       "NEXT_HTTP_ERROR_FALLBACK;404"
     );
   });

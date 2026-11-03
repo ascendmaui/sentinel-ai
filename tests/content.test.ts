@@ -371,6 +371,9 @@ describe("sources registry", () => {
     expect(sourceById("#oaiAug#")).toBe(sources[0]);
     expect(sourceById("https://openai.com/index/hugging-face-incident-and-the-road-ahead/")).toBe(sources[0]);
     expect(sourceById("https://openai.com/index/hugging-face-incident-and-the-road-ahead")).toBe(sources[0]);
+    expect(sourceById("http://openai.com/index/hugging-face-incident-and-the-road-ahead/")).toBe(sources[0]);
+    expect(sourceById("openai.com/index/hugging-face-incident-and-the-road-ahead/")).toBe(sources[0]);
+    expect(sourceById("openai.com/index/hugging-face-incident-and-the-road-ahead")).toBe(sources[0]);
     expect(sourceById("sources/oaiAug")).toBe(S.oaiAug);
     expect(sourceById("refs/oaiAug")).toBe(S.oaiAug);
     expect(sourceById("source/oaiAug")).toBe(S.oaiAug);
@@ -732,6 +735,9 @@ describe("incidents", () => {
     expect(incidentById("incidents/openai-huggingface-2026")).toBe(first);
     expect(incidentById("incident/openai-huggingface-2026")).toBe(first);
     expect(incidentById("cases/openai-huggingface-2026")).toBe(first);
+    expect(incidentById("incident_case_studies/openai-huggingface-2026")).toBe(first);
+    expect(incidentById("incident_case_study/openai-huggingface-2026")).toBe(first);
+    expect(incidentById("api/incident_case_studies/01")).toBe(first);
     expect(incidentById("incidents/01")).toBe(first);
     expect(incidentById("case/1")).toBe(first);
   });
@@ -811,6 +817,9 @@ describe("incidents", () => {
     expect(scenarioById("#h1#")).toBe(first);
     expect(scenarioById("scenarios/h1")).toBe(first);
     expect(scenarioById("scenario/h1")).toBe(first);
+    expect(scenarioById("hypothetical_scenarios/h1")).toBe(first);
+    expect(scenarioById("hypothetical_scenario/legacy-internal-app")).toBe(first);
+    expect(scenarioById("api/hypothetical_scenarios/1")).toBe(first);
     expect(scenarioById("scenarios/1")).toBe(first);
     expect(incidentById("##openai-huggingface-2026")).toBe(incidents[0]);
     expect(incidentById("++01")).toBe(incidents[0]);
@@ -909,6 +918,10 @@ describe("case studies / findings", () => {
     expect(remediationById("/f-01/")?.id).toBe("F-01");
     expect(remediationById("//cs-1//")?.id).toBe("F-01");
     expect(findingById("case-studies/f-01")?.id).toBe("F-01");
+    expect(findingById("case_studies/f-01")?.id).toBe("F-01");
+    expect(findingById("case_study/f-01")?.id).toBe("F-01");
+    expect(remediationById("case_studies/f-01")?.id).toBe("F-01");
+    expect(remediationById("case_study/f-01")?.id).toBe("F-01");
     expect(findingById("findings/f-01")?.id).toBe("F-01");
     expect(findingById("rem-01")?.id).toBe("F-01");
     expect(findingById("rem-1")?.id).toBe("F-01");

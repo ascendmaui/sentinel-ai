@@ -86,22 +86,34 @@ export function GET(req?: Request): Response {
         "vuln",
         "vulnerability",
         "cve",
+        "cve_id",
+        "cveId",
         "weakness",
-        "flaw"
+        "flaw",
+        "flaw_type",
+        "flawType"
       );
       const impact = parseSearchQuery(
         url.searchParams,
         "impact",
         "severity",
         "consequence",
-        "effect"
+        "consequences",
+        "effect",
+        "effects",
+        "outcome",
+        "damage"
       );
       const timeline = parseSearchQuery(
         url.searchParams,
         "timeline",
         "event",
         "milestone",
-        "chronology"
+        "milestones",
+        "chronology",
+        "date_time",
+        "dateTime",
+        "history"
       );
       const did = parseSearchQuery(
         url.searchParams,
@@ -109,16 +121,27 @@ export function GET(req?: Request): Response {
         "action",
         "actions",
         "behavior",
-        "activity"
+        "activity",
+        "activities",
+        "actions_taken",
+        "actionsTaken",
+        "steps",
+        "operations"
       );
       const howIn = parseSearchQuery(
         url.searchParams,
         "howIn",
         "how_in",
         "entry",
+        "entry_point",
+        "entryPoint",
         "initial_access",
         "initialAccess",
-        "vector"
+        "attack_path",
+        "attackPath",
+        "vector",
+        "vector_type",
+        "vectorType"
       );
       const seraphim = parseSearchQuery(
         url.searchParams,
@@ -127,7 +150,13 @@ export function GET(req?: Request): Response {
         "assessment",
         "remediation",
         "remediation_guidance",
-        "limits"
+        "seraphim_guidance",
+        "seraphimGuidance",
+        "limits",
+        "limits_note",
+        "limitsNote",
+        "preparation",
+        "prepare"
       );
       const limit = parseLimit(url.searchParams);
       const offset = parseOffset(url.searchParams, 10000, limit);
@@ -137,7 +166,7 @@ export function GET(req?: Request): Response {
         const matched = incidentById(id);
         let cleanId = id.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
         cleanId = cleanId.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
-        cleanId = cleanId.replace(/^(?:(?:api\/)?(?:incidents|incident|incident-case-studies|cases|case)\/)+/, "");
+        cleanId = cleanId.replace(/^(?:(?:api\/)?(?:incidents|incident|incident[-_]case[-_]studies|incident[-_]case[-_]study|cases|case)\/)+/, "");
         cleanId = cleanId.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         cleanId = cleanId.replace(/^(incident|case|inc)[-_]/, "");
         if (cleanId.startsWith("incident") && /^\d+$/.test(cleanId.slice(8))) cleanId = cleanId.slice(8);
@@ -162,7 +191,7 @@ export function GET(req?: Request): Response {
         const matched = incidentById(n);
         let cleanN = n.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
         cleanN = cleanN.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
-        cleanN = cleanN.replace(/^(?:(?:api\/)?(?:incidents|incident|incident-case-studies|cases|case)\/)+/, "");
+        cleanN = cleanN.replace(/^(?:(?:api\/)?(?:incidents|incident|incident[-_]case[-_]studies|incident[-_]case[-_]study|cases|case)\/)+/, "");
         cleanN = cleanN.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         cleanN = cleanN.replace(/^(incident|case|inc)[-_]/, "");
         if (cleanN.startsWith("incident") && /^\d+$/.test(cleanN.slice(8))) cleanN = cleanN.slice(8);
