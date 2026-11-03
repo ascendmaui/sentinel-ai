@@ -86,8 +86,8 @@ export function GET(req?: Request): Response {
         "out_of_scope",
         "outOfScope"
       );
-      const rankParam = getFirstParam(
-        url.searchParams,
+      let rank: number | undefined;
+      const rankKeys = [
         "rank",
         "rank_id",
         "rankId",
@@ -98,24 +98,38 @@ export function GET(req?: Request): Response {
         "rankNum",
         "tier_rank",
         "tierRank",
-        "order_rank"
-      );
-      let cleanRank = rankParam;
-      if (cleanRank) {
-        cleanRank = cleanRank.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
-        if (cleanRank.startsWith("rank-") || cleanRank.startsWith("rank_")) cleanRank = cleanRank.slice(5);
-        else if (cleanRank.startsWith("rank") && /^\d+$/.test(cleanRank.slice(4))) cleanRank = cleanRank.slice(4);
-        else if (cleanRank.startsWith("r-") || cleanRank.startsWith("r_")) cleanRank = cleanRank.slice(2);
-        else if (cleanRank.startsWith("r") && /^\d+$/.test(cleanRank.slice(1))) cleanRank = cleanRank.slice(1);
-        else if (cleanRank.startsWith("tier-") || cleanRank.startsWith("tier_")) cleanRank = cleanRank.slice(5);
-        else if (cleanRank.startsWith("tier") && /^\d+$/.test(cleanRank.slice(4))) cleanRank = cleanRank.slice(4);
-        else if (cleanRank.startsWith("t-") || cleanRank.startsWith("t_")) cleanRank = cleanRank.slice(2);
-        else if (cleanRank.startsWith("t") && /^\d+$/.test(cleanRank.slice(1))) cleanRank = cleanRank.slice(1);
-        cleanRank = cleanRank.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
-        cleanRank = cleanRank.replace(/^0+/, "");
+        "order_rank",
+      ];
+      for (const k of rankKeys) {
+        const values = typeof url.searchParams.getAll === "function" ? url.searchParams.getAll(k) : [url.searchParams.get(k)];
+        for (const raw of values) {
+          if (typeof raw !== "string") continue;
+          let cleanRank = raw.trim().replace(/^[#+]+/, "").replace(/[#+]+$/, "");
+          if (cleanRank.startsWith("rank-") || cleanRank.startsWith("rank_")) cleanRank = cleanRank.slice(5);
+          else if (cleanRank.startsWith("rank") && /^\d+$/.test(cleanRank.slice(4))) cleanRank = cleanRank.slice(4);
+          else if (cleanRank.startsWith("r-") || cleanRank.startsWith("r_")) cleanRank = cleanRank.slice(2);
+          else if (cleanRank.startsWith("r") && /^\d+$/.test(cleanRank.slice(1))) cleanRank = cleanRank.slice(1);
+          else if (cleanRank.startsWith("tier-") || cleanRank.startsWith("tier_")) cleanRank = cleanRank.slice(5);
+          else if (cleanRank.startsWith("tier") && /^\d+$/.test(cleanRank.slice(4))) cleanRank = cleanRank.slice(4);
+          else if (cleanRank.startsWith("t-") || cleanRank.startsWith("t_")) cleanRank = cleanRank.slice(2);
+          else if (cleanRank.startsWith("t") && /^\d+$/.test(cleanRank.slice(1))) cleanRank = cleanRank.slice(1);
+          cleanRank = cleanRank.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
+          cleanRank = cleanRank.replace(/^0+/, "");
+          const fromTier = tierById(cleanRank)?.rank;
+          if (fromTier !== undefined) {
+            rank = fromTier;
+            break;
+          }
+          if (/^\d+$/.test(cleanRank)) {
+            const num = Number(cleanRank);
+            if (num >= 1 && num <= 4) {
+              rank = num;
+              break;
+            }
+          }
+        }
+        if (rank !== undefined) break;
       }
-      const rankFromTier = cleanRank ? tierById(cleanRank)?.rank : undefined;
-      const rank = cleanRank && /^\d+$/.test(cleanRank) ? Number(cleanRank) : rankFromTier;
       const limit = parseLimit(url.searchParams);
       const offset = parseOffset(url.searchParams, 10000, limit);
       const order = parseSortOrder(url.searchParams);

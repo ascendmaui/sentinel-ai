@@ -108,6 +108,10 @@ describe("brand", () => {
     expect(badgeByKey("trust-1")).toEqual(TRUE_BADGES[0]);
     expect(badgeByKey("trust1")).toEqual(TRUE_BADGES[0]);
     expect(badgeByKey("badges/trust/auth")).toEqual(TRUE_BADGES[1]);
+    expect(badgeByKey("api/brand/trust-1")).toEqual(TRUE_BADGES[0]);
+    expect(badgeByKey("api/badges/auth")).toEqual(TRUE_BADGES[1]);
+    expect(badgeByKey("brand/passive")).toEqual(TRUE_BADGES[0]);
+    expect(badgeByKey("api/brand/passive")).toEqual(TRUE_BADGES[0]);
     expect(badgeByKey("Passive recon only")).toEqual(TRUE_BADGES[0]);
     expect(badgeByKey("Written client authorization required")).toEqual(TRUE_BADGES[1]);
     expect(badgeByKey("probing")).toEqual(TRUE_BADGES[0]);

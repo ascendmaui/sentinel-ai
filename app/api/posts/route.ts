@@ -1,4 +1,4 @@
-import { getFirstParam, json, parseLimit, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
+import { getFirstParam, json, parseLimit, parseNumberParam, parseOffset, parseSearchQuery, parseSortOrder, PUBLIC_CACHE } from "../../../lib/http";
 import { postBySlug, posts, postWords } from "../../../lib/posts";
 import { sourceById } from "../../../lib/sources";
 import { tierById } from "../../../lib/tiers";
@@ -72,51 +72,54 @@ export function GET(req?: Request): Response {
         "textContent"
       );
       const q = parseSearchQuery(url.searchParams);
-      const readMinsRaw = getFirstParam(
+      const readMins = parseNumberParam(
         url.searchParams,
-        "readMins",
-        "mins",
-        "min",
-        "minute",
-        "minutes",
-        "read_mins",
-        "read_time",
-        "readTime",
-        "reading_time",
-        "readingTime",
-        "reading_mins",
-        "readingMins"
+        [
+          "readMins",
+          "mins",
+          "min",
+          "minute",
+          "minutes",
+          "read_mins",
+          "read_time",
+          "readTime",
+          "reading_time",
+          "readingTime",
+          "reading_mins",
+          "readingMins",
+        ],
+        { min: 1, stripSuffix: /\s*(?:mins?|minutes?|m)$/i }
       );
-      const readMinsClean = readMinsRaw?.replace(/\s*(?:mins?|minutes?|m)$/i, "").trim();
-      const readMins = readMinsClean && /^\+?\d+$/.test(readMinsClean) ? Number(readMinsClean) : undefined;
 
-      const minMinsRaw = getFirstParam(
+      const minMins = parseNumberParam(
         url.searchParams,
-        "minMins",
-        "min_mins",
-        "min_read_mins",
-        "minReadMins",
-        "min_read_time",
-        "minReadTime",
-        "min_time",
-        "minTime"
+        [
+          "minMins",
+          "min_mins",
+          "min_read_mins",
+          "minReadMins",
+          "min_read_time",
+          "minReadTime",
+          "min_time",
+          "minTime",
+        ],
+        { min: 0, stripSuffix: /\s*(?:mins?|minutes?|m)$/i }
       );
-      const minMinsClean = minMinsRaw?.replace(/\s*(?:mins?|minutes?|m)$/i, "").trim();
-      const minMins = minMinsClean && /^\+?\d+$/.test(minMinsClean) ? Number(minMinsClean) : undefined;
 
-      const maxMinsRaw = getFirstParam(
+      const maxMins = parseNumberParam(
         url.searchParams,
-        "maxMins",
-        "max_mins",
-        "max_read_mins",
-        "maxReadMins",
-        "max_read_time",
-        "maxReadTime",
-        "max_time",
-        "maxTime"
+        [
+          "maxMins",
+          "max_mins",
+          "max_read_mins",
+          "maxReadMins",
+          "max_read_time",
+          "maxReadTime",
+          "max_time",
+          "maxTime",
+        ],
+        { min: 0, stripSuffix: /\s*(?:mins?|minutes?|m)$/i }
       );
-      const maxMinsClean = maxMinsRaw?.replace(/\s*(?:mins?|minutes?|m)$/i, "").trim();
-      const maxMins = maxMinsClean && /^\+?\d+$/.test(maxMinsClean) ? Number(maxMinsClean) : undefined;
 
       const limit = parseLimit(url.searchParams);
       const offset = parseOffset(url.searchParams, 10000, limit);

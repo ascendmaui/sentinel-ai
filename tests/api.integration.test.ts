@@ -23,7 +23,7 @@ import * as caseStudiesModule from "../lib/caseStudies";
 import { findingById, findings, remediationById } from "../lib/caseStudies";
 import { tierById, tiers } from "../lib/tiers";
 import { S, sourceById, sources } from "../lib/sources";
-import { badRequest, getFirstParam, json, methodNotAllowed, notFound, parseLimit, parseOffset, parsePage, parseSearchQuery, parseSortOrder, SECURITY_HEADERS } from "../lib/http";
+import { badRequest, getFirstParam, json, methodNotAllowed, notFound, parseLimit, parseNumberParam, parseOffset, parsePage, parseSearchQuery, parseSortOrder, SECURITY_HEADERS } from "../lib/http";
 
 const slugCtx = (slug: string) => ({ params: Promise.resolve({ slug }) });
 const idCtx = (id: string) => ({ params: Promise.resolve({ id }) });
@@ -4668,6 +4668,142 @@ describe("Cross-route end-to-end user journeys and relational data integrity", (
     const scItem = await scenarioOne(req("/api/scenarios/api/scenarios/h1"), idCtx("api/scenarios/h1"));
     expect(scItem.status).toBe(200);
     expect((await scItem.json()).id).toBe("legacy-internal-app");
+  });
+
+  it("parseNumberParam handles integer parsing, min/max bounds, unit suffixes, and alias fallback across invalid entries", () => {
+    // 1. Basic parsing and sign support
+    expect(parseNumberParam(new URLSearchParams("count=5"), ["count"])).toBe(5);
+    expect(parseNumberParam(new URLSearchParams("offset=+12"), ["offset"])).toBe(12);
+    expect(parseNumberParam(new URLSearchParams("delta=-3"), ["delta"])).toBe(-3);
+
+    // 2. Bounds enforcement
+    expect(parseNumberParam(new URLSearchParams("val=0"), ["val"], { min: 1 })).toBeUndefined();
+    expect(parseNumberParam(new URLSearchParams("val=-5"), ["val"], { min: 0 })).toBeUndefined();
+    expect(parseNumberParam(new URLSearchParams("val=150"), ["val"], { max: 100 })).toBeUndefined();
+    expect(parseNumberParam(new URLSearchParams("val=50"), ["val"], { min: 10, max: 100 })).toBe(50);
+
+    // 3. Natural unit suffix stripping
+    const suffixRegex = /\s*(?:mins?|minutes?|m)$/i;
+    expect(parseNumberParam(new URLSearchParams("time=8m"), ["time"], { stripSuffix: suffixRegex })).toBe(8);
+    expect(parseNumberParam(new URLSearchParams("time=12mins"), ["time"], { stripSuffix: suffixRegex })).toBe(12);
+    expect(parseNumberParam(new URLSearchParams("time=15 minutes"), ["time"], { stripSuffix: suffixRegex })).toBe(15);
+
+    // 4. Fallback across candidate keys when primary is invalid, empty, or out of bounds
+    expect(parseNumberParam(new URLSearchParams("readMins=0&mins=8"), ["readMins", "mins"], { min: 1 })).toBe(8);
+    expect(parseNumberParam(new URLSearchParams("readMins=invalid&mins=8m"), ["readMins", "mins"], { min: 1, stripSuffix: suffixRegex })).toBe(8);
+    expect(parseNumberParam(new URLSearchParams("readMins=&mins=10"), ["readMins", "mins"])).toBe(10);
+    expect(parseNumberParam(new URLSearchParams("minMins=-1&min_time=5m"), ["minMins", "min_time"], { min: 0, stripSuffix: suffixRegex })).toBe(5);
+    expect(parseNumberParam(new URLSearchParams("maxMins=abc&max_time=12mins"), ["maxMins", "max_time"], { min: 0, stripSuffix: suffixRegex })).toBe(12);
+
+    // 5. Fallback across repeated parameters in the same key
+    const multiParams = new URLSearchParams();
+    multiParams.append("val", "invalid");
+    multiParams.append("val", "0");
+    multiParams.append("val", "42");
+    expect(parseNumberParam(multiParams, ["val"], { min: 1 })).toBe(42);
+
+    // 6. Defensive against empty/invalid inputs
+    expect(parseNumberParam(null as unknown as URLSearchParams, ["val"])).toBeUndefined();
+    expect(parseNumberParam(undefined as unknown as URLSearchParams, ["val"])).toBeUndefined();
+    expect(parseNumberParam(new URLSearchParams("val=5"), [])).toBeUndefined();
+    expect(parseNumberParam(new URLSearchParams("val=5"), ["" as string])).toBeUndefined();
+    expect(parseNumberParam(new URLSearchParams("val=abc"), ["val"])).toBeUndefined();
+    expect(parseNumberParam(new URLSearchParams("val=1.5"), ["val"])).toBeUndefined();
+  });
+
+  it("API collection routes fall back across invalid primary aliases for rank, reading duration, and severity", async () => {
+    // 1. /api/posts reading duration fallback on invalid primary
+    const invalidReadMinsRes = postsIndex(req("/api/posts?readMins=0&mins=8"));
+    expect(invalidReadMinsRes.status).toBe(200);
+    const readMinsData = await invalidReadMinsRes.json();
+    expect(readMinsData.count).toBeGreaterThan(0);
+    expect(readMinsData.posts.every((p: { readMins: number }) => p.readMins === 8)).toBe(true);
+
+    const suffixFallbackRes = postsIndex(req("/api/posts?readMins=invalid&mins=8m"));
+    expect(suffixFallbackRes.status).toBe(200);
+    const suffixData = await suffixFallbackRes.json();
+    expect(suffixData.count).toBeGreaterThan(0);
+    expect(suffixData.posts.every((p: { readMins: number }) => p.readMins === 8)).toBe(true);
+
+    const minMinsFallbackRes = postsIndex(req("/api/posts?minMins=invalid&min_time=7"));
+    expect(minMinsFallbackRes.status).toBe(200);
+    const minMinsData = await minMinsFallbackRes.json();
+    expect(minMinsData.count).toBeGreaterThan(0);
+    expect(minMinsData.posts.every((p: { readMins: number }) => p.readMins >= 7)).toBe(true);
+
+    // 2. /api/tiers rank fallback on invalid primary
+    const tierRank0Res = tiersIndex(req("/api/tiers?rank=0&tier_rank=1"));
+    expect(tierRank0Res.status).toBe(200);
+    const tierRank0Data = await tierRank0Res.json();
+    expect(tierRank0Data.count).toBe(1);
+    expect(tierRank0Data.tiers[0].id).toBe("seraphim");
+
+    const tierRankInvalidRes = tiersIndex(req("/api/tiers?rank=invalid&tier_rank=2"));
+    expect(tierRankInvalidRes.status).toBe(200);
+    const tierRankInvalidData = await tierRankInvalidRes.json();
+    expect(tierRankInvalidData.count).toBe(1);
+    expect(tierRankInvalidData.tiers[0].id).toBe("cherubim");
+
+    const tierRankByNameFallback = tiersIndex(req("/api/tiers?rank=invalid&r=angels"));
+    expect(tierRankByNameFallback.status).toBe(200);
+    const tierNameData = await tierRankByNameFallback.json();
+    expect(tierNameData.count).toBe(1);
+    expect(tierNameData.tiers[0].id).toBe("angels");
+
+    // 3. /api/case-studies severity fallback on invalid primary
+    const csSevInvalidRes = caseStudiesIndex(req("/api/case-studies?severity=invalid&sev=high"));
+    expect(csSevInvalidRes.status).toBe(200);
+    const csSevData = await csSevInvalidRes.json();
+    expect(csSevData.count).toBe(1);
+    expect(csSevData.findings[0].id).toBe("F-02");
+
+    const csSev0Res = caseStudiesIndex(req("/api/case-studies?severity=0&sev=med"));
+    expect(csSev0Res.status).toBe(200);
+    const csSev0Data = await csSev0Res.json();
+    expect(csSev0Data.count).toBe(4);
+
+    // 4. /api/case-studies remediation prefix support
+    const rem01Res = caseStudiesIndex(req("/api/case-studies?id=rem-01"));
+    expect(rem01Res.status).toBe(200);
+    const rem01Data = await rem01Res.json();
+    expect(rem01Data.count).toBe(1);
+    expect(rem01Data.findings[0].id).toBe("F-01");
+
+    const remediation1Res = caseStudiesIndex(req("/api/case-studies?id=remediation-1"));
+    expect(remediation1Res.status).toBe(200);
+    const remediation1Data = await remediation1Res.json();
+    expect(remediation1Data.count).toBe(1);
+    expect(remediation1Data.findings[0].id).toBe("F-01");
+
+    // 5. /api/brand trust badge path prefix stripping
+    const brandPrefix1 = brandEndpoint(req("/api/brand?badge=api/brand/trust-1"));
+    expect(brandPrefix1.status).toBe(200);
+    expect((await brandPrefix1.json()).badge.key).toBe("passive");
+
+    const brandPrefixAuth = brandEndpoint(req("/api/brand?trust=api/brand/auth"));
+    expect(brandPrefixAuth.status).toBe(200);
+    expect((await brandPrefixAuth.json()).badge.key).toBe("auth");
+
+    const brandPrefixPass = brandEndpoint(req("/api/brand?key=brand/passive"));
+    expect(brandPrefixPass.status).toBe(200);
+    expect((await brandPrefixPass.json()).badge.key).toBe("passive");
+
+    // 6. /api/incidents and /api/scenarios nested path prefix filtering
+    const incNestedRes = incidentsIndex(req("/api/incidents?id=api/incidents/openai-huggingface-2026"));
+    expect(incNestedRes.status).toBe(200);
+    expect((await incNestedRes.json()).count).toBe(1);
+
+    const incNestedNumRes = incidentsIndex(req("/api/incidents?n=api/incidents/01"));
+    expect(incNestedNumRes.status).toBe(200);
+    expect((await incNestedNumRes.json()).count).toBe(1);
+
+    const scNestedRes = scenariosIndex(req("/api/scenarios?id=api/scenarios/legacy-internal-app"));
+    expect(scNestedRes.status).toBe(200);
+    expect((await scNestedRes.json()).count).toBe(1);
+
+    const scNestedNumRes = scenariosIndex(req("/api/scenarios?n=api/scenarios/h1"));
+    expect(scNestedNumRes.status).toBe(200);
+    expect((await scNestedNumRes.json()).count).toBe(1);
   });
 });
 

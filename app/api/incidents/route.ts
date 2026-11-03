@@ -137,6 +137,8 @@ export function GET(req?: Request): Response {
         const matched = incidentById(id);
         let cleanId = id.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
         cleanId = cleanId.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
+        cleanId = cleanId.replace(/^(?:(?:api\/)?(?:incidents|incident|incident-case-studies|cases|case)\/)+/, "");
+        cleanId = cleanId.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         cleanId = cleanId.replace(/^(incident|case|inc)[-_]/, "");
         if (cleanId.startsWith("incident") && /^\d+$/.test(cleanId.slice(8))) cleanId = cleanId.slice(8);
         else if (cleanId.startsWith("case") && /^\d+$/.test(cleanId.slice(4))) cleanId = cleanId.slice(4);
@@ -159,6 +161,8 @@ export function GET(req?: Request): Response {
       if (n) {
         const matched = incidentById(n);
         let cleanN = n.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
+        cleanN = cleanN.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
+        cleanN = cleanN.replace(/^(?:(?:api\/)?(?:incidents|incident|incident-case-studies|cases|case)\/)+/, "");
         cleanN = cleanN.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         cleanN = cleanN.replace(/^(incident|case|inc)[-_]/, "");
         if (cleanN.startsWith("incident") && /^\d+$/.test(cleanN.slice(8))) cleanN = cleanN.slice(8);

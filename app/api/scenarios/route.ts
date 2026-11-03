@@ -112,6 +112,8 @@ export function GET(req?: Request): Response {
         const matched = scenarioById(id);
         let cleanId = id.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
         cleanId = cleanId.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
+        cleanId = cleanId.replace(/^(?:(?:api\/)?(?:scenarios|scenario|hypothetical-scenarios|hypothetical)\/)+/, "");
+        cleanId = cleanId.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         cleanId = cleanId.replace(/^(scenario|sc)[-_]/, "");
         if (cleanId.startsWith("scenario") && /^(?:h)?\d+$/.test(cleanId.slice(8))) cleanId = cleanId.slice(8);
         else if (cleanId.startsWith("sc") && /^\d+$/.test(cleanId.slice(2))) cleanId = cleanId.slice(2);
@@ -133,6 +135,8 @@ export function GET(req?: Request): Response {
       if (n) {
         const matched = scenarioById(n);
         let cleanN = n.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
+        cleanN = cleanN.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
+        cleanN = cleanN.replace(/^(?:(?:api\/)?(?:scenarios|scenario|hypothetical-scenarios|hypothetical)\/)+/, "");
         cleanN = cleanN.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         cleanN = cleanN.replace(/^(scenario|sc)[-_]/, "");
         if (cleanN.startsWith("scenario") && /^(?:h)?\d+$/.test(cleanN.slice(8))) cleanN = cleanN.slice(8);

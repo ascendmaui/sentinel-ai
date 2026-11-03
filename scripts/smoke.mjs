@@ -1002,6 +1002,30 @@ const srcUrlParam = encodeURIComponent("https://openai.com/index/hugging-face-in
 const srcItemByUrl = await get(`/api/sources/${srcUrlParam}`);
 check(srcItemByUrl.status === 200 && (await srcItemByUrl.json()).id === "oaiAug", "GET /api/sources/[url] URL lookup");
 
+const postReadMinsInvalidFallback = await (await get("/api/posts?readMins=0&mins=8")).json();
+check(postReadMinsInvalidFallback.count > 0 && postReadMinsInvalidFallback.posts.every(p => p.readMins === 8), "GET /api/posts?readMins=0&mins=8 invalid-primary fallback");
+
+const tierRank0Fallback = await (await get("/api/tiers?rank=0&tier_rank=1")).json();
+check(tierRank0Fallback.count === 1 && tierRank0Fallback.tiers[0].id === "seraphim", "GET /api/tiers?rank=0&tier_rank=1 invalid-primary fallback");
+
+const tierRankInvalidFallback = await (await get("/api/tiers?rank=invalid&tier_rank=2")).json();
+check(tierRankInvalidFallback.count === 1 && tierRankInvalidFallback.tiers[0].id === "cherubim", "GET /api/tiers?rank=invalid&tier_rank=2 invalid-primary fallback");
+
+const csSevInvalidFallback = await (await get("/api/case-studies?severity=invalid&sev=high")).json();
+check(csSevInvalidFallback.count === 1 && csSevInvalidFallback.findings[0].id === "F-02", "GET /api/case-studies?severity=invalid&sev=high invalid-primary fallback");
+
+const brandPathPrefixBadge = await (await get("/api/brand?badge=api/brand/trust-1")).json();
+check(brandPathPrefixBadge.badge && brandPathPrefixBadge.badge.key === "passive", "GET /api/brand?badge=api/brand/trust-1 path-prefix resolution");
+
+const csRemIdFilter = await (await get("/api/case-studies?id=rem-01")).json();
+check(csRemIdFilter.count === 1 && csRemIdFilter.findings[0].id === "F-01", "GET /api/case-studies?id=rem-01 rem- prefix");
+
+const incNestedPathFilter = await (await get("/api/incidents?id=api/incidents/openai-huggingface-2026")).json();
+check(incNestedPathFilter.count === 1 && incNestedPathFilter.incidents[0].id === "openai-huggingface-2026", "GET /api/incidents?id=api/incidents/... nested path prefix");
+
+const scNestedPathFilter = await (await get("/api/scenarios?id=api/scenarios/legacy-internal-app")).json();
+check(scNestedPathFilter.count === 1 && scNestedPathFilter.scenarios[0].id === "legacy-internal-app", "GET /api/scenarios?id=api/scenarios/... nested path prefix");
+
 // 11. Robots, Sitemap, and Static Assets
 const headRobots = await get("/robots.txt", { method: "HEAD" });
 check(headRobots.status === 200, "HEAD /robots.txt -> 200");

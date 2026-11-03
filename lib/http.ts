@@ -236,6 +236,38 @@ export function parseOffset(params: URLSearchParams, max = 10000, pageSize?: num
   return undefined;
 }
 
+/**
+ * Safely parses an optional integer from URL search parameters across multiple candidate keys.
+ * Accepts an optional options object for min, max bounds and suffix-stripping regex (e.g. natural unit suffixes like "8m", "8 mins").
+ * Iterates through candidate keys and candidate values in order, skipping invalid/empty entries until a valid integer is found.
+ */
+export function parseNumberParam(
+  params: URLSearchParams,
+  keys: string[],
+  options: { min?: number; max?: number; stripSuffix?: RegExp } = {}
+): number | undefined {
+  if (!params || typeof params.get !== "function" || !Array.isArray(keys) || keys.length === 0) return undefined;
+  const { min, max, stripSuffix } = options;
+  for (const k of keys) {
+    if (!k || typeof k !== "string") continue;
+    const values = typeof params.getAll === "function" ? params.getAll(k) : [params.get(k)];
+    for (const raw of values) {
+      if (typeof raw !== "string") continue;
+      let v = raw.trim();
+      if (stripSuffix) {
+        v = v.replace(stripSuffix, "").trim();
+      }
+      if (!v || !/^[+-]?\d+$/.test(v)) continue;
+      const num = Number(v);
+      if (!Number.isFinite(num)) continue;
+      if (min !== undefined && num < min) continue;
+      if (max !== undefined && num > max) continue;
+      return num;
+    }
+  }
+  return undefined;
+}
+
 export type SortOrder = "asc" | "desc";
 
 /**

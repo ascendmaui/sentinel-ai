@@ -234,6 +234,10 @@ describe.each(routes.map((r) => [r.path] as const))("route contract %s", (path) 
       const invalidSortFallbackRes = await mod.GET({ url: `${path}?order=invalid&dir=asc` } as unknown as Request);
       expect(invalidSortFallbackRes.status).toBe(200);
       expectHardenedJson(invalidSortFallbackRes, `${path} order=invalid&dir=asc url`);
+
+      const invalidOffsetFallbackRes = await mod.GET({ url: `${path}?offset=invalid&skip=0` } as unknown as Request);
+      expect(invalidOffsetFallbackRes.status).toBe(200);
+      expectHardenedJson(invalidOffsetFallbackRes, `${path} offset=invalid&skip=0 url`);
     });
   } else {
     it("is a dynamic route with generateStaticParams and dynamicParams enabled", () => {

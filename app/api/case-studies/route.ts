@@ -39,13 +39,25 @@ export function GET(req?: Request): Response {
         "slug"
       );
       const title = parseSearchQuery(url.searchParams, "title", "name", "headline");
-      const severity = parseSearchQuery(
-        url.searchParams,
-        "severity",
-        "sev",
-        "level",
-        "priority"
-      );
+      const severityKeys = ["severity", "sev", "level", "priority"];
+      const KNOWN_SEVERITIES = ["critical", "high", "medium", "low", "info"];
+      let severity: string | undefined;
+      for (const k of severityKeys) {
+        const values = typeof url.searchParams.getAll === "function" ? url.searchParams.getAll(k) : [url.searchParams.get(k)];
+        for (const raw of values) {
+          if (typeof raw !== "string") continue;
+          const clean = raw.trim().toLowerCase().replace(/^[#+]+/, "").replace(/[#+]+$/, "");
+          if (!clean) continue;
+          if (KNOWN_SEVERITIES.some((s) => s.startsWith(clean) || clean.startsWith(s))) {
+            severity = clean;
+            break;
+          }
+        }
+        if (severity !== undefined) break;
+      }
+      if (!severity) {
+        severity = parseSearchQuery(url.searchParams, ...severityKeys);
+      }
       const status = parseSearchQuery(
         url.searchParams,
         "status",
@@ -117,7 +129,12 @@ export function GET(req?: Request): Response {
         const matched = findingById(id);
         let cleanId = id.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
         cleanId = cleanId.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
-        if (cleanId.startsWith("fix-") || cleanId.startsWith("fix_")) cleanId = cleanId.slice(4);
+        cleanId = cleanId.replace(/^(?:(?:api\/)?(?:case-studies|case-study|findings|finding|remediations|remediation)\/)+/, "");
+        cleanId = cleanId.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
+        if (cleanId.startsWith("remediation-") || cleanId.startsWith("remediation_")) cleanId = cleanId.slice(12);
+        else if (cleanId.startsWith("rem-") || cleanId.startsWith("rem_")) cleanId = cleanId.slice(4);
+        else if (cleanId.startsWith("rem") && /^\d+$/.test(cleanId.slice(3))) cleanId = cleanId.slice(3);
+        else if (cleanId.startsWith("fix-") || cleanId.startsWith("fix_")) cleanId = cleanId.slice(4);
         else if (cleanId.startsWith("fix") && /^\d+$/.test(cleanId.slice(3))) cleanId = cleanId.slice(3);
         else if (cleanId.startsWith("finding-") || cleanId.startsWith("finding_")) cleanId = cleanId.slice(8);
         else if (cleanId.startsWith("finding") && /^\d+$/.test(cleanId.slice(7))) cleanId = cleanId.slice(7);
