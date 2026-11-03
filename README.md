@@ -58,6 +58,7 @@ All endpoints export HTTP/REST JSON contracts with security headers (`X-Content-
 - `npm run test:components`: Run UI component tests (icons, emblems, logo mark, trust badges, nav, footer).
 - `npm run test:pages`: Run React Server Component page tests, metadata parity, and JSON-LD structured data verification.
 - `npm run test:content`: Run content integrity and relationship verification tests.
+- `npm run test:seo`: Run robots, sitemap, and theme boot script tests.
 - `npm run typecheck`: Strict TypeScript typecheck across all routes, components, and tests (`tsc --noEmit`).
 - `npm run smoke`: Black-box smoke test validating running server endpoints, API contracts, query filtering, 404 responses, and internal link resolution.
 - `npm run build`: Production Next.js build generating static HTML and JSON routes with SSG.

@@ -11,6 +11,7 @@
     "test:content": "vitest run tests/content.test.ts",
     "test:components": "vitest run tests/components.test.ts",
     "test:pages": "vitest run tests/pages.test.ts",
+    "test:seo": "vitest run tests/seo-theme.test.ts",
     "typecheck": "tsc --noEmit",
     "smoke": "node scripts/smoke.mjs"
   },
