@@ -670,6 +670,36 @@ const headSrcOne = await get("/api/sources/oaiAug", { method: "HEAD" });
 check(headSrcOne.status === 200, "HEAD /api/sources/oaiAug -> 200");
 checkSecurityHeaders(headSrcOne, "HEAD /api/sources/oaiAug");
 
+const srcHyphenItem = await get("/api/sources/hf-disc");
+check(srcHyphenItem.status === 200 && (await srcHyphenItem.json()).id === "hfDisc", "GET /api/sources/hf-disc (hyphenated key)");
+
+const srcCs26Item = await get("/api/sources/cs-26");
+check(srcCs26Item.status === 200 && (await srcCs26Item.json()).id === "cs26", "GET /api/sources/cs-26 (hyphenated key)");
+
+const srcHyphenQuery = await (await get("/api/sources?id=hf-disc")).json();
+check(srcHyphenQuery.count === 1 && srcHyphenQuery.sources[0].id === "hfDisc", "GET /api/sources?id=hf-disc");
+
+const srcPrefixQuery = await (await get("/api/sources?id=api/sources/hf-disc")).json();
+check(srcPrefixQuery.count === 1 && srcPrefixQuery.sources[0].id === "hfDisc", "GET /api/sources?id=api/sources/hf-disc");
+
+const srcDomainQuery = await (await get("/api/sources?domain=openai.com")).json();
+check(srcDomainQuery.count >= 3 && srcDomainQuery.sources.every(s => s.url.includes("openai.com")), "GET /api/sources?domain=openai.com");
+
+const postSrcHyphenQuery = await (await get("/api/posts?source=hf-disc")).json();
+check(postSrcHyphenQuery.count >= 1 && postSrcHyphenQuery.posts.some(p => p.slug === "hugging-face-three-incidents"), "GET /api/posts?source=hf-disc");
+
+const postSlugPrefixQuery = await (await get("/api/posts?slug=api/posts/when-the-test-subject-leaves-the-test")).json();
+check(postSlugPrefixQuery.count === 1 && postSlugPrefixQuery.posts[0].slug === "when-the-test-subject-leaves-the-test", "GET /api/posts?slug=api/posts/...");
+
+const tierPrefixQuery = await (await get("/api/tiers?id=api/tiers/seraphim")).json();
+check(tierPrefixQuery.count === 1 && tierPrefixQuery.tiers[0].id === "seraphim", "GET /api/tiers?id=api/tiers/seraphim");
+
+const csSevHighQuery = await (await get("/api/case-studies?severity=sev-high")).json();
+check(csSevHighQuery.count === 1 && csSevHighQuery.findings[0].id === "F-02", "GET /api/case-studies?severity=sev-high");
+
+const csSevMedQuery = await (await get("/api/case-studies?sev=priority-medium")).json();
+check(csSevMedQuery.count === 4, "GET /api/case-studies?sev=priority-medium");
+
 const missingSrc = await get("/api/sources/does-not-exist");
 check(missingSrc.status === 404 && (await missingSrc.json()).error === "not_found", "unknown source -> JSON 404");
 check(missingSrc.headers.get("cache-control") === "no-store", "404 unknown source cache-control is no-store");

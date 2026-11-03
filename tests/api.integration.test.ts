@@ -4805,6 +4805,148 @@ describe("Cross-route end-to-end user journeys and relational data integrity", (
     expect(scNestedNumRes.status).toBe(200);
     expect((await scNestedNumRes.json()).count).toBe(1);
   });
+
+  it("handles hyphenated and snake_case source resolution across dynamic routes and query filters", async () => {
+    // 1. GET /api/sources/[id] with hyphenated and snake_case keys
+    const hfDiscRes = await sourceOne(req("/api/sources/hf-disc"), idCtx("hf-disc"));
+    expect(hfDiscRes.status).toBe(200);
+    expect((await hfDiscRes.json()).id).toBe("hfDisc");
+
+    const hfDiscSnakeRes = await sourceOne(req("/api/sources/hf_disc"), idCtx("hf_disc"));
+    expect(hfDiscSnakeRes.status).toBe(200);
+    expect((await hfDiscSnakeRes.json()).id).toBe("hfDisc");
+
+    const oaiAugHyphenRes = await sourceOne(req("/api/sources/oai-aug"), idCtx("oai-aug"));
+    expect(oaiAugHyphenRes.status).toBe(200);
+    expect((await oaiAugHyphenRes.json()).id).toBe("oaiAug");
+
+    const cs26HyphenRes = await sourceOne(req("/api/sources/cs-26"), idCtx("cs-26"));
+    expect(cs26HyphenRes.status).toBe(200);
+    expect((await cs26HyphenRes.json()).id).toBe("cs26");
+
+    const cs26SnakeRes = await sourceOne(req("/api/sources/cs_26"), idCtx("cs_26"));
+    expect(cs26SnakeRes.status).toBe(200);
+    expect((await cs26SnakeRes.json()).id).toBe("cs26");
+
+    const hfSpacesHyphenRes = await sourceOne(req("/api/sources/hf-spaces"), idCtx("hf-spaces"));
+    expect(hfSpacesHyphenRes.status).toBe(200);
+    expect((await hfSpacesHyphenRes.json()).id).toBe("hfSpaces");
+
+    const jfPickleHyphenRes = await sourceOne(req("/api/sources/jf-pickle"), idCtx("jf-pickle"));
+    expect(jfPickleHyphenRes.status).toBe(200);
+    expect((await jfPickleHyphenRes.json()).id).toBe("jfPickle");
+
+    // 2. GET /api/sources query filter with hyphenated and path-prefixed IDs
+    const srcHyphenQuery = sourcesIndex(req("/api/sources?id=hf-disc"));
+    expect(srcHyphenQuery.status).toBe(200);
+    const srcHyphenData = await srcHyphenQuery.json();
+    expect(srcHyphenData.count).toBe(1);
+    expect(srcHyphenData.sources[0].id).toBe("hfDisc");
+
+    const srcPrefixQuery = sourcesIndex(req("/api/sources?id=api/sources/hf-disc"));
+    expect(srcPrefixQuery.status).toBe(200);
+    expect((await srcPrefixQuery.json()).count).toBe(1);
+
+    const srcNumPrefixQuery = sourcesIndex(req("/api/sources?id=sources/1"));
+    expect(srcNumPrefixQuery.status).toBe(200);
+    expect((await srcNumPrefixQuery.json()).count).toBe(1);
+
+    // 3. GET /api/sources protocol/trailing-slash resilient URL and domain filtering
+    const urlExactRes = sourcesIndex(req("/api/sources?url=https://openai.com/index/hugging-face-incident-and-the-road-ahead/"));
+    expect(urlExactRes.status).toBe(200);
+    expect((await urlExactRes.json()).count).toBeGreaterThanOrEqual(1);
+
+    const urlNoSlashRes = sourcesIndex(req("/api/sources?url=https://openai.com/index/hugging-face-incident-and-the-road-ahead"));
+    expect(urlNoSlashRes.status).toBe(200);
+    expect((await urlNoSlashRes.json()).count).toBeGreaterThanOrEqual(1);
+
+    const urlNoProtoRes = sourcesIndex(req("/api/sources?url=openai.com/index/hugging-face-incident-and-the-road-ahead"));
+    expect(urlNoProtoRes.status).toBe(200);
+    expect((await urlNoProtoRes.json()).count).toBeGreaterThanOrEqual(1);
+
+    const domainRes = sourcesIndex(req("/api/sources?domain=openai.com"));
+    expect(domainRes.status).toBe(200);
+    expect((await domainRes.json()).count).toBeGreaterThanOrEqual(3);
+
+    // 4. Cross-route hyphenated source and path prefix filtering
+    const postSrcHyphen = postsIndex(req("/api/posts?source=hf-disc"));
+    expect(postSrcHyphen.status).toBe(200);
+    expect((await postSrcHyphen.json()).count).toBeGreaterThanOrEqual(1);
+
+    const postSrcPrefix = postsIndex(req("/api/posts?source=api/sources/oaiAug"));
+    expect(postSrcPrefix.status).toBe(200);
+    expect((await postSrcPrefix.json()).count).toBeGreaterThanOrEqual(1);
+
+    const postSlugPrefix = postsIndex(req("/api/posts?slug=api/posts/when-the-test-subject-leaves-the-test"));
+    expect(postSlugPrefix.status).toBe(200);
+    expect((await postSlugPrefix.json()).count).toBe(1);
+
+    const postTierPrefix = postsIndex(req("/api/posts?tier=api/tiers/seraphim"));
+    expect(postTierPrefix.status).toBe(200);
+    expect((await postTierPrefix.json()).count).toBeGreaterThanOrEqual(1);
+
+    const incSrcHyphen = incidentsIndex(req("/api/incidents?source=hf-disc"));
+    expect(incSrcHyphen.status).toBe(200);
+    expect((await incSrcHyphen.json()).count).toBeGreaterThanOrEqual(1);
+
+    const incSrcPrefix = incidentsIndex(req("/api/incidents?source=api/sources/oaiAug"));
+    expect(incSrcPrefix.status).toBe(200);
+    expect((await incSrcPrefix.json()).count).toBeGreaterThanOrEqual(1);
+
+    const scRefHyphen = scenariosIndex(req("/api/scenarios?ref=cs-26"));
+    expect(scRefHyphen.status).toBe(200);
+
+    const scRefPrefix = scenariosIndex(req("/api/scenarios?ref=api/sources/oaiAug"));
+    expect(scRefPrefix.status).toBe(200);
+    expect((await scRefPrefix.json()).count).toBeGreaterThanOrEqual(1);
+
+    const tierPrefixRes = tiersIndex(req("/api/tiers?id=api/tiers/seraphim"));
+    expect(tierPrefixRes.status).toBe(200);
+    expect((await tierPrefixRes.json()).count).toBe(1);
+
+    const tierPricingPrefix = tiersIndex(req("/api/tiers?tier=pricing/thrones"));
+    expect(tierPricingPrefix.status).toBe(200);
+    expect((await tierPricingPrefix.json()).count).toBe(1);
+
+    // 5. Case studies severity prefix stripping (?severity=sev-high, ?sev=priority-medium, ?level=level-low)
+    const csSevHighRes = caseStudiesIndex(req("/api/case-studies?severity=sev-high"));
+    expect(csSevHighRes.status).toBe(200);
+    expect((await csSevHighRes.json()).count).toBe(1);
+
+    const csSevMedRes = caseStudiesIndex(req("/api/case-studies?sev=priority-medium"));
+    expect(csSevMedRes.status).toBe(200);
+    expect((await csSevMedRes.json()).count).toBe(4);
+
+    const csSevLowRes = caseStudiesIndex(req("/api/case-studies?level=level-low"));
+    expect(csSevLowRes.status).toBe(200);
+    expect((await csSevLowRes.json()).count).toBe(3);
+
+    // 6. Dynamic routes rejected ctx.params promise resilience
+    const rejectCtx = { params: Promise.reject(new Error("aborted stream")) };
+    const rejectedPost = await postOne(req("/api/posts/err"), rejectCtx as unknown as { params: Promise<{ slug: string }> });
+    expect(rejectedPost.status).toBe(404);
+    expect((await rejectedPost.json()).error).toBe("not_found");
+
+    const rejectedInc = await incidentOne(req("/api/incidents/err"), rejectCtx as unknown as { params: Promise<{ id: string }> });
+    expect(rejectedInc.status).toBe(404);
+    expect((await rejectedInc.json()).error).toBe("not_found");
+
+    const rejectedSc = await scenarioOne(req("/api/scenarios/err"), rejectCtx as unknown as { params: Promise<{ id: string }> });
+    expect(rejectedSc.status).toBe(404);
+    expect((await rejectedSc.json()).error).toBe("not_found");
+
+    const rejectedCs = await caseStudyOne(req("/api/case-studies/err"), rejectCtx as unknown as { params: Promise<{ id: string }> });
+    expect(rejectedCs.status).toBe(404);
+    expect((await rejectedCs.json()).error).toBe("not_found");
+
+    const rejectedTier = await tierOne(req("/api/tiers/err"), rejectCtx as unknown as { params: Promise<{ id: string }> });
+    expect(rejectedTier.status).toBe(404);
+    expect((await rejectedTier.json()).error).toBe("not_found");
+
+    const rejectedSrc = await sourceOne(req("/api/sources/err"), rejectCtx as unknown as { params: Promise<{ id: string }> });
+    expect(rejectedSrc.status).toBe(404);
+    expect((await rejectedSrc.json()).error).toBe("not_found");
+  });
 });
 
 
