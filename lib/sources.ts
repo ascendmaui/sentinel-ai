@@ -64,5 +64,10 @@ export function sourceById(id: string): Source | undefined {
     );
     if (match) return match;
   }
-  return sources.find((s) => s.id.toLowerCase() === target);
+  const normalized = target.replace(/[-_]/g, "");
+  return sources.find(
+    (s) =>
+      s.id.toLowerCase() === target ||
+      s.id.toLowerCase().replace(/[-_]/g, "") === normalized
+  );
 }

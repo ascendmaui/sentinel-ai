@@ -68,6 +68,8 @@ export function GET(req?: Request): Response {
         const matched = sourceById(id);
         let cleanId = id.trim().toLowerCase().replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
         cleanId = cleanId.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
+        cleanId = cleanId.replace(/^(?:(?:api\/)?(?:sources|source|refs|ref|references|reference)\/)+/, "");
+        cleanId = cleanId.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         if (cleanId.startsWith("source-") || cleanId.startsWith("source_")) cleanId = cleanId.slice(7);
         else if (cleanId.startsWith("source") && /^\d+$/.test(cleanId.slice(6))) cleanId = cleanId.slice(6);
         else if (cleanId.startsWith("src-") || cleanId.startsWith("src_")) cleanId = cleanId.slice(4);
@@ -80,10 +82,12 @@ export function GET(req?: Request): Response {
         else if (cleanId.startsWith("s") && /^\d+$/.test(cleanId.slice(1))) cleanId = cleanId.slice(1);
         cleanId = cleanId.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         const lowerId = id.trim().toLowerCase();
+        const normalized = cleanId.replace(/[-_]/g, "");
         list = list.filter(
           (s) =>
             s.id.toLowerCase() === lowerId ||
             s.id.toLowerCase() === cleanId ||
+            s.id.toLowerCase().replace(/[-_]/g, "") === normalized ||
             (matched && s.id.toLowerCase() === matched.id.toLowerCase())
         );
       }
@@ -98,7 +102,12 @@ export function GET(req?: Request): Response {
         list = list.filter((s) => s.note && s.note.toLowerCase().includes(note));
       }
       if (urlFilter) {
-        list = list.filter((s) => s.url.toLowerCase().includes(urlFilter));
+        const cleanUrlFilter = urlFilter.replace(/\/+$/, "").replace(/^https?:\/\//, "");
+        list = list.filter((s) => {
+          const sUrl = s.url.toLowerCase();
+          const sUrlNoProto = sUrl.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+          return sUrl.includes(urlFilter) || sUrlNoProto.includes(cleanUrlFilter);
+        });
       }
       if (q) {
         list = list.filter(

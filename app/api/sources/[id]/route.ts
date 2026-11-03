@@ -9,8 +9,12 @@ export function generateStaticParams() {
 
 /** One research source with URL, publication date, and credibility note. */
 export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
-  const { id = "" } = (await ctx?.params) ?? {};
-  const source = sourceById(id);
-  if (!source) return notFound("source");
-  return json(source, { cacheControl: PUBLIC_CACHE });
+  try {
+    const { id = "" } = (await ctx?.params) ?? {};
+    const source = sourceById(id);
+    if (!source) return notFound("source");
+    return json(source, { cacheControl: PUBLIC_CACHE });
+  } catch {
+    return notFound("source");
+  }
 }
