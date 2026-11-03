@@ -9,8 +9,12 @@ export function generateStaticParams() {
 
 /** One service tier with detailed deliverables and fit criteria. */
 export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
-  const { id = "" } = (await ctx?.params) ?? {};
-  const tier = tierById(id);
-  if (!tier) return notFound("service tier");
-  return json(tier, { cacheControl: PUBLIC_CACHE });
+  try {
+    const { id = "" } = (await ctx?.params) ?? {};
+    const tier = tierById(id);
+    if (!tier) return notFound("service tier");
+    return json(tier, { cacheControl: PUBLIC_CACHE });
+  } catch {
+    return notFound("service tier");
+  }
 }

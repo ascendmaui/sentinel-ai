@@ -9,9 +9,13 @@ export function generateStaticParams() {
 
 /** One case study finding with before/after analysis and remediation details. */
 export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
-  const { id = "" } = (await ctx?.params) ?? {};
-  const finding = findingById(id);
-  if (!finding) return notFound("case study finding");
-  const rem = remediationById(finding.id);
-  return json({ ...finding, remediation: rem ?? null }, { cacheControl: PUBLIC_CACHE });
+  try {
+    const { id = "" } = (await ctx?.params) ?? {};
+    const finding = findingById(id);
+    if (!finding) return notFound("case study finding");
+    const rem = remediationById(finding.id);
+    return json({ ...finding, remediation: rem ?? null }, { cacheControl: PUBLIC_CACHE });
+  } catch {
+    return notFound("case study finding");
+  }
 }

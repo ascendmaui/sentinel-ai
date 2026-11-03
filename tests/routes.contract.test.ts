@@ -295,6 +295,19 @@ describe.each(routes.map((r) => [r.path] as const))("route contract %s", (path) 
       expect(noArgRes.status).toBe(404);
       expectHardenedJson(noArgRes, `${path} no args`);
     });
+
+    it("returns a JSON 404 when route context params promise rejects", async () => {
+      const rejectCtx = { params: Promise.reject(new Error("simulated stream abort")) };
+      const res = await modules[path].GET(
+        new Request(`http://localhost${path}`),
+        rejectCtx as unknown as { params: Promise<Record<string, string>> }
+      );
+      expect(res.status).toBe(404);
+      expectHardenedJson(res, `${path} rejected params`);
+      expect(res.headers.get("cache-control")).toBe("no-store");
+      const body = await res.json();
+      expect(body.error).toBe("not_found");
+    });
   }
 
   it("never echoes server-side environment values in the response body", async () => {
