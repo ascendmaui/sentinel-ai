@@ -98,7 +98,7 @@ export function badgeByKey(key: string): TrustBadge | undefined {
   if (!target) return undefined;
   target = target.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
   target = target.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
-  target = target.replace(/^(?:(?:api\/)?(?:brand|badges|badge|trust|trust-badges|trust-badge)\/)+/, "");
+  target = target.replace(/^(?:(?:api\/)?(?:brand|badges|badge|trust|trust[-_]badges|trust[-_]badge)\/)+/, "");
   target = target.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
   if (target.startsWith("trust-badge-") || target.startsWith("trust_badge_")) target = target.slice(12);
   else if (target.startsWith("trust-") || target.startsWith("trust_")) target = target.slice(6);

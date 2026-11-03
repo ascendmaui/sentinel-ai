@@ -224,7 +224,7 @@ export const postBySlug = (slug: string): Post | undefined => {
   target = target.replace(/\.(html|json)$/, "");
 
   target = target.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
-  target = target.replace(/^(?:(?:api\/)?(?:posts|post|blog|article|articles)\/)+/, "");
+  target = target.replace(/^(?:(?:api\/)?(?:posts|post|blog[-_]posts|blog[-_]post|blog|article|articles)\/)+/, "");
   target = target.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
 
   if (target.startsWith("post-") || target.startsWith("post_")) target = target.slice(5);

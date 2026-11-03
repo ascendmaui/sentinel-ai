@@ -145,7 +145,7 @@ export function GET(req?: Request): Response {
         const matched = tierById(id);
         let cleanId = id.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
         cleanId = cleanId.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
-        cleanId = cleanId.replace(/^(?:(?:api\/)?(?:tiers|tier|pricing|services|service|plans|plan)\/)+/, "");
+        cleanId = cleanId.replace(/^(?:(?:api\/)?(?:tiers|tier|service[-_]tiers|service[-_]tier|services|service|pricing[-_]tiers|pricing[-_]tier|pricing|plans|plan)\/)+/, "");
         cleanId = cleanId.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         if (cleanId.startsWith("tier-") || cleanId.startsWith("tier_")) cleanId = cleanId.slice(5);
         else if (cleanId.startsWith("tier") && /^\d+$/.test(cleanId.slice(4))) cleanId = cleanId.slice(4);

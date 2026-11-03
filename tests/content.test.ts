@@ -101,6 +101,9 @@ describe("brand", () => {
     expect(badgeByKey("badge/passive")).toEqual(TRUE_BADGES[0]);
     expect(badgeByKey("trust/auth")).toEqual(TRUE_BADGES[1]);
     expect(badgeByKey("trust-badges/auth")).toEqual(TRUE_BADGES[1]);
+    expect(badgeByKey("trust_badges/auth")).toEqual(TRUE_BADGES[1]);
+    expect(badgeByKey("trust_badge/auth")).toEqual(TRUE_BADGES[1]);
+    expect(badgeByKey("api/trust_badges/auth")).toEqual(TRUE_BADGES[1]);
     expect(badgeByKey("trust-auth")).toEqual(TRUE_BADGES[1]);
     expect(badgeByKey("trust_auth")).toEqual(TRUE_BADGES[1]);
     expect(badgeByKey("trust-badge-auth")).toEqual(TRUE_BADGES[1]);
@@ -438,6 +441,12 @@ describe("posts", () => {
     expect(postBySlug("art-" + posts[0].slug)).toBe(posts[0]);
     expect(postBySlug(`blog/${posts[0].slug}`)).toBe(posts[0]);
     expect(postBySlug(`/blog/${posts[0].slug}`)).toBe(posts[0]);
+    expect(postBySlug(`blog_posts/${posts[0].slug}`)).toBe(posts[0]);
+    expect(postBySlug(`blog_post/${posts[0].slug}`)).toBe(posts[0]);
+    expect(postBySlug(`blog-post/${posts[0].slug}`)).toBe(posts[0]);
+    expect(postBySlug(`blog-posts/${posts[0].slug}`)).toBe(posts[0]);
+    expect(postBySlug("blog_post/1")).toBe(posts[0]);
+    expect(postBySlug("blog-post/1")).toBe(posts[0]);
     expect(postBySlug(`posts/${posts[0].slug}`)).toBe(posts[0]);
     expect(postBySlug(`article/${posts[0].slug}`)).toBe(posts[0]);
     expect(postBySlug(`api/posts/${posts[0].slug}`)).toBe(posts[0]);
@@ -601,6 +610,11 @@ describe("tiers", () => {
     expect(tierById("tier/seraphim")).toBe(tiers[0]);
     expect(tierById("pricing/seraphim")).toBe(tiers[0]);
     expect(tierById("services/seraphim")).toBe(tiers[0]);
+    expect(tierById("service_tiers/seraphim")).toBe(tiers[0]);
+    expect(tierById("service-tier/1")).toBe(tiers[0]);
+    expect(tierById("pricing_tiers/thrones")).toBe(tiers[2]);
+    expect(tierById("pricing-tier/thrones")).toBe(tiers[2]);
+    expect(tierById("api/service_tiers/1")).toBe(tiers[0]);
     expect(tierById("api/tiers/seraphim")).toBe(tiers[0]);
     expect(tierById("api/pricing/seraphim")).toBe(tiers[0]);
     expect(tierById("tiers/pricing/seraphim")).toBe(tiers[0]);

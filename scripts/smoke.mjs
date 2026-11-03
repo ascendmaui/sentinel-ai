@@ -1056,6 +1056,30 @@ check(incNestedPathFilter.count === 1 && incNestedPathFilter.incidents[0].id ===
 const scNestedPathFilter = await (await get("/api/scenarios?id=api/scenarios/legacy-internal-app")).json();
 check(scNestedPathFilter.count === 1 && scNestedPathFilter.scenarios[0].id === "legacy-internal-app", "GET /api/scenarios?id=api/scenarios/... nested path prefix");
 
+const scNestedUnderscoreFilter = await (await get("/api/scenarios?id=hypothetical_scenarios/h1")).json();
+check(scNestedUnderscoreFilter.count === 1 && scNestedUnderscoreFilter.scenarios[0].id === "legacy-internal-app", "GET /api/scenarios?id=hypothetical_scenarios/h1 underscore prefix");
+
+const incNestedUnderscoreFilter = await (await get("/api/incidents?id=incident_case_studies/openai-huggingface-2026")).json();
+check(incNestedUnderscoreFilter.count === 1 && incNestedUnderscoreFilter.incidents[0].id === "openai-huggingface-2026", "GET /api/incidents?id=incident_case_studies/... underscore prefix");
+
+const csNestedUnderscoreFilter = await (await get("/api/case-studies?id=case_studies/f-01")).json();
+check(csNestedUnderscoreFilter.count === 1 && csNestedUnderscoreFilter.findings[0].id === "F-01", "GET /api/case-studies?id=case_studies/... underscore prefix");
+
+const postBlogPostsFilter = await (await get("/api/posts?slug=blog_posts/when-the-test-subject-leaves-the-test")).json();
+check(postBlogPostsFilter.count === 1 && postBlogPostsFilter.posts[0].slug === "when-the-test-subject-leaves-the-test", "GET /api/posts?slug=blog_posts/... underscore prefix");
+
+const tierServiceTiersFilter = await (await get("/api/tiers?id=service_tiers/seraphim")).json();
+check(tierServiceTiersFilter.count === 1 && tierServiceTiersFilter.tiers[0].id === "seraphim", "GET /api/tiers?id=service_tiers/... underscore prefix");
+
+const tierSummaryFilter = await (await get("/api/tiers?summary=advisory")).json();
+check(tierSummaryFilter.count >= 1, "GET /api/tiers?summary=advisory filter");
+
+const csSeverityLevelFilter = await (await get("/api/case-studies?severity_level=high")).json();
+check(csSeverityLevelFilter.count === 1 && csSeverityLevelFilter.findings[0].id === "F-02", "GET /api/case-studies?severity_level=high filter");
+
+const brandTrustBadgesFilter = await (await get("/api/brand?badge=trust_badges/passive")).json();
+check(brandTrustBadgesFilter.badge?.key === "passive", "GET /api/brand?badge=trust_badges/passive underscore prefix");
+
 // 11. Robots, Sitemap, and Static Assets
 const headRobots = await get("/robots.txt", { method: "HEAD" });
 check(headRobots.status === 200, "HEAD /robots.txt -> 200");

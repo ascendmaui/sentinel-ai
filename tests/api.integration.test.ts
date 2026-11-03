@@ -5197,6 +5197,53 @@ describe("Cross-route end-to-end user journeys and relational data integrity", (
     );
     expect(srcDetailNoProto.status).toBe(200);
     expect((await srcDetailNoProto.json()).id).toBe("oaiAug");
+
+    // 6. /api/posts and /api/tiers service_tiers, pricing_tiers, blog_posts prefix stripping
+    const postBlogPostsSlug = postsIndex(req("/api/posts?slug=blog_posts/when-the-test-subject-leaves-the-test"));
+    expect(postBlogPostsSlug.status).toBe(200);
+    expect((await postBlogPostsSlug.json()).count).toBe(1);
+
+    const postBlogPostNum = postsIndex(req("/api/posts?slug=blog_post/1"));
+    expect(postBlogPostNum.status).toBe(200);
+    expect((await postBlogPostNum.json()).count).toBe(1);
+
+    const postServiceTier = postsIndex(req("/api/posts?tier=service_tiers/seraphim"));
+    expect(postServiceTier.status).toBe(200);
+    expect((await postServiceTier.json()).count).toBeGreaterThanOrEqual(1);
+
+    const postPricingTier = postsIndex(req("/api/posts?tier=pricing_tiers/thrones"));
+    expect(postPricingTier.status).toBe(200);
+    expect((await postPricingTier.json()).count).toBeGreaterThanOrEqual(1);
+
+    const tierServiceTiersId = tiersIndex(req("/api/tiers?id=service_tiers/seraphim"));
+    expect(tierServiceTiersId.status).toBe(200);
+    expect((await tierServiceTiersId.json()).count).toBe(1);
+
+    const tierPricingTierAlias = tiersIndex(req("/api/tiers?tier=pricing_tier/thrones"));
+    expect(tierPricingTierAlias.status).toBe(200);
+    expect((await tierPricingTierAlias.json()).count).toBe(1);
+
+    const brandTrustBadges = brandEndpoint(req("/api/brand?badge=trust_badges/passive"));
+    expect(brandTrustBadges.status).toBe(200);
+    expect((await brandTrustBadges.json()).badge?.key).toBe("passive");
+
+    const brandTrustBadge = brandEndpoint(req("/api/brand?badge=trust_badge/auth"));
+    expect(brandTrustBadge.status).toBe(200);
+    expect((await brandTrustBadge.json()).badge?.key).toBe("auth");
+
+    const postDetailBlogPosts = await postOne(
+      req("/api/posts/blog_posts/when-the-test-subject-leaves-the-test"),
+      slugCtx("blog_posts/when-the-test-subject-leaves-the-test")
+    );
+    expect(postDetailBlogPosts.status).toBe(200);
+    expect((await postDetailBlogPosts.json()).slug).toBe("when-the-test-subject-leaves-the-test");
+
+    const tierDetailServiceTiers = await tierOne(
+      req("/api/tiers/service_tiers/seraphim"),
+      idCtx("service_tiers/seraphim")
+    );
+    expect(tierDetailServiceTiers.status).toBe(200);
+    expect((await tierDetailServiceTiers.json()).id).toBe("seraphim");
   });
 });
 
