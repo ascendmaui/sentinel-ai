@@ -46,7 +46,9 @@ export function GET(req?: Request): Response {
         const values = typeof url.searchParams.getAll === "function" ? url.searchParams.getAll(k) : [url.searchParams.get(k)];
         for (const raw of values) {
           if (typeof raw !== "string") continue;
-          const clean = raw.trim().toLowerCase().replace(/^[#+]+/, "").replace(/[#+]+$/, "");
+          let clean = raw.trim().toLowerCase().replace(/^[#+]+/, "").replace(/[#+]+$/, "");
+          clean = clean.replace(/^(?:severity|sev|level|priority)[-_]/, "");
+          clean = clean.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
           if (!clean) continue;
           if (KNOWN_SEVERITIES.some((s) => s.startsWith(clean) || clean.startsWith(s))) {
             severity = clean;
@@ -57,6 +59,9 @@ export function GET(req?: Request): Response {
       }
       if (!severity) {
         severity = parseSearchQuery(url.searchParams, ...severityKeys);
+        if (severity) {
+          severity = severity.replace(/^(?:severity|sev|level|priority)[-_]/, "");
+        }
       }
       const status = parseSearchQuery(
         url.searchParams,
@@ -161,6 +166,8 @@ export function GET(req?: Request): Response {
       }
       if (severity) {
         let cleanSev = severity.replace(/^\/+|\/+$/g, "");
+        cleanSev = cleanSev.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
+        cleanSev = cleanSev.replace(/^(?:severity|sev|level|priority)[-_]/, "");
         cleanSev = cleanSev.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         list = list.filter(
           (f) =>

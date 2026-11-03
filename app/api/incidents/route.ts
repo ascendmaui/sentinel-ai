@@ -185,6 +185,8 @@ export function GET(req?: Request): Response {
         const matchedSource = sourceById(source);
         let cleanSource = source.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
         cleanSource = cleanSource.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
+        cleanSource = cleanSource.replace(/^(?:(?:api\/)?(?:sources|source|refs|ref|references|reference)\/)+/, "");
+        cleanSource = cleanSource.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         cleanSource = cleanSource.replace(/^(source|src|ref|reference)[-_]/, "");
         cleanSource = cleanSource.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         list = list.filter(

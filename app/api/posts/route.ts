@@ -129,6 +129,8 @@ export function GET(req?: Request): Response {
         const matched = postBySlug(slug);
         let cleanSlug = slug.replace(/^\/+|\/+$/g, "");
         cleanSlug = cleanSlug.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
+        cleanSlug = cleanSlug.replace(/^(?:(?:api\/)?(?:posts|post|blog|article|articles)\/)+/, "");
+        cleanSlug = cleanSlug.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         const withoutExt = cleanSlug.replace(/\.(html|json)$/, "");
         list = list.filter(
           (p) =>
@@ -143,6 +145,8 @@ export function GET(req?: Request): Response {
         const matchedTier = tierById(tier);
         let cleanTier = tier.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
         cleanTier = cleanTier.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
+        cleanTier = cleanTier.replace(/^(?:(?:api\/)?(?:tiers|tier|pricing|services|service|plans|plan)\/)+/, "");
+        cleanTier = cleanTier.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         cleanTier = cleanTier.replace(/^(tier|rank|r|t)[-_]?/, "");
         cleanTier = cleanTier.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         list = list.filter(
@@ -155,6 +159,8 @@ export function GET(req?: Request): Response {
       if (source) {
         const matchedSource = sourceById(source);
         let cleanSource = source.replace(/^\/+|\/+$/g, "").replace(/\.(html|json)$/, "");
+        cleanSource = cleanSource.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
+        cleanSource = cleanSource.replace(/^(?:(?:api\/)?(?:sources|source|refs|ref|references|reference)\/)+/, "");
         cleanSource = cleanSource.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
         cleanSource = cleanSource.replace(/^(source|src|ref|reference)[-_]/, "");
         cleanSource = cleanSource.replace(/^[#+]+/, "").replace(/[#+]+$/, "");
